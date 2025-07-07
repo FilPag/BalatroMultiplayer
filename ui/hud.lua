@@ -169,7 +169,7 @@ function MP.UI.create_UIBox_player_row(type)
 	local player_name = type == "host" and MP.LOBBY.host.username or MP.LOBBY.guest.username
 	local lives = MP.GAME.enemy.lives
 	local highest_score = MP.GAME.enemy.highest_score
-	if (type == "host" and MP.LOBBY.is_host) or (type == "guest" and not MP.LOBBY.is_host) then
+	if (type == "host" and MP.LOBBY.isHost) or (type == "guest" and not MP.LOBBY.isHost) then
 		lives = MP.GAME.lives
 		highest_score = MP.GAME.highest_score
 	end
