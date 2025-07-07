@@ -1,3 +1,4 @@
+local json = require "json"
 Client = {}
 
 function Client.send(msg)
@@ -11,13 +12,8 @@ end
 function MP.ACTIONS.set_username(username)
 	MP.LOBBY.username = username or "Guest"
 	if MP.LOBBY.connected then
-		Client.send(
-			string.format(
-				"action:username,username:%s,modHash:%s",
-				MP.LOBBY.username .. "~" .. MP.LOBBY.blind_col,
-				MP.MOD_STRING
-			)
-		)
+		Client.send(string.format("action:username,username:%s,color:%s,modHash:%s", MP.LOBBY.username, MP.LOBBY.blind_col, MP.MOD_STRING))
+		sendDebugMessage("MOD_STRING: " .. MP.MOD_STRING, "MULTIPLAYER")
 	end
 end
 
@@ -28,13 +24,7 @@ end
 local function action_connected()
 	MP.LOBBY.connected = true
 	MP.UI.update_connection_status()
-	Client.send(
-		string.format(
-			"action:username,username:%s,modHash:%s",
-			MP.LOBBY.username .. "~" .. MP.LOBBY.blind_col,
-			MP.MOD_STRING
-		)
-	)
+	Client.send(string.format("action:username,username:%s,color:%s,modHash:%s", MP.LOBBY.username, MP.LOBBY.blind_col, MP.MOD_STRING))
 end
 
 local function action_joinedLobby(code, type)
@@ -46,55 +36,37 @@ local function action_joinedLobby(code, type)
 	MP.UI.update_connection_status()
 end
 
-local function action_lobbyInfo(host, hostHash, hostCached, guest, guestHash, guestCached, guestReady, is_host)
-	MP.LOBBY.players = {}
-	MP.LOBBY.is_host = is_host == "true"
-	local function parseName(name)
+--- @class lobby_info 
+--- @field host string
+--- @field hostHash string
+--- @field hostCached boolean
+--- @field isHost boolean
+--- @field players? table[] @ Array of player objects: { username: string, modHash: string, isCached: boolean, id: string }
+
+--- @param lobby_info lobby_info
+local function action_lobbyInfo(lobby_info)
+	local old_player_count = #MP.LOBBY.players
+	MP.LOBBY.isHost = lobby_info.isHost
+	MP.LOBBY.players = lobby_info.players or {}
+	MP.LOBBY.ready_to_start = MP.LOBBY.isHost and #MP.LOBBY.players >= 2
+
+	--[[local function parseName(name)
 		local username, col_str = string.match(name, "([^~]+)~(%d+)")
 		username = username or "Guest"
 		local col = tonumber(col_str) or 1
 		col = math.max(1, math.min(col, 25))
 		return username, col
-	end
-	local hostName, hostCol = parseName(host)
-	local hostConfig, hostMods = MP.UTILS.parse_Hash(hostHash)
-	MP.LOBBY.host = {
-		username = hostName,
-		blind_col = hostCol,
-		hash_str = hostMods,
-		hash = hash(hostMods),
-		cached = hostCached == "true",
-		config = hostConfig,
-	}
-  
-	if guest ~= nil then
-		local guestName, guestCol = parseName(guest)
-		local guestConfig, guestMods = MP.UTILS.parse_Hash(guestHash)
-		MP.LOBBY.guest = {
-			username = guestName,
-			blind_col = guestCol,
-			hash_str = guestMods,
-			hash = hash(guestMods),
-			cached = guestCached == "true",
-			config = guestConfig,
-		}
-	else
-		MP.LOBBY.guest = {}
-	end
+	end]]
 
-	-- Backwards compatibility for old server, assume guest is ready
-	-- TODO: Remove this once new server gets released
-	guestReady = guestReady or "true"
+	--local hostName, hostCol = parseName()
+	--local hostConfig, hostMods = MP.UTILS.parse_Hash(hostHash)
+	--MP.LOBBY.host = { username = hostName, blind_col = hostCol, hash_str = hostMods, hash = hash(hostMods), cached = hostCached == "true",  config = hostConfig}
 
-	-- TODO: This should check for player count instead
-	-- once we enable more than 2 players
-	MP.LOBBY.ready_to_start = guest ~= nil and guestReady == "true"
-
-	if MP.LOBBY.is_host then
+	if MP.LOBBY.isHost then
 		MP.ACTIONS.lobby_options()
 	end
 
-	if G.STAGE == G.STAGES.MAIN_MENU then
+	if G.STAGE == G.STAGES.MAIN_MENU and #MP.LOBBY.players ~= old_player_count then
 		MP.ACTIONS.update_player_usernames()
 	end
 end
@@ -924,19 +896,6 @@ function MP.ACTIONS.update_player_usernames()
 	end
 end
 
-local function string_to_table(str)
-	local tbl = {}
-	for part in string.gmatch(str, "([^,]+)") do
-		local key, value = string.match(part, "([^:]+):(.+)")
-		if key and value then
-			tbl[key] = value
-		end
-	end
-	return tbl
-end
-
-local last_game_seed = nil
-
 local game_update_ref = Game.update
 ---@diagnostic disable-next-line: duplicate-set-field
 function Game:update(dt)
@@ -944,8 +903,15 @@ function Game:update(dt)
 
 	repeat
 		local msg = love.thread.getChannel("networkToUi"):pop()
+		-- if message not starting with { wrap msg string with {}
+
 		if msg then
-			local parsedAction = string_to_table(msg)
+			local ok, parsedAction = pcall(json.decode, msg)
+    	if not ok or type(parsedAction) ~= "table" then
+				sendWarnMessage("Received non-JSON message: " .. tostring(msg), "MULTIPLAYER")
+        -- Optionally handle known plain string messages here
+			return
+    	end
 
 			if not ((parsedAction.action == "keepAlive") or (parsedAction.action == "keepAliveAck")) then
 				local log = string.format("Client got %s message: ", parsedAction.action)
@@ -974,16 +940,7 @@ function Game:update(dt)
 			elseif parsedAction.action == "joinedLobby" then
 				action_joinedLobby(parsedAction.code, parsedAction.type)
 			elseif parsedAction.action == "lobbyInfo" then
-				action_lobbyInfo(
-					parsedAction.host,
-					parsedAction.hostHash,
-					parsedAction.hostCached,
-					parsedAction.guest,
-					parsedAction.guestHash,
-					parsedAction.guestCached,
-					parsedAction.guestReady,
-					parsedAction.isHost
-				)
+				action_lobbyInfo(parsedAction)
 			elseif parsedAction.action == "startGame" then
 				action_start_game(parsedAction.seed, parsedAction.stake)
 			elseif parsedAction.action == "startBlind" then
