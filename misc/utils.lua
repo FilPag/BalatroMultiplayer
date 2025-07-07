@@ -103,8 +103,8 @@ function MP.UTILS.blind_col_numtokey(num)
 end
 
 function MP.UTILS.get_nemesis_key() -- calling this function assumes the user is currently in a multiplayer game
-	local ret = MP.UTILS.blind_col_numtokey((MP.LOBBY.is_host and MP.LOBBY.guest.blind_col or MP.LOBBY.host.blind_col) or
-		1)
+	-- Update to support n > 2 players
+	local ret = MP.UTILS.blind_col_numtokey(1)
 	if tonumber(MP.GAME.enemy.lives) <= 1 and tonumber(MP.GAME.lives) <= 1 then
 		if G.STATE ~= G.STATES.ROUND_EVAL then -- very messy fix that mostly works. breaks in a different way... but far harder to notice
 			ret = "bl_final_heart"
@@ -363,13 +363,20 @@ function MP.UTILS.reverse_key_value_pairs(tbl, stringify_keys)
 end
 
 function MP.UTILS.add_nemesis_info(info_queue)
-	if MP.LOBBY.code then
-		info_queue[#info_queue + 1] = {
-			set = "Other",
-			key = "current_nemesis",
-			vars = { MP.LOBBY.is_host and MP.LOBBY.guest.username or MP.LOBBY.host.username },
-		}
+	if not MP.LOBBY.code then return end
+
+	local enemy_name = ""
+
+	if #MP.LOBBY.players == 2 then
+		-- Loop through and set enemy_username if only two players.
+		-- If more we deal with later
 	end
+
+	info_queue[#info_queue + 1] = {
+		set = "Other",
+		key = "current_nemesis",
+		vars = { MP.LOBBY.isHost and MP.LOBBY.guest.username or MP.LOBBY.host.username },
+	}
 end
 
 function MP.UTILS.shallow_copy(t)

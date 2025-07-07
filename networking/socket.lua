@@ -4,6 +4,7 @@
 -- the necessary modules again
 return [[
 local CONFIG_URL, CONFIG_PORT = ...
+local json = require("json")
 
 require("love.filesystem")
 local socket = require("socket")
@@ -50,7 +51,13 @@ function Networking.connect()
 
 	if connectionResult ~= 1 then
 		SEND_THREAD_DEBUG_MESSAGE(string.format("%s", errorMessage))
-		networkToUiChannel:push("action:error,message:Failed to connect to multiplayer server")
+
+		local errorMsg = {
+			action = "error",
+			message = "Failed to connect to multiplayer server"
+		}
+
+		networkToUiChannel:push(json.encode(errorMsg))
 	else
 		isSocketClosed = false
 	end
@@ -126,7 +133,12 @@ local networkPacketQueue = function()
 					isRetry = false
 
 					timerCoroutine = coroutine.create(timer)
-					networkToUiChannel:push("action:disconnected")
+
+					local disconnectedAction = {
+						action = "disconnected",
+						message = "Connection closed by server",
+					}
+					networkToUiChannel:push(json.encode(disconnectedAction))
 				else
 					-- If there are no more packets, yield
 					coroutine.yield()
@@ -166,7 +178,11 @@ while true do
 
 			timerCoroutine = coroutine.create(timer)
 
-			networkToUiChannel:push("action:disconnected")
+			local disconnectedAction = {
+				action = "disconnected",
+				message = "Connection closed due to inactivity",
+			}
+			networkToUiChannel:push(json.encode(disconnectedAction))
 		end
 
 		if isRetry then
