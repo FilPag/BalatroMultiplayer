@@ -1,6 +1,7 @@
 local Disableable_Button = MP.UI.Disableable_Button
 local Disableable_Toggle = MP.UI.Disableable_Toggle
 local Disableable_Option_Cycle = MP.UI.Disableable_Option_Cycle
+local unpack = table.unpack or unpack -- this is to support both Lua 5.1 and 5.2+
 
 -- This needs to have a parameter because its a callback for inputs
 local function send_lobby_options(value)
@@ -98,16 +99,6 @@ function G.UIDEF.create_UIBox_lobby_menu()
 									MP.UI.create_lobby_code_buttons(text_scale),
 								},
 							},
-							UIBox_button({
-								id = "lobby_menu_leave",
-								button = "lobby_leave",
-								colour = G.C.RED,
-								minw = 3.65,
-								minh = 1.55,
-								label = { localize("b_leave") },
-								scale = text_scale * 1.5,
-								col = true,
-							}),
 						},
 					},
 				},
@@ -127,7 +118,7 @@ function G.UIDEF.create_UIBox_lobby_options()
 					align = "cm",
 				},
 				nodes = {
-					not MP.LOBBY.is_host and {
+					not MP.LOBBY.isHost and {
 						n = G.UIT.R,
 						config = {
 							padding = 0.3,
@@ -214,7 +205,9 @@ function G.UIDEF.create_UIBox_custom_seed_overlay()
 	})
 end
 
-function G.UIDEF.create_UIBox_view_hash(type)
+function G.UIDEF.create_UIBox_view_hash(index)
+	local modsString = MP.LOBBY.players[index] and MP.LOBBY.players[index].modHash or nil
+	_, modsString = MP.UTILS.parse_Hash(modsString)
 	return (
 		create_UIBox_generic_options({
 			contents = {
@@ -225,7 +218,7 @@ function G.UIDEF.create_UIBox_view_hash(type)
 						align = "cm",
 					},
 					nodes = MP.UI.hash_str_to_view(
-						type == "host" and MP.LOBBY.host.hash_str or MP.LOBBY.guest.hash_str,
+						modsString,
 						G.C.UI.TEXT_LIGHT
 					),
 				},
@@ -236,6 +229,9 @@ end
 
 function MP.UI.hash_str_to_view(str, text_colour)
 	local t = {}
+
+	
+
 
 	if not str then
 		return t
@@ -264,15 +260,9 @@ function MP.UI.hash_str_to_view(str, text_colour)
 	return t
 end
 
-G.FUNCS.view_host_hash = function(e)
+G.FUNCS.view_player_hash = function(e)
 	G.FUNCS.overlay_menu({
-		definition = G.UIDEF.create_UIBox_view_hash("host"),
-	})
-end
-
-G.FUNCS.view_guest_hash = function(e)
-	G.FUNCS.overlay_menu({
-		definition = G.UIDEF.create_UIBox_view_hash("guest"),
+		definition = G.UIDEF.create_UIBox_view_hash(e.config.ref_table.index),
 	})
 end
 
@@ -382,18 +372,18 @@ G.FUNCS.start_run = function(e, args)
 				)
 				chosen_stake = MP.DECK.MAX_STAKE
 			end
-			if MP.LOBBY.is_host then
+			if MP.LOBBY.isHost then
 				MP.LOBBY.config.back = args.challenge and "Challenge Deck"
-					or (args.deck and args.deck.name)
-					or G.GAME.viewed_back.name
+						or (args.deck and args.deck.name)
+						or G.GAME.viewed_back.name
 				MP.LOBBY.config.stake = chosen_stake
 				MP.LOBBY.config.sleeve = G.viewed_sleeve
 				MP.LOBBY.config.challenge = args.challenge and args.challenge.id or ""
 				send_lobby_options()
 			end
 			MP.LOBBY.deck.back = args.challenge and "Challenge Deck"
-				or (args.deck and args.deck.name)
-				or G.GAME.viewed_back.name
+					or (args.deck and args.deck.name)
+					or G.GAME.viewed_back.name
 			MP.LOBBY.deck.stake = chosen_stake
 			MP.LOBBY.deck.sleeve = G.viewed_sleeve
 			MP.LOBBY.deck.challenge = args.challenge and args.challenge.id or ""
