@@ -32,10 +32,10 @@ MP.LOBBY = {
 		challenge = "",
 	},
 	username = "Guest",
+	id = "",
 	blind_col = 1,
-	host = {},
-	guest = {},
-	is_host = false,
+	players = {},
+	isHost = false,
 }
 MP.GAME = {}
 MP.UI = {}

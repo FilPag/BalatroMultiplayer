@@ -133,7 +133,7 @@ function create_UIBox_blind_choice(type, run_info)
 			set = "Blind",
 			vars = { blind_choice.config.key == 'bl_ox' and localize(G.GAME.current_round.most_played_poker_hand, "poker_hands") or '' },
 		})
-		local loc_name = ( G.GAME.round_resets.blind_choices[type] == "bl_mp_nemesis" and (MP.LOBBY.is_host and MP.LOBBY.guest.username or MP.LOBBY.host.username) ) 
+		local loc_name = ( G.GAME.round_resets.blind_choices[type] == "bl_mp_nemesis") 
 			or localize({ type = "name_text", key = blind_choice.config.key, set = "Blind" })
 		
 		local blind_col = get_blind_main_colour(type)
@@ -797,7 +797,7 @@ function Game:update_draw_to_hand(dt)
 							func = function()
 								G.HUD_blind:get_UIE_by_ID("HUD_blind_name").config.object.config.string = {
 									{
-										ref_table = MP.LOBBY.is_host and MP.LOBBY.guest or MP.LOBBY.host,
+										ref_table = MP.LOBBY.isHost and MP.LOBBY.guest or MP.LOBBY.host,
 										ref_value = "username",
 									},
 								}
