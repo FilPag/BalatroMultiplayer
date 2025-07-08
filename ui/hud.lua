@@ -157,7 +157,7 @@ function MP.UI.create_UIBox_mods_list(type)
 				n = G.UIT.C,
 				config = { align = "cm" },
 				nodes = MP.UI.hash_str_to_view(
-					type == "host" and MP.LOBBY.host.hash_str or MP.LOBBY.guest.hash_str,
+					type == "host" and MP.LOBBY.players[1].hash_str or MP.LOBBY.players[2].hash_str,
 					G.C.UI.TEXT_DARK
 				),
 			},
@@ -166,7 +166,7 @@ function MP.UI.create_UIBox_mods_list(type)
 end
 
 function MP.UI.create_UIBox_player_row(type)
-	local player_name = type == "host" and MP.LOBBY.host.username or MP.LOBBY.guest.username
+	local player_name = type == "host" and MP.LOBBY.players[1].username or MP.LOBBY.players[2].username
 	local lives = MP.GAME.enemy.lives
 	local highest_score = MP.GAME.enemy.highest_score
 	if (type == "host" and MP.LOBBY.isHost) or (type == "guest" and not MP.LOBBY.isHost) then
