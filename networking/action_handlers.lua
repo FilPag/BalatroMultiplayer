@@ -46,29 +46,12 @@ end
 --- @param lobby_info lobby_info
 local function action_lobbyInfo(lobby_info)
 	local old_player_count = #MP.LOBBY.players
+
 	MP.LOBBY.isHost = lobby_info.isHost
 	MP.LOBBY.players = lobby_info.players or {}
 	MP.LOBBY.ready_to_start = MP.LOBBY.isHost and #MP.LOBBY.players >= 2
 
-	--[[local function parseName(name)
-		local username, col_str = string.match(name, "([^~]+)~(%d+)")
-		username = username or "Guest"
-		local col = tonumber(col_str) or 1
-		col = math.max(1, math.min(col, 25))
-		return username, col
-	end]]
-
-	--local hostName, hostCol = parseName()
-	--local hostConfig, hostMods = MP.UTILS.parse_Hash(hostHash)
-	--MP.LOBBY.host = { username = hostName, blind_col = hostCol, hash_str = hostMods, hash = hash(hostMods), cached = hostCached == "true",  config = hostConfig}
-
-	if MP.LOBBY.isHost then
-		MP.ACTIONS.lobby_options()
-	end
-
-	if G.STAGE == G.STAGES.MAIN_MENU and #MP.LOBBY.players ~= old_player_count then
-		MP.ACTIONS.update_player_usernames()
-	end
+	MP.ACTIONS.update_player_usernames()
 end
 
 local function action_error(message)
@@ -234,59 +217,89 @@ local function action_lose_game()
 	G.STATE = G.STATES.GAME_OVER
 end
 
-local function action_lobby_options(options)
-	local different_decks_before = MP.LOBBY.config.different_decks
+-- Helper: parse option value by type
+local function parse_option_value(type_str, v)
+	if type_str == "boolean" then
+		return (v == true or v == "true")
+	elseif type_str == "number" then
+		return tonumber(v)
+	elseif type_str == "string" then
+		return tostring(v)
+	else
+		return v
+	end
+end
+
+-- Helper: check if any of the given keys changed between two tables
+local function any_key_changed(keys, old_tbl, new_tbl)
+	for _, k in ipairs(keys) do
+		if old_tbl[k] ~= new_tbl[k] then
+			return true
+		end
+	end
+	return false
+end
+
+local config_map = {
+	starting_lives = { type = "number" },
+	pvp_start_round = { type = "number" },
+	timer_base_seconds = { type = "number" },
+	timer_increment_seconds = { type = "number" },
+	showdown_starting_antes = { type = "number" },
+	different_decks = { type = "boolean" },
+	gold_on_life_loss = { type = "boolean" },
+	no_gold_on_round_loss = { type = "boolean" },
+	death_on_round_loss = { type = "boolean" },
+	different_seeds = { type = "boolean" },
+	multiplayer_jokers = { type = "boolean" },
+	normal_bosses = { type = "boolean" },
+	custom_seed = { type = "string" },
+	stake = { type = "number" },
+	back = { type = "string" },
+	challenge = { type = "string" },
+	-- Add more config keys here as needed
+}
+
+local function update_lobby_config(options)
+	local changed_keys = {}
+	local old_config = {}
+	for k, v in pairs(MP.LOBBY.config) do old_config[k] = v end
+
 	for k, v in pairs(options) do
-		if k == "ruleset" then
-			if not MP.Rulesets[v] then
-				G.FUNCS.lobby_leave(nil)
-				MP.UTILS.overlay_message(localize({ type = "variable", key = "k_failed_to_join_lobby", vars = { localize("k_ruleset_not_found") } }))
-				return
-			end
-			local disabled = MP.Rulesets[v].is_disabled()
-			if disabled then
-				G.FUNCS.lobby_leave(nil)
-				MP.UTILS.overlay_message(localize({ type = "variable", key = "k_failed_to_join_lobby", vars = { disabled } }))
-				return
-			end
-			MP.LOBBY.config.ruleset = v
-			goto continue
+		local entry = config_map[k]
+		local parsed_v = entry and parse_option_value(entry.type, v) or v
+		if MP.LOBBY.config[k] ~= parsed_v then
+			MP.LOBBY.config[k] = parsed_v
+			changed_keys[k] = true
 		end
-		if k == "gamemode" then
-			MP.LOBBY.config.gamemode = v
-			goto continue
-		end
-
-		local parsed_v = v
-		if v == "true" then
-			parsed_v = true
-		elseif v == "false" then
-			parsed_v = false
-		end
-
-		if
-			k == "starting_lives"
-			or k == "pvp_start_round"
-			or k == "timer_base_seconds"
-			or k == "timer_increment_seconds"
-			or k == "showdown_starting_antes"
-		then
-			parsed_v = tonumber(v)
-		end
-
-		MP.LOBBY.config[k] = parsed_v
-		if G.OVERLAY_MENU then
-			local config_uie = G.OVERLAY_MENU:get_UIE_by_ID(k .. "_toggle")
-			if config_uie then
-				G.FUNCS.toggle(config_uie)
-			end
-		end
-		::continue::
 	end
-	if different_decks_before ~= MP.LOBBY.config.different_decks then
-		G.FUNCS.exit_overlay_menu() -- throw out guest from any menu.
+	return changed_keys, old_config, MP.LOBBY.config
+end
+
+local function update_overlay_toggles(changed_keys)
+	if not G.OVERLAY_MENU then return end
+	for k in pairs(changed_keys) do
+		local config_uie = G.OVERLAY_MENU:get_UIE_by_ID(k .. "_toggle")
+		if config_uie then
+			G.FUNCS.toggle(config_uie)
+		end
 	end
-	MP.ACTIONS.update_player_usernames() -- render new DECK button state
+end
+
+local function action_lobby_options(options)
+	local changed_keys, old_config, new_config = update_lobby_config(options)
+
+	-- Only update UI if deck, stake, or different_decks changed
+	if any_key_changed({"stake", "back", "different_decks"}, old_config, new_config) then
+		if G.MAIN_MENU_UI then G.MAIN_MENU_UI:remove() end
+		set_main_menu_UI()
+	end
+
+	update_overlay_toggles(changed_keys)
+
+	if old_config.different_decks ~= new_config.different_decks then
+		G.FUNCS.exit_overlay_menu()   -- throw out guest from any menu.
+	end
 end
 
 local function action_send_phantom(key)
@@ -888,8 +901,8 @@ function MP.ACTIONS.connect()
 end
 
 function MP.ACTIONS.update_player_usernames()
-	if MP.LOBBY.code then
-		MP.update_player_usernames()
+	if MP.have_player_usernames_changed() then
+		set_main_menu_UI()
 	end
 end
 
