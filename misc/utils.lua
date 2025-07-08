@@ -365,17 +365,25 @@ end
 function MP.UTILS.add_nemesis_info(info_queue)
 	if not MP.LOBBY.code then return end
 
-	local enemy_name = ""
+	local enemy_name = nil
+	local my_id = MP.LOBBY.local_id
 
-	if #MP.LOBBY.players == 2 then
-		-- Loop through and set enemy_username if only two players.
-		-- If more we deal with later
+	-- Find the first player that is not the local user (by id)
+	for _, player in ipairs(MP.LOBBY.players or {}) do
+		if player.id ~= my_id then
+			enemy_name = player.username
+			break
+		end
 	end
+
+	-- Fallback if not found (single player or error)
+	enemy_name = enemy_name or "?"
+	sendDebugMessage(enemy_name, "MULTIPLAYER")
 
 	info_queue[#info_queue + 1] = {
 		set = "Other",
 		key = "current_nemesis",
-		vars = { MP.LOBBY.isHost and MP.LOBBY.guest.username or MP.LOBBY.host.username },
+		vars = { enemy_name },
 	}
 end
 
@@ -813,4 +821,25 @@ function MP.UTILS.is_standard_ruleset()
 		end
 	end
 	return false
+end
+
+-- Returns the enemy player for the current client (not self).
+-- For now, returns the next player in the array who is not the local player.
+-- If only 2 players, returns the other. For > 2, can be extended for turn order, etc.
+-- @param players table: array of player tables
+-- @param my_id string: the id of the local player
+function MP.UTILS.get_enemy_player(players, my_id)
+	if not players or #players < 2 then return nil end
+	for i, player in ipairs(players) do
+		if player.id and player.id ~= my_id then
+			return player
+		end
+	end
+	-- fallback: just return the next player (wrap around)
+	for i, player in ipairs(players) do
+		if (player.id or player.hash or player.username) ~= my_id then
+			return player
+		end
+	end
+	return nil
 end

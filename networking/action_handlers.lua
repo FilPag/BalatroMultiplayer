@@ -889,10 +889,7 @@ end
 
 function MP.ACTIONS.update_player_usernames()
 	if MP.LOBBY.code then
-		if G.MAIN_MENU_UI then
-			G.MAIN_MENU_UI:remove()
-		end
-		set_main_menu_UI()
+		MP.update_player_usernames()
 	end
 end
 

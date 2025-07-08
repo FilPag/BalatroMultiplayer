@@ -801,7 +801,8 @@ function Game:update_draw_to_hand(dt)
 							func = function()
 								G.HUD_blind:get_UIE_by_ID("HUD_blind_name").config.object.config.string = {
 									{
-										ref_table = MP.LOBBY.isHost and MP.LOBBY.guest or MP.LOBBY.host,
+										-- Show the enemy player for the current client, supports n players
+										ref_table = MP.UTILS.get_enemy_player(MP.LOBBY.players, MP.LOBBY.local_id),
 										ref_value = "username",
 									},
 								}
@@ -1841,19 +1842,6 @@ function create_UIBox_win()
 													},
 												},
 											},
-											--[[ Removed until it is fixed in a future update
-											UIBox_button({
-												id = "continue_singpleplayer_button",
-												align = "lm",
-												button = "continue_in_singleplayer",
-												label = { localize("b_continue_singleplayer") },
-												colour = G.C.GREEN,
-												toolTip = {title = "", text = localize("k_continue_singleplayer_tooltip")},
-												minw = 6,
-												minh = 1,
-												func = 'set_button_pip',
-												focus_args = { nav = "wide", button = "y" },
-											})]]
 										},
 									},
 									{
@@ -1864,7 +1852,6 @@ function create_UIBox_win()
 											create_UIBox_round_scores_row("furthest_round", G.C.FILTER),
 											create_UIBox_round_scores_row("seed", G.C.WHITE),
 											UIBox_button({
-												id = "copy_seed_button",
 												button = "copy_seed",
 												label = { localize("b_copy") },
 												colour = G.C.BLUE,
