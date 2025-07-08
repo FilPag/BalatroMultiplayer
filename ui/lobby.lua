@@ -1261,31 +1261,23 @@ function G.FUNCS.reconnect(e)
 	G.FUNCS:exit_overlay_menu()
 end
 
-function MP.update_player_usernames()
-	if not MP.LOBBY.code then return end
+function MP.have_player_usernames_changed()
+	if not MP.LOBBY.code then return false end
 
 	local prev_usernames = MP.LOBBY._prev_usernames or {}
 	local players = MP.LOBBY.players or {}
-	local changed = false
+
+	if #prev_usernames ~= #players then
+		return true
+	end
 
 	for i, player in ipairs(players) do
 		if prev_usernames[i] ~= player.username then
-			changed = true
-			break
+			return true
 		end
 	end
-	if #prev_usernames ~= #players then
-		changed = true
-	end
 
-	if changed and G.STAGE == G.STAGES.MAIN_MENU then
-		set_main_menu_UI()
-	end
-
-	MP.LOBBY._prev_usernames = {}
-	for i, player in ipairs(players) do
-		MP.LOBBY._prev_usernames[i] = player.username
-	end
+	return false
 end
 
 --[[ function MP.UI.set_lobby_menu()
