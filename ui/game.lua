@@ -133,9 +133,14 @@ function create_UIBox_blind_choice(type, run_info)
 			set = "Blind",
 			vars = { blind_choice.config.key == 'bl_ox' and localize(G.GAME.current_round.most_played_poker_hand, "poker_hands") or '' },
 		})
-		local loc_name = ( G.GAME.round_resets.blind_choices[type] == "bl_mp_nemesis") 
-			or localize({ type = "name_text", key = blind_choice.config.key, set = "Blind" })
-		
+		local loc_name
+		if G.GAME.round_resets.blind_choices[type] == "bl_mp_nemesis" then
+			local enemy = MP.UTILS.get_enemy_player and MP.UTILS.get_enemy_player(MP.LOBBY.players, MP.LOBBY.local_id)
+			loc_name = enemy and enemy.username or localize({ type = "name_text", key = blind_choice.config.key, set = "Blind" })
+		else
+			loc_name = localize({ type = "name_text", key = blind_choice.config.key, set = "Blind" })
+		end
+
 		local blind_col = get_blind_main_colour(type)
 		
 		local blind_amt = get_blind_amount(G.GAME.round_resets.blind_ante)
@@ -797,7 +802,8 @@ function Game:update_draw_to_hand(dt)
 							func = function()
 								G.HUD_blind:get_UIE_by_ID("HUD_blind_name").config.object.config.string = {
 									{
-										ref_table = MP.LOBBY.isHost and MP.LOBBY.guest or MP.LOBBY.host,
+										-- Show the enemy player for the current client, supports n players
+										ref_table = MP.UTILS.get_enemy_player(MP.LOBBY.players, MP.LOBBY.local_id),
 										ref_value = "username",
 									},
 								}
@@ -1586,16 +1592,6 @@ function create_UIBox_win()
 									{
 										n = G.UIT.C,
 										config = {
-											maxw = 0.8,
-											minw = 0.8,
-											minh = 0.7,
-											colour = G.C.CLEAR,
-											no_fill = false
-										}
-									},
-									{
-										n = G.UIT.C,
-										config = {
 											id = "view_nemesis_deck_button",
 											button = "view_nemesis_deck",
 											align = "cm",
@@ -1738,16 +1734,6 @@ function create_UIBox_win()
 													},
 												},
 											},
-											UIBox_button({
-												id = "continue_singpleplayer_button",
-												align = "lm",
-												button = "continue_in_singleplayer",
-												label = { localize("b_continue_singleplayer") },
-												colour = G.C.GREEN,
-												minw = 6,
-												minh = 1,
-												focus_args = { nav = "wide" },
-											})
 										},
 									},
 									{
@@ -1758,7 +1744,6 @@ function create_UIBox_win()
 											create_UIBox_round_scores_row("furthest_round", G.C.FILTER),
 											create_UIBox_round_scores_row("seed", G.C.WHITE),
 											UIBox_button({
-												id = "copy_seed_button",
 												button = "copy_seed",
 												label = { localize("b_copy") },
 												colour = G.C.BLUE,

@@ -189,7 +189,7 @@ local function create_player_nodes(players, text_scale)
 					n = G.UIT.B,
 					config = {
 						w = 0.1,
-						h = 0.1,
+					 h = 0.1,
 						colour = G.C.ORANGE,
 					},
 				},
@@ -1262,12 +1262,54 @@ function G.FUNCS.reconnect(e)
 end
 
 function MP.update_player_usernames()
-	if MP.LOBBY.code then
-		if G.MAIN_MENU_UI then
-			G.MAIN_MENU_UI:remove()
-		end
-		if G.STAGE == G.STAGES.MAIN_MENU then
-			G.FUNCS.display_lobby_main_menu_UI()
+	if not MP.LOBBY.code then return end
+
+	local prev_usernames = MP.LOBBY._prev_usernames or {}
+	local players = MP.LOBBY.players or {}
+	local changed = false
+
+	for i, player in ipairs(players) do
+		if prev_usernames[i] ~= player.username then
+			changed = true
+			break
 		end
 	end
+	if #prev_usernames ~= #players then
+		changed = true
+	end
+
+	if changed and G.STAGE == G.STAGES.MAIN_MENU then
+		set_main_menu_UI()
+	end
+
+	MP.LOBBY._prev_usernames = {}
+	for i, player in ipairs(players) do
+		MP.LOBBY._prev_usernames[i] = player.username
+	end
 end
+
+--[[ function MP.UI.set_lobby_menu()
+	G.MAIN_MENU_UI = UIBox {
+		definition = create_UIBox_main_menu_buttons(),
+		config = { align = "bmi", offset = { x = 0, y = 0}, major = G.ROOM_ATTACH, bond = 'Weak' }
+	}
+	G.MAIN_MENU_UI.alignment.offset.y = 0
+	G.MAIN_MENU_UI:align_to_major()
+	G.E_MANAGER:add_event(Event({
+		blockable = false,
+		blocking = false,
+		func = (function()
+			if (not G.F_DISP_USERNAME) or (type(G.F_DISP_USERNAME) == 'string') then
+				G.PROFILE_BUTTON = UIBox {
+					definition = create_UIBox_profile_button(),
+					config = { align = "bli", offset = { x = -10, y = 0 }, major = G.ROOM_ATTACH, bond = 'Weak' } }
+				G.PROFILE_BUTTON.alignment.offset.x = 0
+				G.PROFILE_BUTTON:align_to_major()
+				return true
+			end
+		end)
+	}))
+
+	G.CONTROLLER:snap_to { node = G.MAIN_MENU_UI:get_UIE_by_ID('main_menu_play') }
+end
+-- ]]
