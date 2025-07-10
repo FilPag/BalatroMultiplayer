@@ -23,7 +23,7 @@ SMODS.Joker({
 		return MP.LOBBY.code and MP.LOBBY.config.multiplayer_jokers
 	end,
 	calculate = function(self, card, context)
-		if context.cardarea == G.jokers and context.joker_main and not MP.is_pvp_boss() then
+		if context.cardarea == G.jokers and context.joker_main and not MP.is_online_boss() then
 			return {
 				x_mult = card.ability.extra.x_mult,
 			}

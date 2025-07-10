@@ -104,8 +104,10 @@ end
 
 function MP.UTILS.get_nemesis_key() -- calling this function assumes the user is currently in a multiplayer game
 	-- Update to support n > 2 players
-	local ret = MP.UTILS.blind_col_numtokey(1)
-	if tonumber(MP.GAME.enemy.lives) <= 1 and tonumber(MP.GAME.lives) <= 1 then
+	local enemy = MP.UTILS.get_nemesis()
+	local enemy_colour = MP.UTILS.get_nemesis_lobby_data().colour
+	local ret = MP.UTILS.blind_col_numtokey(enemy_colour)
+	if tonumber(enemy.lives) <= 1 and tonumber(MP.UTILS.get_local_player().lives) <= 1 then
 		if G.STATE ~= G.STATES.ROUND_EVAL then -- very messy fix that mostly works. breaks in a different way... but far harder to notice
 			ret = "bl_final_heart"
 		end
@@ -378,7 +380,6 @@ function MP.UTILS.add_nemesis_info(info_queue)
 
 	-- Fallback if not found (single player or error)
 	enemy_name = enemy_name or "?"
-	sendDebugMessage(enemy_name, "MULTIPLAYER")
 
 	info_queue[#info_queue + 1] = {
 		set = "Other",
@@ -823,23 +824,92 @@ function MP.UTILS.is_standard_ruleset()
 	return false
 end
 
--- Returns the enemy player for the current client (not self).
--- For now, returns the next player in the array who is not the local player.
--- If only 2 players, returns the other. For > 2, can be extended for turn order, etc.
+function MP.UTILS.ease_score(score_table, new_score, delay)
+	delay = delay or 0.3
+	for _, field in ipairs({ "e_count", "exponent", "coeffiocient" }) do
+		if new_score[field] ~= nil then
+			G.E_MANAGER:add_event(Event({
+				blockable = false,
+				blocking = false,
+				trigger = "ease",
+				delay = delay,
+				ref_table = score_table,
+				ref_value = field,
+				ease_to = new_score[field],
+				func = function(t) return math.floor(t) end
+			}))
+		end
+	end
+end
+
+function MP.UTILS.calc_coop_score(local_score)
+	if not MP.LOBBY.players then
+		return local_score
+	end
+
+	local total_score = MP.INSANE_INT.create(local_score, 0, 0) 
+
+	for _, player in ipairs(MP.LOBBY.players) do
+		if player.score and player.id ~= MP.LOBBY.local_id then
+			total_score = MP.INSANE_INT.add(total_score, player.score)
+		end
+	end
+
+	return total_score
+end
+
+-- Returns the local player for the current client.
 -- @param players table: array of player tables
 -- @param my_id string: the id of the local player
-function MP.UTILS.get_enemy_player(players, my_id)
-	if not players or #players < 2 then return nil end
+function MP.UTILS.get_local_player()
+	local players = MP.GAME.players
+	local my_id = MP.LOBBY.local_id
+
+	if not players then return nil end
+	for i, player in ipairs(players) do
+		if player.id and player.id == my_id then
+			return player
+		end
+	end
+	return nil
+end
+
+function MP.UTILS.get_local_player_lobby_data()
+	local players = MP.GAME.players
+	local my_id = MP.LOBBY.local_id
+	if not players then error("MP.LOBBY.players is nil") end
+
 	for i, player in ipairs(players) do
 		if player.id and player.id ~= my_id then
 			return player
 		end
 	end
-	-- fallback: just return the next player (wrap around)
+end
+
+-- Returns the enemy player for the current client.
+-- @param players table: array of player tables
+-- @param my_id string: the id of the local player
+function MP.UTILS.get_nemesis()
+	local players = MP.GAME.players
+	local my_id = MP.LOBBY.local_id
+
+	if not players then error("MP.LOBBY.players is nil") end
 	for i, player in ipairs(players) do
-		if (player.id or player.hash or player.username) ~= my_id then
+		if player.id and player.id ~= my_id then
 			return player
 		end
 	end
 	return nil
+end
+
+function MP.UTILS.get_nemesis_lobby_data()
+	local players = MP.LOBBY.players
+	local my_id = MP.LOBBY.local_id
+	if not players then error("MP.LOBBY.players is nil") end
+
+	for i, player in ipairs(players) do
+		if player.id and player.id ~= my_id then
+			return player
+		end
+	end
 end

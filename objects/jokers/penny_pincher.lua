@@ -24,7 +24,7 @@ SMODS.Joker({
 		return (MP.LOBBY.code and MP.LOBBY.config.multiplayer_jokers) and MP.GAME.pincher_unlock -- do NOT replace this with G.GAME.round_resets.ante >= 3, order sets ante to 0
 	end,
 	calc_dollar_bonus = function(self, card)
-		local spent = MP.GAME.enemy.spent_in_shop[MP.GAME.pincher_index]
+		local spent = MP.UTILS.get_nemesis().spent_in_shop[MP.GAME.pincher_index]
 		local money = 0
 		if spent then
 			money = math.floor(spent / card.ability.extra.nemesis_dollars)
