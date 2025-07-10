@@ -10,7 +10,10 @@ MP.Ruleset({
 	banned_vouchers = {},
 	banned_enhancements = {},
 	banned_tags = {},
-	banned_blinds ={},
+	banned_blinds ={
+		"bl_wall",
+		"bl_final_vessel",
+	},
 
 	reworked_jokers = {
 		"j_mp_hanging_chad",

@@ -59,7 +59,10 @@ MP.Ruleset({
 		"tag_top_up",
 		"tag_handy",
 	},
-	banned_blinds ={},
+	banned_blinds ={
+		"bl_wall",
+		"bl_final_vessel",
+	},
 
 	reworked_jokers = {},
 	reworked_consumables = {

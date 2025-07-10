@@ -1,15 +1,12 @@
 MP.Ruleset({
-	key = "vanilla",
+	key = "coop",
 	multiplayer_content = false,
 	banned_jokers = {},
 	banned_consumables = {},
 	banned_vouchers = {},
 	banned_enhancements = {},
 	banned_tags = {},
-	banned_blinds = {
-		"bl_wall",
-		"bl_final_vessel",
-	},
+	banned_blinds = {},
 
 	reworked_jokers = {},
 	reworked_consumables = {},

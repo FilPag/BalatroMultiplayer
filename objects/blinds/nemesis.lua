@@ -29,9 +29,14 @@ SMODS.Blind({
 	end,
 })
 
-function MP.is_pvp_boss()
+function MP.is_online_boss()
 	if not G.GAME or not G.GAME.blind then
 		return false
 	end
+	-- Special case for coop boss blinds
+	if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" and G.GAME.blind.boss then
+		return true
+	end
+
 	return G.GAME.blind.config.blind.key == "bl_mp_nemesis" or G.GAME.blind.pvp
 end

@@ -11,7 +11,7 @@ if SMODS.Mods["JokerDisplay"] and SMODS.Mods["JokerDisplay"].can_load then
 				},
 			},
 			calc_function = function(card)
-				card.joker_display_values.x_mult = MP.is_pvp_boss() and card.ability.extra.x_mult or 1
+				card.joker_display_values.x_mult = MP.is_online_boss() and card.ability.extra.x_mult or 1
 			end,
 		}
 		jd_def["j_mp_defensive_joker"] = {
@@ -74,7 +74,7 @@ if SMODS.Mods["JokerDisplay"] and SMODS.Mods["JokerDisplay"].can_load then
 				},
 			},
 			calc_function = function(card)
-				card.joker_display_values.x_mult = not MP.is_pvp_boss() and card.ability.extra.x_mult or 1
+				card.joker_display_values.x_mult = not MP.is_online_boss() and card.ability.extra.x_mult or 1
 			end,
 		}
 		jd_def["j_mp_pizza"] = {
@@ -97,14 +97,19 @@ if SMODS.Mods["JokerDisplay"] and SMODS.Mods["JokerDisplay"].can_load then
 				{ text = ")" },
 			},
 			calc_function = function(card)
+				local enemy = MP.UTILS.get_nemesis()
+				if not enemy then
+					sendErrorMessage("Enemy player not found for skip calculation", "JokerDisplay")
+					return
+				end
 				card.joker_display_values.skip_diff = G.GAME.skips ~= nil
-						and MP.GAME.enemy.skips ~= nil
+						and enemy.skips ~= nil
 						and localize({
 							type = "variable",
-							key = MP.GAME.enemy.skips > G.GAME.skips and "a_mp_skips_behind"
-								or MP.GAME.enemy.skips == G.GAME.skips and "a_mp_skips_tied"
+							key = enemy.skips > G.GAME.skips and "a_mp_skips_behind"
+								or enemy.skips == G.GAME.skips and "a_mp_skips_tied"
 								or "a_mp_skips_ahead",
-							vars = { math.abs(MP.GAME.enemy.skips - G.GAME.skips) },
+							vars = { math.abs(enemy.skips - G.GAME.skips) },
 						})[1]
 					or ""
 			end,
