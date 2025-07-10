@@ -1,3 +1,5 @@
+local player_state_manager = SMODS.load_file('networking/player_state_manager.lua', 'Multiplayer')()
+
 local create_UIBox_blind_choice_ref = create_UIBox_blind_choice
 ---@diagnostic disable-next-line: lowercase-global
 function create_UIBox_blind_choice(type, run_info)
@@ -151,6 +153,11 @@ function create_UIBox_blind_choice(type, run_info)
 			blind_amt = "????"
 		end
 
+		-- TODO add an option to scale the blind amount based on the number of players in the lobby
+		if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" and type == "Boss" then
+			blind_amt = blind_amt * #MP.LOBBY.players
+		end
+
 		local text_table = loc_target
 
 		if G.GAME.round_resets.pvp_blind_choices[type] then
@@ -215,9 +222,15 @@ function create_UIBox_blind_choice(type, run_info)
 										shadow = true,
 										hover = true,
 										one_press = true,
-										func = (G.GAME.round_resets.blind_choices[type] == "bl_mp_nemesis"
-											or G.GAME.round_resets.pvp_blind_choices[type])
-												and "pvp_ready_button"
+										func = (
+											G.GAME.round_resets.blind_choices[type] == "bl_mp_nemesis"
+											or G.GAME.round_resets.pvp_blind_choices[type]
+											or (
+												MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival"
+												and (type == "Boss")
+											)
+										)
+											and "pvp_ready_button"
 											or nil,
 										button = "select_blind",
 									},
@@ -524,7 +537,12 @@ function Blind:change_colour(blind_col)	-- ensures that small/big blinds have pr
 end
 
 local blind_set_blindref = Blind.set_blind
-function Blind:set_blind(blind, reset, silent)	-- hacking in proper spirals, far from good but whatever
+function Blind:set_blind(blind, reset, silent)
+	-- Adjust blind multiplier for coop survival mode
+	if blind and MP.LOBBY.code and MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" and blind.boss then
+		blind.mult = blind.mult * #MP.LOBBY.players
+	end
+
 	blind_set_blindref(self, blind, reset, silent)
 	if (blind and blind.key == 'bl_mp_nemesis') or (self and self.name and self.name == 'bl_mp_nemesis') then -- this shouldn't break and this fix shouldn't work
 		local boss = true
@@ -533,10 +551,11 @@ function Blind:set_blind(blind, reset, silent)	-- hacking in proper spirals, far
 		if blind_key == "bl_small" or blind_key == "bl_big" then
 			boss = false
 		end
-		if blind_key == "bl_final_heart" then	-- should be made generic
+		if blind_key == "bl_final_heart" then
 			showdown = true
 		end
-		G.ARGS.spin.real = (G.SETTINGS.reduced_motion and 0 or 1)*(boss and (showdown and 0.5 or 0.25) or 0)
+		G.ARGS.spin.real = (G.SETTINGS.reduced_motion and 0 or 1) * (boss and (showdown and 0.5 or 0.25) or 0)
+		player_state_manager.reset_scores()
 	end
 end
 
@@ -716,10 +735,11 @@ local function update_blind_HUD()
 		G.HUD_blind.alignment.offset.y = -10
 		G.E_MANAGER:add_event(Event({
 			trigger = "after",
-			delay = 0.3,
+			delay = 0,
 			blockable = false,
 			func = function()
-				G.HUD_blind:get_UIE_by_ID("HUD_blind_count").config.ref_table = MP.GAME.enemy
+				local nemesis = MP.UTILS.get_nemesis()
+				G.HUD_blind:get_UIE_by_ID("HUD_blind_count").config.ref_table = nemesis
 				G.HUD_blind:get_UIE_by_ID("HUD_blind_count").config.ref_value = "score_text"
 				G.HUD_blind:get_UIE_by_ID("HUD_blind_count").config.func = "multiplayer_blind_chip_UI_scale"
 				G.HUD_blind:get_UIE_by_ID("HUD_blind").children[2].children[2].children[2].children[1].children[1].config.text =
@@ -727,7 +747,7 @@ local function update_blind_HUD()
 				G.HUD_blind:get_UIE_by_ID("HUD_blind").children[2].children[2].children[2].children[3].children[1].config.text =
 					localize("k_enemy_hands")
 				G.HUD_blind:get_UIE_by_ID("dollars_to_be_earned").config.object.config.string =
-					{ { ref_table = MP.GAME.enemy, ref_value = "hands" } }
+					{ { ref_table = nemesis, ref_value = "hands_left" } }
 				G.HUD_blind:get_UIE_by_ID("dollars_to_be_earned").config.object:update_text()
 				G.HUD_blind.alignment.offset.y = 0
 				if G.GAME.blind.config.blind.key == "bl_mp_nemesis" then	-- this was just the first place i thought of to implement this sprite swapping, change if inappropriate
@@ -772,6 +792,7 @@ function G.FUNCS.mp_toggle_ready(e)
 	end
 end
 
+
 local update_draw_to_hand_ref = Game.update_draw_to_hand
 function Game:update_draw_to_hand(dt)
 	if MP.LOBBY.code then
@@ -786,10 +807,10 @@ function Game:update_draw_to_hand(dt)
 			else
 				G.GAME.blind.pvp = false
 			end
-			if MP.is_pvp_boss() then
+			if MP.is_online_boss() and G.GAME.blind.config.blind.key == "bl_mp_nemesis" then
 				G.E_MANAGER:add_event(Event({
 					trigger = "after",
-					delay = 1,
+					delay = 0,
 					blockable = false,
 					func = function()
 						G.HUD_blind:get_UIE_by_ID("HUD_blind_name").config.object:pop_out(0)
@@ -802,7 +823,7 @@ function Game:update_draw_to_hand(dt)
 								G.HUD_blind:get_UIE_by_ID("HUD_blind_name").config.object.config.string = {
 									{
 										-- Show the enemy player for the current client, supports n players
-										ref_table = MP.UTILS.get_enemy_player(MP.LOBBY.players, MP.LOBBY.local_id),
+										ref_table = MP.UTILS.get_nemesis_lobby_data(),
 										ref_value = "username",
 									},
 								}
@@ -965,7 +986,7 @@ local update_hand_played_ref = Game.update_hand_played
 ---@diagnostic disable-next-line: duplicate-set-field
 function Game:update_hand_played(dt)
 	-- Ignore for singleplayer or regular blinds
-	if not MP.LOBBY.connected or not MP.LOBBY.code or not MP.is_pvp_boss() then
+	if not MP.LOBBY.connected or not MP.LOBBY.code or not MP.is_online_boss() then
 		update_hand_played_ref(self, dt)
 		return
 	end
@@ -984,9 +1005,9 @@ function Game:update_hand_played(dt)
 		G.E_MANAGER:add_event(Event({
 			trigger = "immediate",
 			func = function()
-				MP.ACTIONS.play_hand(G.GAME.chips, G.GAME.current_round.hands_left)
-				-- Set blind chips to enemy score
-				G.GAME.blind.chip_text = MP.INSANE_INT.to_string(MP.GAME.enemy.score)
+				if MP.LOBBY.config.gamemode ~= "gamemode_mp_coopSurvival" then
+					G.GAME.blind.chip_text = MP.INSANE_INT.to_string(MP.UTILS.get_nemesis().score)
+				end
 				-- For now, never advance to next round
 				if G.GAME.current_round.hands_left < 1 then
 					attention_text({
@@ -1010,10 +1031,17 @@ function Game:update_hand_played(dt)
 		}))
 	end
 
-	if MP.GAME.end_pvp and MP.is_pvp_boss() then
+	if MP.GAME.end_pvp and MP.is_online_boss() then
 		G.STATE_COMPLETE = false
 		G.STATE = G.STATES.NEW_ROUND
 		MP.GAME.end_pvp = false
+	end
+
+	if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" then
+		if G.GAME.chips - G.GAME.blind.chips >= 0 then
+			G.STATE_COMPLETE = false
+			G.STATE = G.STATES.NEW_ROUND
+		end
 	end
 end
 
@@ -1036,9 +1064,10 @@ function Game:update_new_round(dt)
 	end
 	if MP.LOBBY.code and not G.STATE_COMPLETE then
 		-- Prevent player from losing
-		if to_big(G.GAME.chips) < to_big(G.GAME.blind.chips) and not MP.is_pvp_boss() then
+		if to_big(G.GAME.chips) < to_big(G.GAME.blind.chips) and not MP.is_online_boss() then
 			G.GAME.blind.chips = -1
-			MP.GAME.wait_for_enemys_furthest_blind = (MP.LOBBY.config.gamemode == "gamemode_mp_survival") and (tonumber(MP.GAME.lives) == 1) -- In Survival Mode, if this is the last live, wait for the enemy.
+			MP.GAME.wait_for_enemys_furthest_blind = (MP.LOBBY.config.gamemode == "gamemode_mp_survival") and
+			(tonumber(MP.UTILS.get_local_player().lives) == 1)                                                                                                -- In Survival Mode, if this is the last live, wait for the enemy.
 			MP.ACTIONS.fail_round(G.GAME.current_round.hands_played)
 		end
 
@@ -1122,8 +1151,8 @@ function MP.end_round()
 			end
 		end
 		if
-			G.GAME.modifiers.set_joker_slots_ante
-			and (G.GAME.round_resets.ante == G.GAME.modifiers.set_joker_slots_ante)
+				G.GAME.modifiers.set_joker_slots_ante
+				and (G.GAME.round_resets.ante == G.GAME.modifiers.set_joker_slots_ante)
 		then
 			G.jokers.config.card_limit = 0
 		end
@@ -1157,8 +1186,7 @@ function MP.end_round()
 				end
 			end
 
-			MP.GAME.furthest_blind = (temp_furthest_blind > MP.GAME.furthest_blind) and temp_furthest_blind or MP.GAME.furthest_blind
-			MP.ACTIONS.set_furthest_blind(MP.GAME.furthest_blind)
+			MP.ACTIONS.set_furthest_blind(temp_furthest_blind)
 
 			MP.GAME.pincher_index = MP.GAME.pincher_index + 1
 
@@ -1199,14 +1227,13 @@ function Game:start_run(args)
 	if not MP.LOBBY.connected or not MP.LOBBY.code or MP.LOBBY.config.disable_live_and_timer_hud then
 		return
 	end
-
 	local scale = 0.4
 	local hud_ante = G.HUD:get_UIE_by_ID("hud_ante")
 	hud_ante.children[1].children[1].config.text = localize("k_lives")
 
 	-- Set lives number
 	hud_ante.children[2].children[1].config.object = DynaText({
-		string = { { ref_table = MP.GAME, ref_value = "lives" } },
+		string = { { ref_table = MP.UTILS.get_local_player(), ref_value = "lives" } },
 		colours = { G.C.IMPORTANT },
 		shadow = true,
 		font = G.LANGUAGES["en-us"].font,
@@ -2104,41 +2131,52 @@ local reset_blinds_ref = reset_blinds
 function reset_blinds()
 	reset_blinds_ref()
 	G.GAME.round_resets.pvp_blind_choices = {}
+
+	-- TODO need to sync lobby options on connect
 	if MP.LOBBY.code then
-		local mp_small_choice, mp_big_choice, mp_boss_choice = MP.Gamemodes[MP.LOBBY.config.gamemode]:get_blinds_by_ante(G.GAME.round_resets.ante)
-		G.GAME.round_resets.blind_choices.Small = mp_small_choice or G.GAME.round_resets.blind_choices.Small
-		G.GAME.round_resets.blind_choices.Big = mp_big_choice or G.GAME.round_resets.blind_choices.Big
-		G.GAME.round_resets.blind_choices.Boss = mp_boss_choice or G.GAME.round_resets.blind_choices.Boss
+		local mp_small_choice, mp_big_choice, mp_boss_choice = MP.Gamemodes[MP.LOBBY.config.gamemode]:get_blinds_by_ante(
+		G.GAME.round_resets.ante, G.GAME.round_resets.blind_choices)
+		G.GAME.round_resets.blind_choices.Small = mp_small_choice
+		G.GAME.round_resets.blind_choices.Big = mp_big_choice
+		G.GAME.round_resets.blind_choices.Boss = mp_boss_choice
 	end
 end
 
 local update_selecting_hand_ref = Game.update_selecting_hand
 function Game:update_selecting_hand(dt)
-	if
-		G.GAME.current_round.hands_left < G.GAME.round_resets.hands
-		and #G.hand.cards < 1
-		and #G.deck.cards < 1
-		and #G.play.cards < 1
-		and MP.LOBBY.code
+	if G.GAME.current_round.hands_left < G.GAME.round_resets.hands
+			and #G.hand.cards < 1
+			and #G.deck.cards < 1
+			and #G.play.cards < 1
+			and MP.LOBBY.code
 	then
 		G.GAME.current_round.hands_left = 0
-		if not MP.is_pvp_boss() then
-			G.STATE_COMPLETE = false
-			G.STATE = G.STATES.NEW_ROUND
-		else
+		if MP.is_online_boss() then
 			MP.ACTIONS.play_hand(G.GAME.chips, 0)
 			G.STATE_COMPLETE = false
 			G.STATE = G.STATES.HAND_PLAYED
+		else
+			G.STATE_COMPLETE = false
+			G.STATE = G.STATES.NEW_ROUND
 		end
 		return
 	end
 	update_selecting_hand_ref(self, dt)
 
-	if MP.GAME.end_pvp and MP.is_pvp_boss() then
+	if MP.GAME.end_pvp and MP.is_online_boss() then
 		G.hand:unhighlight_all()
 		G.STATE_COMPLETE = false
 		G.STATE = G.STATES.NEW_ROUND
 		MP.GAME.end_pvp = false
+	end
+
+	if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" then
+		if G.GAME.chips - G.GAME.blind.chips >= 0 then
+			G.hand:unhighlight_all()
+			G.STATE_COMPLETE = false
+			G.STATE = G.STATES.NEW_ROUND
+			MP.GAME.end_pvp = false
+		end
 	end
 end
 
@@ -2154,19 +2192,26 @@ end
 
 local blind_disable_ref = Blind.disable
 function Blind:disable()
-	if MP.is_pvp_boss() and not (G.GAME.blind and G.GAME.blind.name == 'Verdant Leaf') then	-- hackfix to make verdant work properly
+	if MP.is_online_boss() and not (G.GAME.blind and G.GAME.blind.name == 'Verdant Leaf') then -- hackfix to make verdant work properly
 		return
 	end
 	blind_disable_ref(self)
 end
 
 G.FUNCS.multiplayer_blind_chip_UI_scale = function(e)
-	local new_score_text = MP.INSANE_INT.to_string(MP.GAME.enemy.score)
-	if G.GAME.blind and MP.GAME.enemy.score and MP.GAME.enemy.score_text ~= new_score_text then
-		if not MP.INSANE_INT.greater_than(MP.GAME.enemy.score, MP.INSANE_INT.create(0, G.E_SWITCH_POINT, 0)) then
-			e.config.scale = scale_number(MP.GAME.enemy.score.coeffiocient, 0.7, 100000)
+	local score_ref = MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" and MP.GAME.coop or MP.UTILS.get_nemesis()
+
+	if not score_ref or not score_ref.score then
+		if score_ref then score_ref.score_text = "" end
+		return
+	end
+
+	local new_score_text = MP.INSANE_INT.to_string(score_ref.score)
+	if G.GAME.blind and score_ref.score and score_ref.score_text ~= new_score_text then
+		if not MP.INSANE_INT.greater_than(score_ref.score, MP.INSANE_INT.create(0, G.E_SWITCH_POINT, 0)) then
+			e.config.scale = scale_number(score_ref.score.coeffiocient, 0.7, 100000)
 		end
-		MP.GAME.enemy.score_text = new_score_text
+		score_ref.score_text = new_score_text
 	end
 end
 
@@ -2222,7 +2267,7 @@ local function show_enemy_location()
 						{
 							n = G.UIT.T,
 							config = {
-								ref_table = MP.GAME.enemy,
+								ref_table = MP.UTILS.get_nemesis(),
 								ref_value = "location",
 								scale = 0.35,
 								colour = G.C.WHITE,
@@ -2406,8 +2451,6 @@ function G.FUNCS:continue_in_singleplayer(e)
 	-- Allow saving, save the run, and set up for continuation
 	G.F_NO_SAVING = false
 	G.SETTINGS.current_setup = 'Continue'
-	G.FUNCS.wipe_on()
-	save_run()
 	G:delete_run()
 
 	-- Load the saved game and start a new run in singleplayer
@@ -2415,17 +2458,10 @@ function G.FUNCS:continue_in_singleplayer(e)
 		trigger = 'immediate',
 		no_delete = true,
 		func = function()
-			local profile = G.SETTINGS.profile
-			local save_path = profile .. '/save.jkr'
-			G.SAVED_GAME = get_compressed(save_path)
-			if G.SAVED_GAME ~= nil then
-				G.SAVED_GAME = STR_UNPACK(G.SAVED_GAME)
-			end
-			G:start_run({ savetext = G.SAVED_GAME })
+			G.FUNCS.start_setup_run(nil)
 			return true
 		end
 	}))
-	G.FUNCS.wipe_off()
 end
 
 --[[
