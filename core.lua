@@ -107,7 +107,8 @@ function MP.reset_game_states()
 		comeback_bonus_given = true,
 		comeback_bonus = 0,
 		end_pvp = false,
-		enemy = {
+		players = {}, --[[@type table<string, {score: any, score_text: string, hands: number, location: string, skips: number, lives: number, sells: number, spent_last_shop: number, highest_score: any}>]]
+		--[[enemy = {
 			score = MP.INSANE_INT.empty(),
 			score_text = "0",
 			hands = 4,
@@ -118,7 +119,7 @@ function MP.reset_game_states()
 			sells_per_ante = {},
 			spent_in_shop = {},
 			highest_score = MP.INSANE_INT.empty(),
-		},
+		}, --]]
 		location = "loc_selecting",
 		next_blind_context = nil,
 		ante_key = tostring(math.random()),

@@ -37,6 +37,10 @@ local uiToNetworkChannel = love.thread.getChannel("uiToNetwork")
 function Networking.connect()
 	-- TODO: Check first if Networking.Client is not null
 	-- and if it is, skip this function
+	if Networking.Client and not isSocketClosed then
+		Networking.Client:close()
+		isSocketClosed = true
+	end
 
 	SEND_THREAD_DEBUG_MESSAGE(
 		string.format("Attempting to connect to multiplayer server... URL: %s, PORT: %d", CONFIG_URL, CONFIG_PORT)
@@ -74,10 +78,11 @@ local mainThreadMessageQueue = function()
 		for _ = 1, requestsPerCycle do
 			local msg = uiToNetworkChannel:pop()
 			if msg then
-				if msg:find("^action") ~= nil then
-					Networking.Client:send(msg .. "\n")
-				elseif msg == "connect" then
+				if msg == "connect" then
 					Networking.connect()
+				else
+					-- Send any non-empty message (JSON or otherwise) to the server
+					Networking.Client:send(msg .. "\n")
 				end
 			else
 				-- If there are no more messages, yield
@@ -188,7 +193,7 @@ while true do
 		if isRetry then
 			retryCount = retryCount + 1
 			-- Send keepAlive without cutting the line
-			uiToNetworkChannel:push("action:keepAlive")
+			uiToNetworkChannel:push(json.encode({ action = "keepAlive" }))
 
 			-- Restart the timer
 			timerCoroutine = coroutine.create(timer)

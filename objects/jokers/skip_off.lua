@@ -18,18 +18,19 @@ SMODS.Joker({
 	config = { extra = { hands = 0, discards = 0, extra_hands = 1, extra_discards = 1 } },
 	loc_vars = function(self, info_queue, card)
 		MP.UTILS.add_nemesis_info(info_queue)
+		local nemesis = MP.UTILS.get_nemesis()
 		return {
 			vars = {
 				card.ability.extra.extra_hands,
 				card.ability.extra.extra_discards,
 				card.ability.extra.hands,
 				card.ability.extra.discards,
-				G.GAME.skips ~= nil and MP.GAME.enemy.skips ~= nil and localize({
+				G.GAME.skips ~= nil and nemesis.skips ~= nil and localize({
 					type = "variable",
-					key = MP.GAME.enemy.skips > G.GAME.skips and "a_mp_skips_behind"
-						or MP.GAME.enemy.skips == G.GAME.skips and "a_mp_skips_tied"
+					key = nemesis.skips > G.GAME.skips and "a_mp_skips_behind"
+						or nemesis.skips == G.GAME.skips and "a_mp_skips_tied"
 						or "a_mp_skips_ahead",
-					vars = { math.abs(MP.GAME.enemy.skips - G.GAME.skips) },
+					vars = { math.abs(nemesis.skips - G.GAME.skips) },
 				})[1] or "",
 			},
 		}
@@ -38,8 +39,9 @@ SMODS.Joker({
 		return MP.LOBBY.code and MP.LOBBY.config.multiplayer_jokers
 	end,
 	update = function(self, card, dt)
-		if G.STAGE == G.STAGES.RUN and G.GAME.skips ~= nil and MP.GAME.enemy.skips ~= nil then
-			local skip_diff = (math.max(G.GAME.skips - MP.GAME.enemy.skips, 0))
+		local nemesis = MP.UTILS.get_nemesis()
+		if G.STAGE == G.STAGES.RUN and G.GAME.skips ~= nil and nemesis.skips ~= nil then
+			local skip_diff = (math.max(G.GAME.skips - nemesis.skips, 0))
 			card.ability.extra.hands = skip_diff * card.ability.extra.extra_hands
 			card.ability.extra.discards = skip_diff * card.ability.extra.extra_discards
 		end

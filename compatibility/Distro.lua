@@ -22,7 +22,7 @@ if SMODS.Mods["Distro"] and SMODS.Mods["Distro"].can_load then
 	function get_multiplayer_details()
 		-- For 2 players: host is players[1], guest is players[2]
 		local enemy_username = MP.LOBBY.isHost and MP.LOBBY.players[2].username or MP.LOBBY.players[1].username
-		return "Multiplayer Versus " .. enemy_username .. " | " .. tostring(MP.GAME.lives) .. " Lives Left"
+		return "Multiplayer Versus " .. enemy_username .. " | " .. tostring(MP.UTILS.get_local_player().lives) .. " Lives Left"
 	end
 
 	local start_run_ref = Game.start_run

@@ -49,7 +49,7 @@ SMODS.Joker({
 		if
 			context.cardarea == G.jokers
 			and context.joker_main
-			and MP.is_pvp_boss()
+			and MP.is_online_boss()
 			and (not card.edition or card.edition.type ~= "mp_phantom")
 		then
 			return {
