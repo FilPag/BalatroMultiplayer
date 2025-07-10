@@ -37,7 +37,7 @@ SMODS.Joker({
 		if MP.LOBBY.code then
 			if G.STAGE == G.STAGES.RUN then
 				card.ability.extra.x_mult = math.max(
-					math.min(1 + (MP.GAME.enemy.hands * card.ability.extra.x_mult_gain), card.ability.extra.max_x_mult),
+					math.min(1 + (MP.UTILS.get_nemesis().hands * card.ability.extra.x_mult_gain), card.ability.extra.max_x_mult),
 					1
 				)
 			end
@@ -48,7 +48,7 @@ SMODS.Joker({
 	calculate = function(self, card, context)
 		if context.cardarea == G.jokers
 			and context.joker_main
-			and MP.is_pvp_boss()
+			and MP.is_online_boss()
 			and (not card.edition or card.edition.type ~= "mp_phantom")
 		then
 			return {

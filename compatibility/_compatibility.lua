@@ -22,10 +22,7 @@ MP.DECK.BANNED_TAGS = {
 	["tag_boss"] = true,
 }
 
-MP.DECK.BANNED_BLINDS = {
-	["bl_wall"] = true,
-	["bl_final_vessel"] = true,
-}
+MP.DECK.BANNED_BLINDS = {}
 
 function MP.DECK.ban_card(card_id)
 	if card_id:sub(1, 1) == "j" then
