@@ -24,19 +24,23 @@ function MP.UI.lobby_info()
 end
 
 function MP.UI.create_UIBox_players()
-	local players = {
-		MP.UI.create_UIBox_player_row("host"),
-		MP.UI.create_UIBox_player_row("guest"),
-	}
+
+local players = {}
+if MP.LOBBY.players and MP.GAME.players then
+	for i, player in ipairs(MP.GAME.players) do
+		local lobby_player = MP.LOBBY.players[i]
+		local username = lobby_player and lobby_player.username or ("Player " .. tostring(i))
+		table.insert(players, MP.UI.create_UIBox_player_row(username, player))
+	end
+end
 
 	local t = {
 		n = G.UIT.ROOT,
 		config = { align = "cm", minw = 3, padding = 0.1, r = 0.1, colour = G.C.CLEAR },
 		nodes = {
-			{ n = G.UIT.R, config = { align = "cm", padding = 0.04 }, nodes = players },
+			{ n = G.UIT.R, config = { align = "cm", colour = G.C.CLEAR, padding = 0.04 }, nodes = players },
 		},
 	}
-
 	return t
 end
 
@@ -57,14 +61,10 @@ function MP.UI.create_UIBox_mods_list(type)
 	}
 end
 
-function MP.UI.create_UIBox_player_row(type)
-	local player_name = type == "host" and MP.LOBBY.players[1].username or MP.LOBBY.players[2].username
-	local lives = MP.GAME.enemy.lives
-	local highest_score = MP.GAME.enemy.highest_score
-	if (type == "host" and MP.LOBBY.isHost) or (type == "guest" and not MP.LOBBY.isHost) then
-		lives = MP.GAME.lives
-		highest_score = MP.GAME.highest_score
-	end
+function MP.UI.create_UIBox_player_row(username, player_state)
+	local player_name = username
+	local lives = player_state.lives
+	local highest_score = player_state.highest_score
 	return {
 		n = G.UIT.R,
 		config = {
@@ -135,7 +135,7 @@ function MP.UI.create_UIBox_player_row(type)
 							{
 								n = G.UIT.T,
 								config = {
-									text = "???", -- Will be hands in the future
+									text = tostring(player_state.hands_left),-- Will be hands in the future
 									scale = 0.45,
 									colour = G.C.UI.TEXT_LIGHT,
 								},
@@ -286,7 +286,7 @@ MP.timer_event = Event({
 		MP.GAME.timer = MP.GAME.timer - 1
 		if MP.GAME.timer <= 0 then
 			MP.GAME.timer = 0
-			if not MP.GAME.ready_blind and not MP.is_pvp_boss() then
+			if not MP.GAME.ready_blind and not MP.is_online_boss() then
 				MP.ACTIONS.fail_timer()
 			end
 			return true

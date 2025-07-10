@@ -195,6 +195,7 @@ function G.UIDEF.ruleset_selection_options()
 		{button_id = "standard_ruleset_button", button_localize_key = "k_standard"},
 		{button_id = "vanilla_ruleset_button", button_localize_key = "k_vanilla"},
 		{button_id = "badlatro_ruleset_button", button_localize_key = "k_badlatro"},
+		{button_id = "coop_ruleset_button", button_localize_key = "k_coop"},
 	}
 
 	return MP.UI.Main_Lobby_Options("ruleset_area", default_ruleset_area,
@@ -447,28 +448,52 @@ function G.UIDEF.ruleset_cardarea_definition(args)
 		}}
 	end
 end
-
 function G.UIDEF.gamemode_selection_options()
-	MP.LOBBY.config.gamemode = "gamemode_mp_attrition"
+	local gamemode_buttons_data
+	if MP.LOBBY.config.ruleset == "ruleset_mp_coop" then
+		gamemode_buttons_data = {
+			{button_id = "coopSurvival_gamemode_button", button_localize_key = "k_coopSurvival"},
+		}
+	else
+		gamemode_buttons_data = {
+			{button_id = "attrition_gamemode_button", button_localize_key = "k_attrition"},
+			{button_id = "showdown_gamemode_button", button_localize_key = "k_showdown"},
+			{button_id = "survival_gamemode_button", button_localize_key = "k_survival"},
+		}
+	end
+
+	-- Default to the first gamemode in the list
+	local default_gamemode_key = gamemode_buttons_data[1].button_localize_key
+	local default_gamemode_name = default_gamemode_key:gsub("^k_", "")
+	MP.LOBBY.config.gamemode = "gamemode_mp_" .. default_gamemode_name
 
 	local default_gamemode_area = UIBox({
-		definition = G.UIDEF.gamemode_info("attrition"),
+		definition = G.UIDEF.gamemode_info(default_gamemode_name),
 		config = {align = "cm"}
 	})
 
-	local gamemode_buttons_data = {
-		{button_id = "attrition_gamemode_button", button_localize_key = "k_attrition"},
-		{button_id = "showdown_gamemode_button", button_localize_key = "k_showdown"},
-		{button_id = "survival_gamemode_button", button_localize_key = "k_survival"},
-	}
-
 	return MP.UI.Main_Lobby_Options("gamemode_area", default_gamemode_area,
-														 "change_gamemode_selection", gamemode_buttons_data)
+									 "change_gamemode_selection", gamemode_buttons_data)
 end
 
 function G.FUNCS.change_gamemode_selection(e)
-	MP.UI.Change_Main_Lobby_Options(e, "gamemode_area", G.UIDEF.gamemode_info, "attrition_gamemode_button",
-														 function (gamemode_name) MP.LOBBY.config.gamemode = "gamemode_mp_" .. gamemode_name end)
+	-- Use the id of the first gamemode button as the default
+	local gamemode_buttons_data
+	if MP.LOBBY.config.ruleset == "ruleset_mp_coop" then
+		gamemode_buttons_data = {
+			{button_id = "coopSurvival_gamemode_button", button_localize_key = "k_coopSurvival"},
+		}
+	else
+		gamemode_buttons_data = {
+			{button_id = "attrition_gamemode_button", button_localize_key = "k_attrition"},
+			{button_id = "showdown_gamemode_button", button_localize_key = "k_showdown"},
+			{button_id = "survival_gamemode_button", button_localize_key = "k_survival"},
+		}
+	end
+	local default_gamemode_id = gamemode_buttons_data[1].button_id
+
+	MP.UI.Change_Main_Lobby_Options(e, "gamemode_area", G.UIDEF.gamemode_info, default_gamemode_id,
+		function (gamemode_name) MP.LOBBY.config.gamemode = "gamemode_mp_" .. gamemode_name end)
 end
 
 function G.UIDEF.gamemode_info(gamemode_name)
@@ -642,7 +667,7 @@ function G.FUNCS.start_lobby(e)
 	end
 	MP.LOBBY.config.gamemode = gamemode_check and MP.LOBBY.config.gamemode or "gamemode_mp_attrition"
 
-	MP.ACTIONS.create_lobby(string.sub(MP.LOBBY.config.gamemode, 13))
+	MP.ACTIONS.create_lobby(MP.LOBBY.config.ruleset, string.sub(MP.LOBBY.config.gamemode, 13))
 	G.FUNCS.exit_overlay_menu()
 end
 

@@ -1,8 +1,9 @@
 local json = require "json"
+local player_state_manager = SMODS.load_file('networking/player_state_manager.lua', 'Multiplayer')()
 Client = {}
 
 function Client.send(msg)
-	if not (msg == "action:keepAliveAck") then
+	if msg ~= '{"action":"keepAliveAck"}' and msg ~= "action:keepAliveAck" then
 		sendTraceMessage(string.format("Client sent message: %s", msg), "MULTIPLAYER")
 	end
 	love.thread.getChannel("uiToNetwork"):push(msg)
@@ -12,7 +13,12 @@ end
 function MP.ACTIONS.set_username(username)
 	MP.LOBBY.username = username or "Guest"
 	if MP.LOBBY.connected then
-		Client.send(string.format("action:username,username:%s,color:%s,modHash:%s", MP.LOBBY.username, MP.LOBBY.blind_col, MP.MOD_STRING))
+		Client.send(json.encode({
+			action = "username",
+			username = MP.LOBBY.username,
+			colour = MP.LOBBY.blind_col,
+			modHash = MP.MOD_STRING
+		}))
 		sendDebugMessage("MOD_STRING: " .. MP.MOD_STRING, "MULTIPLAYER")
 	end
 end
@@ -21,11 +27,29 @@ function MP.ACTIONS.set_blind_col(num)
 	MP.LOBBY.blind_col = num or 1
 end
 
+local function action_set_boss_blind(bossKey)
+	sendTraceMessage(string.format("Received boss key: %s", bossKey), "MULTIPLAYER")
+	G.GAME.round_resets.blind_choices.Boss = bossKey
+
+	if G.blind_select then
+		G.blind_select:remove()
+    G.blind_prompt_box:remove()
+		G.blind_select = UIBox {
+			definition = create_UIBox_blind_select(),
+			config = { align = "bmi", offset = { x = 0, y = 0.8 - (G.hand.T.y - G.jokers.T.y) + G.blind_select.T.h }, major = G.hand, bond = 'Weak' }
+		}
+	end
+end
 
 local function action_connected()
 	MP.LOBBY.connected = true
 	MP.UI.update_connection_status()
-	Client.send(string.format("action:username,username:%s,color:%s,modHash:%s", MP.LOBBY.username, MP.LOBBY.blind_col, MP.MOD_STRING))
+	Client.send(json.encode({
+		action = "username",
+		username = MP.LOBBY.username,
+		colour = MP.LOBBY.blind_col,
+		modHash = MP.MOD_STRING
+	}))
 end
 
 local function action_joinedLobby(code, type)
@@ -36,19 +60,19 @@ local function action_joinedLobby(code, type)
 	MP.UI.update_connection_status()
 end
 
---- @class lobby_info 
+--- @class lobby_info
 --- @field host string
 --- @field hostHash string
 --- @field hostCached boolean
 --- @field isHost boolean
+--- @field local_id string
 --- @field players? table[] @ Array of player objects: { username: string, modHash: string, isCached: boolean, id: string }
 
 --- @param lobby_info lobby_info
 local function action_lobbyInfo(lobby_info)
-	local old_player_count = #MP.LOBBY.players
-
 	MP.LOBBY.isHost = lobby_info.isHost
 	MP.LOBBY.players = lobby_info.players or {}
+	MP.LOBBY.local_id = lobby_info.local_id
 	MP.LOBBY.ready_to_start = MP.LOBBY.isHost and #MP.LOBBY.players >= 2
 
 	MP.ACTIONS.update_player_usernames()
@@ -61,7 +85,7 @@ local function action_error(message)
 end
 
 local function action_keep_alive()
-	Client.send("action:keepAliveAck")
+	Client.send(json.encode({ action = "keepAliveAck" }))
 end
 
 local function action_disconnected()
@@ -75,13 +99,22 @@ end
 ---@param deck string
 ---@param seed string
 ---@param stake_str string
-local function action_start_game(seed, stake_str)
+local function action_start_game(players, seed, stake_str)
 	MP.reset_game_states()
 	local stake = tonumber(stake_str)
 	MP.ACTIONS.set_ante(0)
+	MP.GAME.players = players
+
+	for _, player in ipairs(MP.GAME.players) do
+		player.location = player_state_manager.parse_enemy_location(player.location)
+		player.score = MP.INSANE_INT.from_string(player.score) or MP.INSANE_INT.empty()
+		player.highest_score = MP.INSANE_INT.from_string(player.highest_score) or MP.INSANE_INT.empty()
+	end
+
 	if not MP.LOBBY.config.different_seeds and MP.LOBBY.config.custom_seed ~= "random" then
 		seed = MP.LOBBY.config.custom_seed
 	end
+
 	G.FUNCS.lobby_start_run(nil, { seed = seed, stake = stake })
 end
 
@@ -96,72 +129,38 @@ local function action_start_blind()
 	end
 end
 
----@param score_str string
----@param hands_left_str string
----@param skips_str string
-local function action_enemy_info(score_str, hands_left_str, skips_str, lives_str)
+local function action_ally_info(score_str, hand_left_str)
 	local score = MP.INSANE_INT.from_string(score_str)
+	local hands_left = tonumber(hand_left_str)
 
-	local hands_left = tonumber(hands_left_str)
-	local skips = tonumber(skips_str)
-	local lives = tonumber(lives_str)
+	local new_total = MP.INSANE_INT.empty()
 
+	-- for each player add add score to new total
 	if score == nil or hands_left == nil then
 		sendDebugMessage("Invalid score or hands_left", "MULTIPLAYER")
 		return
 	end
 
-	if MP.INSANE_INT.greater_than(score, MP.GAME.enemy.highest_score) then
-		MP.GAME.enemy.highest_score = score
-	end
-
 	G.E_MANAGER:add_event(Event({
-		blockable = false,
+		trigger = 'ease',
 		blocking = false,
-		trigger = "ease",
-		delay = 3,
-		ref_table = MP.GAME.enemy.score,
-		ref_value = "e_count",
-		ease_to = score.e_count,
-		func = function(t)
-			return math.floor(t)
-		end,
+		ref_table = G.GAME,
+		ref_value = 'chips',
+		ease_to = G.GAME.chips + math.floor(score.coeffiocient),
+		delay = 0.5,
+		func = (function(t) return math.floor(t) end)
 	}))
-
-	G.E_MANAGER:add_event(Event({
-		blockable = false,
-		blocking = false,
-		trigger = "ease",
-		delay = 3,
-		ref_table = MP.GAME.enemy.score,
-		ref_value = "coeffiocient",
-		ease_to = score.coeffiocient,
-		func = function(t)
-			return math.floor(t)
-		end,
-	}))
-
-	G.E_MANAGER:add_event(Event({
-		blockable = false,
-		blocking = false,
-		trigger = "ease",
-		delay = 3,
-		ref_table = MP.GAME.enemy.score,
-		ref_value = "exponent",
-		ease_to = score.exponent,
-		func = function(t)
-			return math.floor(t)
-		end,
-	}))
-
-	MP.GAME.enemy.hands = hands_left
-	MP.GAME.enemy.skips = skips
-	MP.GAME.enemy.lives = lives
-	if MP.is_pvp_boss() then
-		G.HUD_blind:get_UIE_by_ID("HUD_blind_count"):juice_up()
-		G.HUD_blind:get_UIE_by_ID("dollars_to_be_earned"):juice_up()
-	end
+	local chip_UI_count = G.HUD:get_UIE_by_ID("chip_UI_count")
+	if chip_UI_count then chip_UI_count:juice_up() end
 end
+
+local function action_game_state_update(player_id, updates)
+	player_state_manager.process(player_id, updates)
+end
+
+---@param score_str string
+---@param hands_left_str string
+---@param skips_str string
 
 local function action_stop_game()
 	if G.STAGE ~= G.STAGES.MAIN_MENU then
@@ -175,21 +174,6 @@ local function action_end_pvp()
 	MP.GAME.end_pvp = true
 	MP.GAME.timer = MP.LOBBY.config.timer_base_seconds
 	MP.GAME.timer_started = false
-end
-
----@param lives number
-local function action_player_info(lives)
-	if MP.GAME.lives ~= lives then
-		if MP.GAME.lives ~= 0 and MP.LOBBY.config.gold_on_life_loss then
-			MP.GAME.comeback_bonus_given = false
-			MP.GAME.comeback_bonus = MP.GAME.comeback_bonus + 1
-		end
-		ease_lives(lives - MP.GAME.lives)
-		if MP.LOBBY.config.no_gold_on_round_loss and (G.GAME.blind and G.GAME.blind.dollars) then
-			G.GAME.blind.dollars = 0
-		end
-	end
-	MP.GAME.lives = lives
 end
 
 local function action_win_game()
@@ -283,7 +267,7 @@ local function action_lobby_options(options)
 	local changed_keys, old_config, new_config = update_lobby_config(options)
 
 	-- Only update UI if deck, stake, or different_decks changed
-	if any_key_changed({"stake", "back", "different_decks"}, old_config, new_config) then
+	if any_key_changed({ "stake", "back", "different_decks" }, old_config, new_config) then
 		if G.MAIN_MENU_UI then G.MAIN_MENU_UI:remove() end
 		set_main_menu_UI()
 	end
@@ -291,7 +275,7 @@ local function action_lobby_options(options)
 	update_overlay_toggles(changed_keys)
 
 	if old_config.different_decks ~= new_config.different_decks then
-		G.FUNCS.exit_overlay_menu()   -- throw out guest from any menu.
+		G.FUNCS.exit_overlay_menu() -- throw out guest from any menu.
 	end
 end
 
@@ -357,85 +341,52 @@ local function action_speedrun()
 	MP.UTILS.run_for_each_joker("j_mp_speedrun", speedrun)
 end
 
-local function enemyLocation(options)
-	local location = options.location
-	local value = ""
-
-	if string.find(location, "-") then
-		local split = {}
-		for str in string.gmatch(location, "([^-]+)") do
-			table.insert(split, str)
-		end
-		location = split[1]
-		value = split[2]
-	end
-
-	loc_name = localize({ type = "name_text", key = value, set = "Blind" })
-	if loc_name ~= "ERROR" then
-		value = loc_name
-	else
-		value = (G.P_BLINDS[value] and G.P_BLINDS[value].name) or value
-	end
-
-	loc_location = G.localization.misc.dictionary[location]
-
-	if loc_location == nil then
-		if location ~= nil then
-			loc_location = location
-		else
-			loc_location = "Unknown"
-		end
-	end
-
-	MP.GAME.enemy.location = loc_location .. value
-end
-
 local function action_version()
 	MP.ACTIONS.version()
 end
 
 local action_asteroid = action_asteroid
-	or function()
-		local hand_priority = {
-			["Flush Five"] = 1,
-			["Flush House"] = 2,
-			["Five of a Kind"] = 3,
-			["Straight Flush"] = 4,
-			["Four of a Kind"] = 5,
-			["Full House"] = 6,
-			["Flush"] = 7,
-			["Straight"] = 8,
-			["Three of a Kind"] = 9,
-			["Two Pair"] = 11,
-			["Pair"] = 12,
-			["High Card"] = 13
-		}
-		local hand_type = "High Card"
-		local max_level = 0
+		or function()
+			local hand_priority = {
+				["Flush Five"] = 1,
+				["Flush House"] = 2,
+				["Five of a Kind"] = 3,
+				["Straight Flush"] = 4,
+				["Four of a Kind"] = 5,
+				["Full House"] = 6,
+				["Flush"] = 7,
+				["Straight"] = 8,
+				["Three of a Kind"] = 9,
+				["Two Pair"] = 11,
+				["Pair"] = 12,
+				["High Card"] = 13
+			}
+			local hand_type = "High Card"
+			local max_level = 0
 
 
-		for k, v in pairs(G.GAME.hands) do
-			if v.visible then
-				if to_big(v.level) > to_big(max_level) or
-					(to_big(v.level) == to_big(max_level) and
-						hand_priority[k] < hand_priority[hand_type]) then
-					hand_type = k
-					max_level = v.level
+			for k, v in pairs(G.GAME.hands) do
+				if v.visible then
+					if to_big(v.level) > to_big(max_level) or
+							(to_big(v.level) == to_big(max_level) and
+								hand_priority[k] < hand_priority[hand_type]) then
+						hand_type = k
+						max_level = v.level
+					end
 				end
 			end
+			update_hand_text({ sound = "button", volume = 0.7, pitch = 0.8, delay = 0.3 }, {
+				handname = localize(hand_type, "poker_hands"),
+				chips = G.GAME.hands[hand_type].chips,
+				mult = G.GAME.hands[hand_type].mult,
+				level = G.GAME.hands[hand_type].level,
+			})
+			level_up_hand(nil, hand_type, false, -1)
+			update_hand_text(
+				{ sound = "button", volume = 0.7, pitch = 1.1, delay = 0 },
+				{ mult = 0, chips = 0, handname = "", level = "" }
+			)
 		end
-		update_hand_text({ sound = "button", volume = 0.7, pitch = 0.8, delay = 0.3 }, {
-			handname = localize(hand_type, "poker_hands"),
-			chips = G.GAME.hands[hand_type].chips,
-			mult = G.GAME.hands[hand_type].mult,
-			level = G.GAME.hands[hand_type].level,
-		})
-		level_up_hand(nil, hand_type, false, -1)
-		update_hand_text(
-			{ sound = "button", volume = 0.7, pitch = 1.1, delay = 0 },
-			{ mult = 0, chips = 0, handname = "", level = "" }
-		)
-	end
 
 local function action_sold_joker()
 	local function juice_taxes(card)
@@ -520,7 +471,7 @@ local function action_eat_pizza(whole)
 end
 
 local function action_spent_last_shop(amount)
-	MP.GAME.enemy.spent_last_shop = tonumber(amount)
+	MP.UTILS.get_nemesis().spent_last_shop = tonumber(amount)
 end
 
 local function action_magnet()
@@ -555,15 +506,16 @@ local function action_magnet_response(key)
 
 	card_save, err = MP.UTILS.str_decode_and_unpack(key)
 	if not card_save then
-		sendDebugMessage(string.format("Failed to unpack magnet joker: %s", err) , "MULTIPLAYER")
+		sendDebugMessage(string.format("Failed to unpack magnet joker: %s", err), "MULTIPLAYER")
 		return
 	end
 
-	local card = Card(G.jokers.T.x + G.jokers.T.w/2, G.jokers.T.y, G.CARD_W, G.CARD_H, G.P_CENTERS.j_joker, G.P_CENTERS.c_base)
+	local card = Card(G.jokers.T.x + G.jokers.T.w / 2, G.jokers.T.y, G.CARD_W, G.CARD_H, G.P_CENTERS.j_joker,
+		G.P_CENTERS.c_base)
 	-- Avoid crashing if the load function ends up indexing a nil value
 	success, err = pcall(card.load, card, card_save)
 	if not success then
-		sendDebugMessage(string.format("Failed to load magnet joker: %s", err) , "MULTIPLAYER")
+		sendDebugMessage(string.format("Failed to load magnet joker: %s", err), "MULTIPLAYER")
 		return
 	end
 
@@ -588,14 +540,14 @@ function G.FUNCS.load_end_game_jokers()
 
 	card_area_save, err = MP.UTILS.str_decode_and_unpack(MP.end_game_jokers_payload)
 	if not card_area_save then
-		sendDebugMessage(string.format("Failed to unpack enemy jokers: %s", err) , "MULTIPLAYER")
+		sendDebugMessage(string.format("Failed to unpack enemy jokers: %s", err), "MULTIPLAYER")
 		return
 	end
 
 	-- Avoid crashing if the load function ends up indexing a nil value
 	success, err = pcall(MP.end_game_jokers.load, MP.end_game_jokers, card_area_save)
 	if not success then
-		sendDebugMessage(string.format("Failed to load enemy jokers: %s", err) , "MULTIPLAYER")
+		sendDebugMessage(string.format("Failed to load enemy jokers: %s", err), "MULTIPLAYER")
 		-- Reset the card area if loading fails to avoid inconsistent state
 		MP.end_game_jokers:remove()
 		MP.end_game_jokers:init(
@@ -626,7 +578,7 @@ end
 
 local function action_get_end_game_jokers()
 	if not G.jokers or not G.jokers.cards then
-		Client.send("action:receiveEndGameJokers,keys:")
+		Client.send(json.encode({ action = "receiveEndGameJokers", keys = "" }))
 		return
 	end
 
@@ -640,7 +592,7 @@ local function action_get_end_game_jokers()
 	local jokers_save = G.jokers:save()
 	local jokers_encoded = MP.UTILS.str_pack_and_encode(jokers_save)
 
-	Client.send(string.format("action:receiveEndGameJokers,keys:%s", jokers_encoded))
+	Client.send(json.encode({ action = "receiveEndGameJokers", keys = jokers_encoded }))
 end
 
 local function action_get_nemesis_deck()
@@ -648,7 +600,7 @@ local function action_get_nemesis_deck()
 	for _, card in ipairs(G.playing_cards) do
 		deck_str = deck_str .. ";" .. MP.UTILS.card_to_string(card)
 	end
-	Client.send(string.format("action:receiveNemesisDeck,cards:%s", deck_str))
+	Client.send(json.encode({ action = "receiveNemesisDeck", cards = deck_str }))
 end
 
 function G.FUNCS.load_nemesis_deck()
@@ -743,37 +695,37 @@ local function action_pause_ante_timer(time)
 end
 
 -- #region Client to Server
-function MP.ACTIONS.create_lobby(gamemode)
-	Client.send(string.format("action:createLobby,gameMode:%s", gamemode))
+function MP.ACTIONS.create_lobby(ruleset, gamemode)
+	Client.send(json.encode({ action = "createLobby", ruleset = ruleset, gameMode = gamemode }))
 end
 
 function MP.ACTIONS.join_lobby(code)
-	Client.send(string.format("action:joinLobby,code:%s", code))
+	Client.send(json.encode({ action = "joinLobby", code = code }))
 end
 
 function MP.ACTIONS.lobby_info()
-	Client.send("action:lobbyInfo")
+	Client.send(json.encode({ action = "lobbyInfo" }))
 end
 
 function MP.ACTIONS.leave_lobby()
-	Client.send("action:leaveLobby")
+	Client.send(json.encode({ action = "leaveLobby" }))
 end
 
 function MP.ACTIONS.start_game()
-	Client.send("action:startGame")
+	Client.send(json.encode({ action = "startGame" }))
 end
 
 function MP.ACTIONS.ready_blind(e)
 	MP.GAME.next_blind_context = e
-	Client.send("action:readyBlind")
+	Client.send(json.encode({ action = "readyBlind" }))
 end
 
 function MP.ACTIONS.unready_blind()
-	Client.send("action:unreadyBlind")
+	Client.send(json.encode({ action = "unreadyBlind" }))
 end
 
 function MP.ACTIONS.stop_game()
-	Client.send("action:stopGame")
+	Client.send(json.encode({ action = "stopGame" }))
 end
 
 function MP.ACTIONS.fail_round(hands_used)
@@ -783,11 +735,11 @@ function MP.ACTIONS.fail_round(hands_used)
 	if hands_used == 0 then
 		return
 	end
-	Client.send("action:failRound")
+	Client.send(json.encode({ action = "failRound" }))
 end
 
 function MP.ACTIONS.version()
-	Client.send(string.format("action:version,version:%s", MULTIPLAYER_VERSION))
+	Client.send(json.encode({ action = "version", version = MULTIPLAYER_VERSION }))
 end
 
 function MP.ACTIONS.set_location(location)
@@ -795,7 +747,7 @@ function MP.ACTIONS.set_location(location)
 		return
 	end
 	MP.GAME.location = location
-	Client.send(string.format("action:setLocation,location:%s", location))
+	Client.send(json.encode({ action = "setLocation", location = location }))
 end
 
 ---@param score number
@@ -813,93 +765,104 @@ function MP.ACTIONS.play_hand(score, hands_left)
 	if MP.INSANE_INT.greater_than(insane_int_score, MP.GAME.highest_score) then
 		MP.GAME.highest_score = insane_int_score
 	end
-	Client.send(string.format("action:playHand,score:" .. fixed_score .. ",handsLeft:%d", hands_left))
+
+	local target = nul
+	if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" then
+		target = G.GAME.blind.chips
+	end
+
+	Client.send(json.encode({ action = "playHand", score = fixed_score, hands_left = hands_left, target_score = target}))
 end
 
 function MP.ACTIONS.lobby_options()
-	local msg = "action:lobbyOptions"
+	local options = {}
 	for k, v in pairs(MP.LOBBY.config) do
-		msg = msg .. string.format(",%s:%s", k, tostring(v))
+		options[k] = v
 	end
-	Client.send(msg)
+	Client.send(json.encode({ action = "lobbyOptions", options = options }))
+end
+
+---@param boss string
+function MP.ACTIONS.set_Boss(boss)
+	Client.send(json.encode({ action = "setBossBlind", bossKey = boss}))
 end
 
 function MP.ACTIONS.set_ante(ante)
-	Client.send(string.format("action:setAnte,ante:%d", ante))
+	Client.send(json.encode({ action = "setAnte", ante = ante }))
 end
 
 function MP.ACTIONS.new_round()
-	Client.send("action:newRound")
+	Client.send(json.encode({ action = "newRound" }))
 end
 
 function MP.ACTIONS.set_furthest_blind(furthest_blind)
-	Client.send(string.format("action:setFurthestBlind,furthestBlind:%d", furthest_blind))
+	Client.send(json.encode({ action = "setFurthestBlind", furthest_blind = furthest_blind }))
 end
 
 function MP.ACTIONS.skip(skips)
-	Client.send("action:skip,skips:" .. tostring(skips))
+	Client.send(json.encode({ action = "skip", skips = skips }))
 end
 
 function MP.ACTIONS.send_phantom(key)
-	Client.send("action:sendPhantom,key:" .. key)
+	Client.send(json.encode({ action = "sendPhantom", key = key }))
 end
 
 function MP.ACTIONS.remove_phantom(key)
-	Client.send("action:removePhantom,key:" .. key)
+	Client.send(json.encode({ action = "removePhantom", key = key }))
 end
 
 function MP.ACTIONS.asteroid()
-	Client.send("action:asteroid")
+	Client.send(json.encode({ action = "asteroid" }))
 end
 
 function MP.ACTIONS.sold_joker()
-	Client.send("action:soldJoker")
+	Client.send(json.encode({ action = "soldJoker" }))
 end
 
 function MP.ACTIONS.lets_go_gambling_nemesis()
-	Client.send("action:letsGoGamblingNemesis")
+	Client.send(json.encode({ action = "letsGoGamblingNemesis" }))
 end
 
 function MP.ACTIONS.eat_pizza(whole)
-	Client.send("action:eatPizza,whole:" .. tostring(whole and true))
+	Client.send(json.encode({ action = "eatPizza", whole = tostring(whole and true) }))
 end
 
 function MP.ACTIONS.spent_last_shop(amount)
-	Client.send("action:spentLastShop,amount:" .. tostring(amount))
+	Client.send(json.encode({ action = "spentLastShop", amount = tostring(amount) }))
 end
 
 function MP.ACTIONS.magnet()
-	Client.send("action:magnet")
+	Client.send(json.encode({ action = "magnet" }))
 end
 
 function MP.ACTIONS.magnet_response(key)
-	Client.send("action:magnetResponse,key:" .. key)
+	Client.send(json.encode({ action = "magnetResponse", key = key }))
 end
 
 function MP.ACTIONS.get_end_game_jokers()
-	Client.send("action:getEndGameJokers")
+	Client.send(json.encode({ action = "getEndGameJokers" }))
 end
 
 function MP.ACTIONS.get_nemesis_deck()
-	Client.send("action:getNemesisDeck")
+	Client.send(json.encode({ action = "getNemesisDeck" }))
 end
 
 function MP.ACTIONS.start_ante_timer()
-	Client.send("action:startAnteTimer,time:" .. tostring(MP.GAME.timer))
+	Client.send(json.encode({ action = "startAnteTimer", time = tostring(MP.GAME.timer) }))
 	action_start_ante_timer(MP.GAME.timer)
 end
 
 function MP.ACTIONS.pause_ante_timer()
-	Client.send("action:pauseAnteTimer,time:" .. tostring(MP.GAME.timer))
+	Client.send(json.encode({ action = "pauseAnteTimer", time = tostring(MP.GAME.timer) }))
 	action_pause_ante_timer(MP.GAME.timer) -- TODO
 end
 
 function MP.ACTIONS.fail_timer()
-	Client.send("action:failTimer")
+	Client.send(json.encode({ action = "failTimer" }))
 end
 
 function MP.ACTIONS.sync_client()
-	Client.send("action:syncClient,isCached:" .. tostring(_RELEASE_MODE))
+	Client.send(json.encode({ action = "syncClient", isCached = tostring(_RELEASE_MODE) }))
 end
 
 -- #endregion Client to Server
@@ -926,11 +889,11 @@ function Game:update(dt)
 
 		if msg then
 			local ok, parsedAction = pcall(json.decode, msg)
-    	if not ok or type(parsedAction) ~= "table" then
+			if not ok or type(parsedAction) ~= "table" then
 				sendWarnMessage("Received non-JSON message: " .. tostring(msg), "MULTIPLAYER")
-        -- Optionally handle known plain string messages here
-			return
-    	end
+				-- Optionally handle known plain string messages here
+				return
+			end
 
 			if not ((parsedAction.action == "keepAlive") or (parsedAction.action == "keepAliveAck")) then
 				local log = string.format("Client got %s message: ", parsedAction.action)
@@ -958,25 +921,25 @@ function Game:update(dt)
 			elseif parsedAction.action == "lobbyInfo" then
 				action_lobbyInfo(parsedAction)
 			elseif parsedAction.action == "startGame" then
-				action_start_game(parsedAction.seed, parsedAction.stake)
+				action_start_game(parsedAction.players, parsedAction.seed, parsedAction.stake)
 			elseif parsedAction.action == "startBlind" then
 				action_start_blind()
-			elseif parsedAction.action == "enemyInfo" then
-				action_enemy_info(parsedAction.score, parsedAction.handsLeft, parsedAction.skips, parsedAction.lives)
+			elseif parsedAction.action == "allyInfo" then
+				action_ally_info(parsedAction.score, parsedAction.hands_left)
+			elseif parsedAction.action == "gameStateUpdate" then
+				action_game_state_update(parsedAction.id, parsedAction.updates)
 			elseif parsedAction.action == "stopGame" then
 				action_stop_game()
 			elseif parsedAction.action == "endPvP" then
 				action_end_pvp()
-			elseif parsedAction.action == "playerInfo" then
-				action_player_info(parsedAction.lives)
 			elseif parsedAction.action == "winGame" then
 				action_win_game()
 			elseif parsedAction.action == "loseGame" then
 				action_lose_game()
 			elseif parsedAction.action == "lobbyOptions" then
-				action_lobby_options(parsedAction)
-			elseif parsedAction.action == "enemyLocation" then
-				enemyLocation(parsedAction)
+				action_lobby_options(parsedAction.options)
+			elseif parsedAction.action == "setBossBlind" then
+				action_set_boss_blind(parsedAction.bossKey)
 			elseif parsedAction.action == "sendPhantom" then
 				action_send_phantom(parsedAction.key)
 			elseif parsedAction.action == "removePhantom" then
