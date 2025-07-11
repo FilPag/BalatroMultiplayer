@@ -1615,6 +1615,16 @@ function create_UIBox_win()
 								},
 							},
 							{
+								n = G.UIT.C,
+								config = {
+									maxw = 0.8,
+									minw = 0.8,
+									minh = 0.7,
+									colour = G.C.CLEAR,
+									no_fill = false
+								}
+							},
+							{
 								n = G.UIT.R,
 								config = { align = "cm", padding = 0.08 },
 								nodes = {
@@ -1763,6 +1773,16 @@ function create_UIBox_win()
 													},
 												},
 											},
+											UIBox_button({
+												id = "continue_singpleplayer_button",
+												align = "lm",
+												button = "continue_in_singleplayer",
+												label = { localize("b_continue_singleplayer") },
+												colour = G.C.GREEN,
+												minw = 6,
+												minh = 1,
+												focus_args = { nav = "wide" },
+											})
 										},
 									},
 									{
@@ -1773,6 +1793,7 @@ function create_UIBox_win()
 											create_UIBox_round_scores_row("furthest_round", G.C.FILTER),
 											create_UIBox_round_scores_row("seed", G.C.WHITE),
 											UIBox_button({
+												id = "copy_seed_button",
 												button = "copy_seed",
 												label = { localize("b_copy") },
 												colour = G.C.BLUE,
@@ -1992,10 +2013,12 @@ function reset_blinds()
 	-- TODO need to sync lobby options on connect
 	if MP.LOBBY.code then
 		local mp_small_choice, mp_big_choice, mp_boss_choice = MP.Gamemodes[MP.LOBBY.config.gamemode]:get_blinds_by_ante(
-		G.GAME.round_resets.ante, G.GAME.round_resets.blind_choices)
+			G.GAME.round_resets.ante, G.GAME.round_resets.blind_choices)
 		G.GAME.round_resets.blind_choices.Small = mp_small_choice
 		G.GAME.round_resets.blind_choices.Big = mp_big_choice
-		G.GAME.round_resets.blind_choices.Boss = mp_boss_choice
+		if MP.LOBBY.config.gamemode ~= "gamemode_mp_coopSurvival" then
+			G.GAME.round_resets.blind_choices.Boss = mp_boss_choice
+		end
 	end
 end
 
