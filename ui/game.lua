@@ -541,6 +541,8 @@ function Blind:set_blind(blind, reset, silent)
 	-- Adjust blind multiplier for coop survival mode
 	if blind and MP.LOBBY.code and MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" and blind.boss then
 		blind.mult = blind.mult * #MP.LOBBY.players
+		player_state_manager.reset_scores()
+		G.GAME.chips = 0
 	end
 
 	blind_set_blindref(self, blind, reset, silent)
@@ -555,7 +557,6 @@ function Blind:set_blind(blind, reset, silent)
 			showdown = true
 		end
 		G.ARGS.spin.real = (G.SETTINGS.reduced_motion and 0 or 1) * (boss and (showdown and 0.5 or 0.25) or 0)
-		player_state_manager.reset_scores()
 	end
 end
 

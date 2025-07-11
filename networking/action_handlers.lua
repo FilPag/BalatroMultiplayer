@@ -125,6 +125,7 @@ local function action_start_blind()
 	MP.GAME.ready_blind = false
 	MP.GAME.timer_started = false
 	MP.GAME.timer = MP.LOBBY.config.timer_base_seconds
+
 	if MP.GAME.next_blind_context then
 		G.FUNCS.select_blind(MP.GAME.next_blind_context)
 	else
@@ -194,12 +195,21 @@ local function action_win_game()
 end
 
 local function action_lose_game()
-	MP.end_game_jokers_payload = ""
-	MP.nemesis_deck_string = ""
-	MP.end_game_jokers_received = false
-	MP.nemesis_deck_received = false
-	G.STATE_COMPLETE = false
-	G.STATE = G.STATES.GAME_OVER
+	G.E_MANAGER:add_event(Event({
+		no_delete = true,
+		trigger = "immediate",
+		blockable = false,
+		blocking = false,
+		func = function()
+			MP.end_game_jokers_payload = ""
+			MP.nemesis_deck_string = ""
+			MP.end_game_jokers_received = false
+			MP.nemesis_deck_received = false
+			G.STATE_COMPLETE = false
+			G.STATE = G.STATES.GAME_OVER
+			return true
+		end,
+	}))
 end
 
 -- Helper: parse option value by type
