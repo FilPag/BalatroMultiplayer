@@ -29,6 +29,7 @@ end
 
 local function action_set_boss_blind(bossKey)
 	sendTraceMessage(string.format("Received boss key: %s", bossKey), "MULTIPLAYER")
+	-- TODO syncing doesn't sem to work
 	G.GAME.round_resets.blind_choices.Boss = bossKey
 
 	if G.blind_select then
