@@ -2200,6 +2200,7 @@ function Game:update_selecting_hand(dt)
 			G.STATE_COMPLETE = false
 			G.STATE = G.STATES.NEW_ROUND
 			MP.GAME.end_pvp = false
+			player_state_manager.reset_scores()
 		end
 	end
 end
