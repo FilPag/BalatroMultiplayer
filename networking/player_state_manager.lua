@@ -116,7 +116,7 @@ function M.process(player_id, updates)
 		end
 	end
 
-	if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" then
+	if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" and MP.is_online_boss() then
 		coop_updates(updates)
 	end
 end

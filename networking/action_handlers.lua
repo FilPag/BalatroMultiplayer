@@ -191,7 +191,7 @@ local function action_lose_game()
 	G.E_MANAGER:add_event(Event({
 		no_delete = true,
 		trigger = "immediate",
-		blockable = false,
+		blockable = true,
 		blocking = false,
 		func = function()
 			MP.end_game_jokers_payload = ""
