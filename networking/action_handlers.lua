@@ -186,12 +186,21 @@ local function action_end_pvp()
 end
 
 local function action_win_game()
-	MP.end_game_jokers_payload = ""
-	MP.nemesis_deck_string = ""
-	MP.end_game_jokers_received = false
-	MP.nemesis_deck_received = false
-	win_game()
-	MP.GAME.won = true
+	G.E_MANAGER:add_event(Event({
+		no_delete = true,
+		trigger = "immediate",
+		blockable = true,
+		blocking = false,
+		func = function()
+			MP.end_game_jokers_payload = ""
+			MP.nemesis_deck_string = ""
+			MP.end_game_jokers_received = false
+			MP.nemesis_deck_received = false
+			win_game()
+			MP.GAME.won = true
+			return true
+		end,
+	}))
 end
 
 local function action_lose_game()
