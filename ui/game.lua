@@ -1008,10 +1008,11 @@ function Game:update_hand_played(dt)
 		MP.GAME.end_pvp = false
 	end
 
-	if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" then
+	if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" and MP.is_online_boss() then
 		if G.GAME.chips - G.GAME.blind.chips >= 0 then
 			G.STATE_COMPLETE = false
 			G.STATE = G.STATES.NEW_ROUND
+			player_state_manager.reset_scores()
 		end
 	end
 end
