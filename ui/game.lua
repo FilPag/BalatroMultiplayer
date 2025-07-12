@@ -2011,6 +2011,7 @@ local reset_blinds_ref = reset_blinds
 function reset_blinds()
 	reset_blinds_ref()
 	G.GAME.round_resets.pvp_blind_choices = {}
+	MP.ACTIONS.new_round()
 
 	-- TODO need to sync lobby options on connect
 	if MP.LOBBY.code then
@@ -2282,7 +2283,6 @@ function G.FUNCS.select_blind(e)
 	if MP.LOBBY.code then
 		MP.GAME.ante_key = tostring(math.random())
 		MP.ACTIONS.play_hand(0, G.GAME.round_resets.hands)
-		MP.ACTIONS.new_round()
 		MP.ACTIONS.set_location("loc_playing-" .. (e.config.ref_table.key or e.config.ref_table.name))
 		hide_enemy_location()
 	end

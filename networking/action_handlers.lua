@@ -34,7 +34,7 @@ local function action_set_boss_blind(bossKey)
 
 	if G.blind_select then
 		G.blind_select:remove()
-    G.blind_prompt_box:remove()
+	G.blind_prompt_box:remove()
 		G.blind_select = UIBox {
 			definition = create_UIBox_blind_select(),
 			config = { align = "bmi", offset = { x = 0, y = 0.8 - (G.hand.T.y - G.jokers.T.y) + G.blind_select.T.h }, major = G.hand, bond = 'Weak' }
@@ -179,12 +179,21 @@ local function action_end_pvp()
 end
 
 local function action_win_game()
-	MP.end_game_jokers_payload = ""
-	MP.nemesis_deck_string = ""
-	MP.end_game_jokers_received = false
-	MP.nemesis_deck_received = false
-	win_game()
-	MP.GAME.won = true
+G.E_MANAGER:add_event(Event({
+	no_delete = true,
+	trigger = "immediate",
+	blockable = true,
+	blocking = false,
+	func = function()
+		MP.end_game_jokers_payload = ""
+		MP.nemesis_deck_string = ""
+		MP.end_game_jokers_received = false
+		MP.nemesis_deck_received = false
+		win_game()
+		MP.GAME.won = true
+		return true
+	end,
+}))
 end
 
 local function action_lose_game()
