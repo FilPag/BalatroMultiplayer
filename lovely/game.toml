@@ -85,17 +85,6 @@ times = 1
 
 [[patches]]
 [patches.pattern]
-target = "functions/common_events.lua"
-pattern = '''G.GAME.current_round.hands_left = G.GAME.current_round.hands_left + mod'''
-position = 'after'
-payload = '''if MP.LOBBY.code and MP.is_online_boss() and mod > 0 then
-		MP.ACTIONS.play_hand(G.GAME.chips, G.GAME.current_round.hands_left)
-	end'''
-match_indent = true
-times = 1
-
-[[patches]]
-[patches.pattern]
 target = "card.lua"
 pattern = '''function Card:sell_card()'''
 position = 'after'
