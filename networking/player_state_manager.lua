@@ -81,7 +81,7 @@ local function coop_updates(updates)
 
     G.E_MANAGER:add_event(Event({
       trigger = 'ease',
-      blocking = false,
+      blocking = true,
       ref_table = G.GAME,
       ref_value = 'chips',
       ease_to = new_score.coeffiocient, --TODO update Game.CHIPS to use MP.INSANE_INT
