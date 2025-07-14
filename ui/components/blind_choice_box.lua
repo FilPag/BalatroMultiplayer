@@ -1,0 +1,414 @@
+function MP.UIDEF.blind_choice_box(run_info, params)
+
+	local life_or_death_text
+	if G.GAME.round_resets.blind_choices[type] == "bl_mp_nemesis" then
+		life_or_death_text= MP.UIDEF.blind_choice_life_or_death_text()
+	elseif type == "Small" or type == "Big" then
+		life_or_death_text = create_UIBox_blind_tag(type, run_info)
+	end
+
+
+	return {
+		n = G.UIT.R,
+		config = {
+			id = type,
+			align = "tm",
+			func = "blind_choice_handler",
+			minh = not run_info and 10 or nil,
+			ref_table = { deck = nil, run_info = run_info },
+			r = 0.1,
+			padding = 0.05,
+		},
+		nodes = {
+			{
+				n = G.UIT.R,
+				config = {
+					align = "cm",
+					colour = mix_colours(G.C.BLACK, G.C.L_BLACK, 0.5),
+					r = 0.1,
+					outline = 1,
+					outline_colour = G.C.L_BLACK,
+				},
+				nodes = {
+					{
+						n = G.UIT.R,
+						config = { align = "cm", padding = 0.2 },
+						nodes = {
+							not run_info and {
+								n = G.UIT.R,
+								config = {
+									id = "select_blind_button",
+									align = "cm",
+									ref_table = params.blind_choice.config,
+									colour = params.disabled and G.C.UI.BACKGROUND_INACTIVE or G.C.ORANGE,
+									minh = 0.6,
+									minw = 2.7,
+									padding = 0.07,
+									r = 0.1,
+									shadow = true,
+									hover = true,
+									one_press = true,
+									func = (
+												G.GAME.round_resets.blind_choices[type] == "bl_mp_nemesis"
+												or G.GAME.round_resets.pvp_blind_choices[type]
+												or (
+													MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival"
+													and (type == "Boss")
+												)
+											)
+											and "pvp_ready_button"
+											or nil,
+									button = "select_blind",
+								},
+								nodes = {
+									{
+										n = G.UIT.T,
+										config = {
+											ref_table = G.GAME.round_resets.loc_blind_states,
+											ref_value = type,
+											scale = 0.45,
+											colour = params.disabled and G.C.UI.TEXT_INACTIVE or G.C.UI.TEXT_LIGHT,
+											shadow = not params.disabled,
+										},
+									},
+								},
+							} or {
+								n = G.UIT.R,
+								config = {
+									id = "select_blind_button",
+									align = "cm",
+									ref_table = params.blind_choice.config,
+									colour = get_blind_button_colour(params.blind_state),
+									minh = 0.6,
+									minw = 2.7,
+									padding = 0.07,
+									r = 0.1,
+									emboss = 0.08,
+								},
+								nodes = {
+									{
+										n = G.UIT.T,
+										config = {
+											text = localize(params.blind_state, "blind_states"),
+											scale = 0.45,
+											colour = G.C.UI.TEXT_LIGHT,
+											shadow = true,
+										},
+									},
+								},
+							},
+						},
+					},
+					{
+						n = G.UIT.R,
+						config = { id = "blind_name", align = "cm", padding = 0.07 },
+						nodes = {
+							{
+								n = G.UIT.R,
+								config = {
+									align = "cm",
+									r = 0.1,
+									outline = 1,
+									outline_colour = params.blind_col,
+									colour = darken(params.blind_col, 0.3),
+									minw = 2.9,
+									emboss = 0.1,
+									padding = 0.07,
+									line_emboss = 1,
+								},
+								nodes = {
+									{
+										n = G.UIT.O,
+										config = {
+											object = DynaText({
+												string = get_blind_loc_name(),
+												colours = { parmas.disabled and G.C.UI.TEXT_INACTIVE or G.C.WHITE },
+												shadow = not params.disabled,
+												float = not params.disabled,
+												y_offset = -4,
+												scale = 0.45,
+												maxw = 2.8,
+											}),
+										},
+									},
+								},
+							},
+						},
+					},
+					{
+						n = G.UIT.R,
+						config = { align = "cm", padding = 0.05 },
+						nodes = {
+							{
+								n = G.UIT.R,
+								config = { id = "blind_desc", align = "cm", padding = 0.05 },
+								nodes = {
+									{
+										n = G.UIT.R,
+										config = { align = "cm" },
+										nodes = {
+											{
+												n = G.UIT.R,
+												config = { align = "cm", minh = 1.5 },
+												nodes = {
+													{ n = G.UIT.O, config = { object = params.blind_choice.animation } },
+												},
+											},
+											params.text_table and params.text_table[1] and {
+												n = G.UIT.R,
+												config = {
+													align = "cm",
+													minh = 0.7,
+													padding = 0.05,
+													minw = 2.9,
+												},
+												nodes = {
+													params.text_table[1]
+													and {
+														n = G.UIT.R,
+														config = { align = "cm", maxw = 2.8 },
+														nodes = {
+															{
+																n = G.UIT.T,
+																config = {
+																	id = params.blind_choice.config.key,
+																	ref_table = { val = "" },
+																	ref_value = "val",
+																	scale = 0.32,
+																	colour = params.disabled
+																			and G.C.UI.TEXT_INACTIVE
+																			or G.C.WHITE,
+																	shadow = not params.disabled,
+																	func = "HUD_blind_debuff_prefix",
+																},
+															},
+															{
+																n = G.UIT.T,
+																config = {
+																	text = params.text_table[1] or "-",
+																	scale = 0.32,
+																	colour = params.disabled
+																			and G.C.UI.TEXT_INACTIVE
+																			or G.C.WHITE,
+																	shadow = not params.disabled,
+																},
+															},
+														},
+													}
+													or nil,
+													params.text_table[2] and {
+														n = G.UIT.R,
+														config = { align = "cm", maxw = 2.8 },
+														nodes = {
+															{
+																n = G.UIT.T,
+																config = {
+																	text = params.text_table[2] or "-",
+																	scale = 0.32,
+																	colour = params.disabled and G.C.UI.TEXT_INACTIVE
+																			or G.C.WHITE,
+																	shadow = not params.disabled,
+																},
+															},
+														},
+													} or nil,
+													params.text_table[3] and {
+														n = G.UIT.R,
+														config = { align = "cm", maxw = 2.8 },
+														nodes = {
+															{
+																n = G.UIT.T,
+																config = {
+																	text = params.text_table[3] or "-",
+																	scale = 0.32,
+																	colour = params.disabled and G.C.UI.TEXT_INACTIVE
+																			or G.C.WHITE,
+																	shadow = not params.disabled,
+																},
+															},
+														},
+													} or nil,
+												},
+											} or nil,
+										},
+									},
+									{
+										n = G.UIT.R,
+										config = {
+											align = "cm",
+											r = 0.1,
+											padding = 0.05,
+											minw = 3.1,
+											colour = G.C.BLACK,
+											emboss = 0.05,
+										},
+										nodes = {
+											{
+												n = G.UIT.R,
+												config = { align = "cm", maxw = 3 },
+												nodes = {
+													{
+														n = G.UIT.T,
+														config = {
+															text = localize("ph_blind_score_at_least"),
+															scale = 0.3,
+															colour = params.disabled and G.C.UI.TEXT_INACTIVE or G.C.WHITE,
+															shadow = not params.disabled,
+														},
+													},
+												},
+											},
+											{
+												n = G.UIT.R,
+												config = { align = "cm", minh = 0.6 },
+												nodes = {
+													{
+														n = G.UIT.O,
+														config = {
+															w = 0.5,
+															h = 0.5,
+															colour = G.C.BLUE,
+															object = get_stake_sprite(G.GAME.stake or 1, 0.5),
+															hover = true,
+															can_collide = false,
+														},
+													},
+													{ n = G.UIT.B, config = { h = 0.1, w = 0.1 } },
+													{
+														n = G.UIT.T,
+														config = {
+															text = number_format(params.blind_amt),
+															scale = score_number_scale(0.9, params.blind_amt),
+															colour = params.disabled and G.C.UI.TEXT_INACTIVE or G.C.RED,
+															shadow = not params.disabled,
+														},
+													},
+												},
+											},
+											params._reward
+											and {
+												n = G.UIT.R,
+												config = { align = "cm" },
+												nodes = {
+													{
+														n = G.UIT.T,
+														config = {
+															text = localize("ph_blind_reward"),
+															scale = 0.35,
+															colour = params.disabled and G.C.UI.TEXT_INACTIVE
+																	or G.C.WHITE,
+															shadow = not params.disabled,
+														},
+													},
+													{
+														n = G.UIT.T,
+														config = {
+															text = string.rep(
+															---@diagnostic disable-next-line: param-type-mismatch
+																localize("$"),
+																params.blind_choice.config.dollars
+															) .. "+",
+															scale = 0.35,
+															colour = params.disabled and G.C.UI.TEXT_INACTIVE
+																	or G.C.MONEY,
+															shadow = not params.disabled,
+														},
+													},
+												},
+											}
+											or nil,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			{
+				n = G.UIT.R,
+				config = { id = "blind_extras", align = "cm" },
+				nodes = {
+					life_or_death_text,
+				}
+			},
+		},
+	}
+end
+
+function MP.UIDEF.blind_choice_life_or_death_text()
+	local texts = {
+		{ key = "k_bl_life",  colour = G.C.FILTER, scale = 0.55, bump = true },
+		{ key = "k_bl_or",    colour = G.C.WHITE,  scale = 0.35 },
+		{ key = "k_bl_death", colour = G.C.FILTER, scale = 0.55, bump = true },
+	}
+	local nodes = {}
+	for i, t in ipairs(texts) do
+		local dt = DynaText({
+			string = { { string = localize(t.key), colour = t.colour } },
+			colours = t.key == "k_bl_or" and { G.C.CHANCE } or { G.C.BLACK },
+			scale = t.scale,
+			silent = true,
+			pop_delay = 4.5,
+			shadow = true,
+			bump = t.bump or nil,
+			maxw = 3,
+		})
+		table.insert(nodes, { n = G.UIT.R, config = { align = "cm" }, nodes = { { n = G.UIT.O, config = { object = dt } } } })
+	end
+	return {
+		n = G.UIT.R,
+		config = { align = "cm" },
+		nodes = {
+			{
+				n = G.UIT.R,
+				config = { align = "cm", padding = 0.07, r = 0.1, colour = { 0, 0, 0, 0.12 }, minw = 2.9 },
+				nodes = nodes,
+			},
+		},
+	}
+end
+
+function setup_orbital_choices(type)
+	G.GAME.orbital_choices = G.GAME.orbital_choices or {}
+	local ante = G.GAME.round_resets.ante
+	G.GAME.orbital_choices[ante] = G.GAME.orbital_choices[ante] or {}
+
+	if not G.GAME.orbital_choices[ante][type] then
+		local visible_hands = {}
+		for hand, data in pairs(G.GAME.hands) do
+			if data.visible then table.insert(visible_hands, hand) end
+		end
+		G.GAME.orbital_choices[ante][type] = pseudorandom_element(visible_hands, pseudoseed("orbital"))
+	end
+end
+
+--- Returns the display name for a blind, handling nemesis and fallback
+function get_blind_loc_name(type, blind_choice)
+	local key = (G.GAME.round_resets.blind_choices or {})[type]
+	if key == "bl_mp_nemesis" then
+		local enemy = MP.UTILS.get_nemesis_lobby_data and MP.UTILS.get_nemesis_lobby_data()
+		if enemy and enemy.username and #enemy.username > 0 then
+			return { { string = enemy.username, colour = G.C.BLUE } }
+		end
+	end
+	return { { string = localize({ type = "name_text", key = blind_choice and blind_choice.config and blind_choice.config.key or key, set = "Blind" }), colour = G.C.WHITE } }
+end
+
+-- Helper: Get blind amount
+function get_blind_amt(type, blind_choice)
+	if G.GAME.round_resets.blind_choices[type] == "bl_mp_nemesis" or G.GAME.round_resets.pvp_blind_choices[type] then
+		return "????"
+	end
+	return get_blind_amount(G.GAME.round_resets.blind_ante) * blind_choice.config.mult *
+			G.GAME.starting_params.ante_scaling
+end
+
+-- Helper: Get run info color
+function get_run_info_colour(blind_state)
+	if blind_state == "Defeated" then return G.C.GREY end
+	if blind_state == "Skipped" then return G.C.BLUE end
+	if blind_state == "Upcoming" then return G.C.ORANGE end
+	if blind_state == "Current" then return G.C.RED end
+	return G.C.GOLD
+end
