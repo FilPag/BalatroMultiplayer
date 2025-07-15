@@ -510,7 +510,6 @@ function Game:update_hand_played(dt)
 		if G.GAME.chips - G.GAME.blind.chips >= 0 then
 			G.STATE_COMPLETE = false
 			G.STATE = G.STATES.NEW_ROUND
-			player_state_manager.reset_scores()
 		end
 	end
 end
