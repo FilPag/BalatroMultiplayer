@@ -508,7 +508,6 @@ function Game:update_hand_played(dt)
 		if G.GAME.chips - G.GAME.blind.chips >= 0 then
 			G.STATE_COMPLETE = false
 			G.STATE = G.STATES.NEW_ROUND
-			player_state_manager.reset_scores()
 		end
 	end
 end
@@ -897,6 +896,61 @@ function G.FUNCS.mods_button(arg_736_0)
 	end
 
 	mods_button_ref(arg_736_0)
+end
+
+local reset_blinds_ref = reset_blinds
+function reset_blinds()
+	reset_blinds_ref()
+	G.GAME.round_resets.pvp_blind_choices = {}
+	MP.ACTIONS.new_round()
+
+	if MP.LOBBY.code then
+		sendDebugMessage("Resetting blinds in MP", "MULTIPLAYER")
+		local mp_small_choice, mp_big_choice, mp_boss_choice = MP.Gamemodes[MP.LOBBY.config.gamemode]:get_blinds_by_ante(G.GAME.round_resets.ante, G.GAME.round_resets.blind_choices)
+		G.GAME.round_resets.blind_choices.Small = mp_small_choice
+		G.GAME.round_resets.blind_choices.Big = mp_big_choice
+		if MP.LOBBY.config.gamemode ~= "gamemode_mp_coopSurvival" then
+			G.GAME.round_resets.blind_choices.Boss = mp_boss_choice
+		end
+	end
+end
+
+local update_selecting_hand_ref = Game.update_selecting_hand
+function Game:update_selecting_hand(dt)
+	if G.GAME.current_round.hands_left < G.GAME.round_resets.hands
+			and #G.hand.cards < 1
+			and #G.deck.cards < 1
+			and #G.play.cards < 1
+			and MP.LOBBY.code
+	then
+		G.GAME.current_round.hands_left = 0
+		if MP.is_online_boss() then
+			MP.ACTIONS.play_hand(G.GAME.chips, 0)
+			G.STATE_COMPLETE = false
+			G.STATE = G.STATES.HAND_PLAYED
+		else
+			G.STATE_COMPLETE = false
+			G.STATE = G.STATES.NEW_ROUND
+		end
+		return
+	end
+	update_selecting_hand_ref(self, dt)
+
+	if MP.GAME.end_pvp and MP.is_online_boss() then
+		G.hand:unhighlight_all()
+		G.STATE_COMPLETE = false
+		G.STATE = G.STATES.NEW_ROUND
+		MP.GAME.end_pvp = false
+	end
+
+	if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" then
+		if G.GAME.chips - G.GAME.blind.chips >= 0 then
+			G.hand:unhighlight_all()
+			G.STATE_COMPLETE = false
+			G.STATE = G.STATES.NEW_ROUND
+			MP.GAME.end_pvp = false
+		end
+	end
 end
 
 local can_open_ref = G.FUNCS.can_open

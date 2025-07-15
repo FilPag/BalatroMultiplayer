@@ -64,31 +64,32 @@ local function local_player_updates(updates)
 		local hud_ante = G.HUD:get_UIE_by_ID("hud_ante")
 		if hud_ante then hud_ante.children[2].children[1]:juice_up() end
 	end
-
-	if updates.score then
-		new_score = MP.INSANE_INT.from_string(updates.score)
-		local_player.score = MP.INSANE_INT.add(local_player.score, new_score)
-	end
 end
 
 local function coop_updates(updates)
-	if updates.score then
-		local new_score = MP.INSANE_INT.empty()
+	if not updates.score then return end
+	G.E_MANAGER:add_event(Event({
+		blocking = true,
+		func = (function()
+			if not MP.is_online_boss() then return true end
 
-		for _, player in pairs(MP.GAME.players) do
-			new_score = MP.INSANE_INT.add(new_score, player.score)
-		end
-
-    G.E_MANAGER:add_event(Event({
-      trigger = 'ease',
-      blocking = true,
-      ref_table = G.GAME,
-      ref_value = 'chips',
-      ease_to = new_score.coeffiocient, --TODO update Game.CHIPS to use MP.INSANE_INT
-      delay =  0.5,
-      func = (function(t) return math.floor(t) end)
-    }))
-	end
+			MP.coop_score = MP.INSANE_INT.empty()
+			for _, player in pairs(MP.GAME.players) do
+				MP.coop_score = MP.INSANE_INT.add(MP.coop_score, player.score)
+			end
+			G.E_MANAGER:add_event(Event({
+				trigger = 'ease',
+				blocking = false,
+				blockable = true,
+				ref_table = G.GAME,
+				ref_value = 'chips',
+				ease_to = MP.coop_score.coeffiocient,
+				delay = 0.5,
+				func = (function(t) return math.floor(t) end)
+			}))
+			return true
+		end)
+	}))
 end
 
 function M.process(player_id, updates)
@@ -97,7 +98,6 @@ function M.process(player_id, updates)
 	if player_id == MP.LOBBY.local_id then
 		local_player_updates(updates)
 		updates.lives = nil
-		updates.score = nil
 	end
 
 	if G.GAME.blind.config.blind.key == "bl_mp_nemesis" or G.GAME.blind.pvp then
@@ -109,8 +109,7 @@ function M.process(player_id, updates)
 		if key == "location" then
 			player[key] = M.parse_enemy_location(value)
 		elseif key == "score" or key == "highest_score" then
-			local new_score = MP.INSANE_INT.from_string(value)
-			player.score = MP.INSANE_INT.add(player.score, new_score)
+			player.score = MP.INSANE_INT.from_string(value)
 		else
 			player[key] = value
 		end

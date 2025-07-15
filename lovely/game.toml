@@ -142,6 +142,14 @@ pattern = '''G.E_MANAGER:add_event(Event({
       func = (function(t) return math.floor(t) end)
     }))'''
 position = 'after'
-payload = '''if MP.LOBBY.code and MP.is_online_boss() then MP.ACTIONS.play_hand(hand_chips*mult, G.GAME.current_round.hands_left) end'''
+payload = '''if MP.LOBBY.code and MP.is_online_boss() then
+  G.E_MANAGER:add_event(Event({
+    blocking = false,
+    func = function()
+      MP.ACTIONS.play_hand(hand_chips*mult, G.GAME.current_round.hands_left)
+      return true
+    end
+  }))
+end'''
 match_indent = true
 times = 1
