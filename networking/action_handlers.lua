@@ -31,14 +31,16 @@ local function action_set_boss_blind(bossKey)
 	sendTraceMessage(string.format("Received boss key: %s", bossKey), "MULTIPLAYER")
 	-- TODO syncing doesn't sem to work
 	G.GAME.round_resets.blind_choices.Boss = bossKey
+	MP.next_coop_boss = bossKey
 
 	if G.blind_select then
 		G.blind_select:remove()
-	G.blind_prompt_box:remove()
+		G.blind_prompt_box:remove()
 		G.blind_select = UIBox {
 			definition = create_UIBox_blind_select(),
 			config = { align = "bmi", offset = { x = 0, y = 0.8 - (G.hand.T.y - G.jokers.T.y) + G.blind_select.T.h }, major = G.hand, bond = 'Weak' }
 		}
+		MP.next_coop_boss = nil
 	end
 end
 
@@ -179,21 +181,21 @@ local function action_end_pvp()
 end
 
 local function action_win_game()
-G.E_MANAGER:add_event(Event({
-	no_delete = true,
-	trigger = "immediate",
-	blockable = true,
-	blocking = false,
-	func = function()
-		MP.end_game_jokers_payload = ""
-		MP.nemesis_deck_string = ""
-		MP.end_game_jokers_received = false
-		MP.nemesis_deck_received = false
-		win_game()
-		MP.GAME.won = true
-		return true
-	end,
-}))
+	G.E_MANAGER:add_event(Event({
+		no_delete = true,
+		trigger = "immediate",
+		blockable = true,
+		blocking = false,
+		func = function()
+			MP.end_game_jokers_payload = ""
+			MP.nemesis_deck_string = ""
+			MP.end_game_jokers_received = false
+			MP.nemesis_deck_received = false
+			win_game()
+			MP.GAME.won = true
+			return true
+		end,
+	}))
 end
 
 local function action_lose_game()
@@ -785,6 +787,8 @@ function MP.ACTIONS.play_hand(score, hands_left)
 	if MP.INSANE_INT.greater_than(insane_int_score, MP.GAME.highest_score) then
 		MP.GAME.highest_score = insane_int_score
 	end
+
+	MP.UTILS.get_local_player().score = MP.INSANE_INT.add(insane_int_score, MP.UTILS.get_local_player().score)
 
 	local target = nul
 	if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" then
