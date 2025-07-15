@@ -1012,7 +1012,6 @@ function Game:update_hand_played(dt)
 		if G.GAME.chips - G.GAME.blind.chips >= 0 then
 			G.STATE_COMPLETE = false
 			G.STATE = G.STATES.NEW_ROUND
-			player_state_manager.reset_scores()
 		end
 	end
 end
@@ -2013,10 +2012,9 @@ function reset_blinds()
 	G.GAME.round_resets.pvp_blind_choices = {}
 	MP.ACTIONS.new_round()
 
-	-- TODO need to sync lobby options on connect
 	if MP.LOBBY.code then
-		local mp_small_choice, mp_big_choice, mp_boss_choice = MP.Gamemodes[MP.LOBBY.config.gamemode]:get_blinds_by_ante(
-			G.GAME.round_resets.ante, G.GAME.round_resets.blind_choices)
+		sendDebugMessage("Resetting blinds in MP", "MULTIPLAYER")
+		local mp_small_choice, mp_big_choice, mp_boss_choice = MP.Gamemodes[MP.LOBBY.config.gamemode]:get_blinds_by_ante(G.GAME.round_resets.ante, G.GAME.round_resets.blind_choices)
 		G.GAME.round_resets.blind_choices.Small = mp_small_choice
 		G.GAME.round_resets.blind_choices.Big = mp_big_choice
 		if MP.LOBBY.config.gamemode ~= "gamemode_mp_coopSurvival" then
@@ -2059,7 +2057,6 @@ function Game:update_selecting_hand(dt)
 			G.STATE_COMPLETE = false
 			G.STATE = G.STATES.NEW_ROUND
 			MP.GAME.end_pvp = false
-			player_state_manager.reset_scores()
 		end
 	end
 end
