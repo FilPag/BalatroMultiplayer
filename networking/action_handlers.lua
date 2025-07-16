@@ -192,6 +192,7 @@ local function action_end_pvp()
 end
 
 local function action_win_game()
+  MP.ACTIONS.sendPlayerDeck()
 	G.E_MANAGER:add_event(Event({
 		no_delete = true,
 		trigger = "immediate",
@@ -210,13 +211,14 @@ local function action_win_game()
 end
 
 local function action_lose_game()
+  MP.ACTIONS.sendPlayerDeck()
 	G.E_MANAGER:add_event(Event({
 		no_delete = true,
 		trigger = "immediate",
 		blockable = true,
 		blocking = false,
 		func = function()
-			MP.GAME.won = true
+			MP.GAME.won = false
 			MP.end_game_jokers_payload = ""
 			MP.nemesis_deck_string = ""
 			MP.end_game_jokers_received = false
@@ -634,23 +636,21 @@ local function action_get_end_game_jokers()
 	Client.send(json.encode({ action = "receiveEndGameJokers", keys = jokers_encoded }))
 end
 
-local function action_get_nemesis_deck()
-	local deck_str = ""
-	for _, card in ipairs(G.playing_cards) do
-		deck_str = deck_str .. ";" .. MP.UTILS.card_to_string(card)
-	end
-	Client.send(json.encode({ action = "receiveNemesisDeck", cards = deck_str }))
-end
-
-function G.FUNCS.load_nemesis_deck()
-	if not MP.nemesis_deck or not MP.nemesis_cards or not MP.LOBBY.code then
+function G.FUNCS.load_player_deck(player)
+	if not MP.LOBBY.code or not player.deck_str then
 		return
 	end
 
-	local card_strings = MP.UTILS.string_split(MP.nemesis_deck_string, ";")
+	if not player.cards then player.cards = {} end
 
-	for k, _ in pairs(MP.nemesis_cards) do
-		MP.nemesis_cards[k] = nil
+	if not player.deck then
+		player.deck = CardArea(-100, -100, G.CARD_W, G.CARD_H, { type = 'deck' })
+	end
+
+	local card_strings = MP.UTILS.string_split(player.deck_str, ";")
+
+	for k, _ in pairs(player.cards) do
+		player.cards[k] = nil
 	end
 
 	for _, card_str in pairs(card_strings) do
@@ -693,7 +693,7 @@ function G.FUNCS.load_nemesis_deck()
 				front = G.P_CARDS[front_key],
 				center = enhancement ~= "none" and G.P_CENTERS[enhancement] or nil
 			},
-			MP.nemesis_deck, true, true, nil, false
+			player.deck, true, true, nil, false
 		)
 		if edition ~= "none" then
 			card:set_edition({ [edition] = true }, true, true)
@@ -704,16 +704,17 @@ function G.FUNCS.load_nemesis_deck()
 
 		-- Remove the card from G.playing_cards and insert into MP.nemesis_cards
 		table.remove(G.playing_cards, #G.playing_cards)
-		table.insert(MP.nemesis_cards, card)
+		table.insert(player.cards, card)
 
 		::continue::
 	end
 end
 
-local function action_receive_nemesis_deck(deck_str)
-	MP.nemesis_deck_string = deck_str
-	MP.nemesis_deck_received = true
-	G.FUNCS.load_nemesis_deck()
+local function action_receive_player_deck(player_id, cards)
+	local player = MP.UTILS.get_player_by_id(player_id)
+	player.deck_str = cards
+	player.deck_received = true
+	G.FUNCS.load_player_deck(player)
 end
 
 local function action_start_ante_timer(time)
@@ -761,8 +762,7 @@ local action_table = {
 	magnetResponse = function(parsedAction) action_magnet_response(parsedAction.key) end,
 	getEndGameJokers = function() action_get_end_game_jokers() end,
 	receiveEndGameJokers = function(parsedAction) action_receive_end_game_jokers(parsedAction.keys) end,
-	getNemesisDeck = function() action_get_nemesis_deck() end,
-	receiveNemesisDeck = function(parsedAction) action_receive_nemesis_deck(parsedAction.cards) end,
+	receivePlayerDeck = function(parsedAction) action_receive_player_deck(parsedAction.playerId, parsedAction.cards) end,
 	startAnteTimer = function(parsedAction) action_start_ante_timer(parsedAction.time) end,
 	pauseAnteTimer = function(parsedAction) action_pause_ante_timer(parsedAction.time) end,
 	error = function(parsedAction) action_error(parsedAction.message) end,
@@ -796,7 +796,7 @@ function MP.NETWORKING.update(dt)
 				sendTraceMessage(log, "MULTIPLAYER")
 			end
 
-		local handler = action_table[parsedAction.action]
+			local handler = action_table[parsedAction.action]
 			if handler then
 				handler(parsedAction)
 			end
