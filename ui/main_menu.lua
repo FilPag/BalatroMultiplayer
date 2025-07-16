@@ -539,6 +539,7 @@ function G.UIDEF.create_UIBox_join_lobby_button()
 									w = 4,
 									h = 1,
 									max_length = 5,
+									id = "join_lobby_code_input",
 									all_caps = true,
 									prompt_text = localize("k_enter_lobby_code"),
 									ref_table = MP.LOBBY,
@@ -634,9 +635,12 @@ end
 function G.FUNCS.join_lobby(e)
 	G.SETTINGS.paused = true
 
+	local definition = G.UIDEF.create_UIBox_join_lobby_button()
 	G.FUNCS.overlay_menu({
-		definition = G.UIDEF.create_UIBox_join_lobby_button(),
+		definition = definition,
 	})
+	local ref = G.OVERLAY_MENU:get_UIE_by_ID("join_lobby_code_input")
+	G.FUNCS.select_text_input(ref)
 end
 
 function G.FUNCS.join_from_clipboard(e)
