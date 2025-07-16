@@ -10,18 +10,7 @@ function create_UIBox_game_over()
     G.CARD_H,
     { card_limit = G.GAME.starting_params.joker_slots, type = "joker", highlight_limit = 1 }
   )
-  if not MP.end_game_jokers_received then
-    MP.ACTIONS.get_end_game_jokers()
-  else
-    G.FUNCS.load_end_game_jokers()
-  end
-  MP.nemesis_deck = CardArea(-100, -100, G.CARD_W, G.CARD_H, { type = 'deck' })
-  MP.nemesis_cards = {}
-  if not MP.nemesis_deck_received then
-    MP.ACTIONS.get_nemesis_deck()
-  else
-    G.FUNCS.load_nemesis_deck()
-  end
+
   local eased_red = copy_table(G.GAME.round_resets.ante <= G.GAME.win_ante and G.C.RED or G.C.BLUE)
   eased_red[4] = 0
   ease_value(eased_red, 4, 0.8, nil, nil, true)
@@ -323,18 +312,13 @@ function create_UIBox_win()
     G.CARD_H,
     { card_limit = G.GAME.starting_params.joker_slots, type = "joker", highlight_limit = 1 }
   )
+
   if not MP.end_game_jokers_received then
     MP.ACTIONS.get_end_game_jokers()
   else
     G.FUNCS.load_end_game_jokers()
   end
-  MP.nemesis_deck = CardArea(-100, -100, G.CARD_W, G.CARD_H, { type = 'deck' })
-  MP.nemesis_cards = {}
-  if not MP.nemesis_deck_received then
-    MP.ACTIONS.get_nemesis_deck()
-  else
-    G.FUNCS.load_nemesis_deck()
-  end
+
   local eased_green = copy_table(G.C.GREEN)
   eased_green[4] = 0
   ease_value(eased_green, 4, 0.5, nil, nil, true)
