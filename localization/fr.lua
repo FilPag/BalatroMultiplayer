@@ -298,7 +298,7 @@ return {
 				"vous l'aimez, n'hésitez pas à",
 			},
 			ml_lobby_info = { "Infos", "Lobby" },
-			loc_ready = "Prêt.e pour le PvP",
+			loc_ready_pvp = "Prêt.e pour le PvP",
 			loc_selecting = "Sélectionne une Blinde",
 			loc_shop = "Dans le magasin",
 			loc_playing = "Joue ",

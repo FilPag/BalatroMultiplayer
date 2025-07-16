@@ -287,7 +287,7 @@ return {
 				"piaciuta considera",
 			},
 			ml_lobby_info = { "Info", "Lobby" },
-			loc_ready = "Pronto per il PvP",
+			loc_ready_pvp = "Pronto per il PvP",
 			loc_selecting = "Selezionando un buio",
 			loc_shop = "Facendo acquisti",
 			loc_playing = "Giocando ",
