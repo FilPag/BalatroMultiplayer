@@ -197,64 +197,7 @@ function G.FUNCS.mp_timer_button(e)
 	end
 end
 
-function MP.UI.timer_hud()
-	return {
-		n = G.UIT.C,
-		config = {
-			align = "cm",
-			padding = 0.05,
-			minw = 1.45,
-			minh = 1,
-			colour = G.C.DYN_UI.BOSS_MAIN,
-			emboss = 0.05,
-			r = 0.1,
-		},
-		nodes = {
-			{
-				n = G.UIT.R,
-				config = { align = "cm", maxw = 1.35 },
-				nodes = {
-					{
-						n = G.UIT.T,
-						config = {
-							text = localize("k_timer"),
-							minh = 0.33,
-							scale = 0.34,
-							colour = G.C.UI.TEXT_LIGHT,
-							shadow = true,
-						},
-					},
-				},
-			},
-			{
-				n = G.UIT.R,
-				config = {
-					align = "cm",
-					r = 0.1,
-					minw = 1.2,
-					colour = G.C.DYN_UI.BOSS_DARK,
-					id = "row_round_text",
-					func = "set_timer_box",
-					button = "mp_timer_button",
-				},
-				nodes = {
-					{
-						n = G.UIT.O,
-						config = {
-							object = DynaText({
-								string = { { ref_table = MP.GAME, ref_value = "timer" } },
-								colours = { G.C.UI.TEXT_DARK },
-								shadow = true,
-								scale = 0.8,
-							}),
-							id = "timer_UI_count",
-						},
-					},
-				},
-			},
-		},
-	}
-end
+
 
 function G.FUNCS.set_timer_box(e)
 	if MP.GAME.timer_started then

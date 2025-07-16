@@ -803,21 +803,12 @@ function MP.UTILS.ease_score(score_table, new_score, delay)
 	end
 end
 
-function MP.UTILS.calc_coop_score(local_score)
-	if not MP.LOBBY.players then
-		return local_score
-	end
-
-	local total_score = MP.INSANE_INT.create(local_score, 0, 0) 
-
-	for _, player in ipairs(MP.LOBBY.players) do
-		if player.score and player.id ~= MP.LOBBY.local_id then
-			total_score = MP.INSANE_INT.add(total_score, player.score)
-		end
-	end
-
-	return total_score
+function MP.UTILS.is_coop()
+	if not MP.LOBBY.code then return false end
+	return MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival"
 end
+
+
 
 -- Returns the local player for the current client.
 -- @param players table: array of player tables
