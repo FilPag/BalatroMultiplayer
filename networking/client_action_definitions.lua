@@ -178,8 +178,12 @@ function MP.ACTIONS.get_end_game_jokers()
   Client.send(json.encode({ action = "getEndGameJokers" }))
 end
 
-function MP.ACTIONS.get_nemesis_deck()
-  Client.send(json.encode({ action = "getNemesisDeck" }))
+function MP.ACTIONS.sendPlayerDeck()
+  local deck_str = ""
+  for _, card in ipairs(G.playing_cards) do
+    deck_str = deck_str .. ";" .. MP.UTILS.card_to_string(card)
+  end
+  Client.send(json.encode({ action = "sendPlayerDeck", cards = deck_str }))
 end
 
 function MP.ACTIONS.start_ante_timer()
