@@ -309,7 +309,7 @@ G.FUNCS.start_run = function(e, args)
 				MP.LOBBY.config.stake = chosen_stake
 				MP.LOBBY.config.sleeve = G.viewed_sleeve
 				MP.LOBBY.config.challenge = args.challenge and args.challenge.id or ""
-				send_lobby_options()
+				MP.ACTIONS.lobby_options()
 			end
 			MP.LOBBY.deck.back = args.challenge and "Challenge Deck"
 					or (args.deck and args.deck.name)
