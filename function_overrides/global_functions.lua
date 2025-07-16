@@ -25,10 +25,8 @@ function reset_blinds()
 	G.GAME.round_resets.pvp_blind_choices = {}
 	MP.ACTIONS.new_round()
 
-	-- TODO need to sync lobby options on connect
 	if MP.LOBBY.code then
-		local mp_small_choice, mp_big_choice, mp_boss_choice = MP.Gamemodes[MP.LOBBY.config.gamemode]:get_blinds_by_ante(
-			G.GAME.round_resets.ante, G.GAME.round_resets.blind_choices)
+		local mp_small_choice, mp_big_choice, mp_boss_choice = MP.Gamemodes[MP.LOBBY.config.gamemode]:get_blinds_by_ante(G.GAME.round_resets.ante, G.GAME.round_resets.blind_choices)
 		G.GAME.round_resets.blind_choices.Small = mp_small_choice
 		G.GAME.round_resets.blind_choices.Big = mp_big_choice
 		if MP.LOBBY.config.gamemode ~= "gamemode_mp_coopSurvival" then
