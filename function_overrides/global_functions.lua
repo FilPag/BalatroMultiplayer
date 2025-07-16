@@ -34,3 +34,12 @@ function reset_blinds()
 		end
 	end
 end
+
+local get_blind_main_colourref = get_blind_main_colour
+function get_blind_main_colour(type) -- handles ui colour stuff
+	local nemesis = G.GAME.round_resets.blind_choices[type] == "bl_mp_nemesis" or type == "bl_mp_nemesis"
+	if nemesis then
+		type = MP.UTILS.get_nemesis_key()
+	end
+	return get_blind_main_colourref(type)
+end

@@ -38,6 +38,7 @@ MP.LOBBY = {
 	isHost = false,
 }
 MP.GAME = {}
+MP.NETWORKING = {}
 MP.UI = {}
 MP.UI_UTILS = {}
 MP.UIDEF = {}
@@ -45,7 +46,7 @@ MP.ACTIONS = {}
 MP.INTEGRATIONS = {
 	TheOrder = SMODS.Mods["Multiplayer"].config.integrations.TheOrder,
 }
-
+MP.player_state_manager = SMODS.load_file('networking/player_state_manager.lua', 'Multiplayer')()
 G.C.MULTIPLAYER = HEX("AC3232")
 
 function MP.load_mp_file(file)
@@ -135,7 +136,6 @@ MP.reset_game_states()
 MP.LOBBY.username = MP.UTILS.get_username()
 MP.LOBBY.blind_col = MP.UTILS.get_blind_col()
 
-
 if not SMODS.current_mod.lovely then
 	G.E_MANAGER:add_event(Event({
 		no_delete = true,
@@ -166,8 +166,7 @@ SMODS.Atlas({
 
 MP.load_mp_dir("compatibility")
 
-MP.load_mp_file("networking/action_handlers.lua")
-
+MP.load_mp_dir("networking")
 MP.load_mp_dir("objects/editions")
 MP.load_mp_dir("objects/stickers")
 MP.load_mp_dir("objects/blinds")
