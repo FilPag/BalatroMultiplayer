@@ -273,7 +273,7 @@ return {
                 "te gusta, considera",
 			},
             ml_lobby_info = { "Info de", "la sala" },
-			loc_ready = "Listo para el PvP",
+			loc_ready_pvp = "Listo para el PvP",
 			loc_selecting = "Seleccionando ciega",
 			loc_shop = "Comprando",
 			loc_playing = "Jugando ",
