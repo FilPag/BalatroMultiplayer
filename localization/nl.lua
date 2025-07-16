@@ -302,7 +302,7 @@ return {
 				"je het leuk vindt, overweeg",
 			},
 			ml_lobby_info = { "Lobby", "Informatie" },
-			loc_ready = "Klaar voor PvP",
+			loc_ready_pvp = "Klaar voor PvP",
 			loc_selecting = "Blind aan het selecteren",
 			loc_shop = "Shoppen",
 			loc_playing = "Speelt ",

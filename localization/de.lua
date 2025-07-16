@@ -245,7 +245,7 @@ return {
 				"von einer einzigen Person,",
 				"fallst du es magst dann vielleicht",
 			},
-			loc_ready = "Bereit für PvP",
+			loc_ready_pvp = "Bereit für PvP",
 			loc_selecting = "Am Blind auswählen",
 			loc_shop = "Beim Einkaufen",
 			loc_playing = "Am Spielen ",
