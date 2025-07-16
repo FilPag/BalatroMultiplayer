@@ -1,3 +1,40 @@
+function MP.UI_UTILS.ease_lives(mod)
+	G.E_MANAGER:add_event(Event({
+		trigger = "immediate",
+		func = function()
+			if not G.hand_text_area then
+				return
+			end
+
+			if MP.LOBBY.config.disable_live_and_timer_hud then
+				return true -- Returning nothing hangs the game because it's a part of an event
+			end
+
+			local lives_UI = G.hand_text_area.ante
+			mod = mod or 0
+			local text = "+"
+			local col = G.C.IMPORTANT
+			if mod < 0 then
+				text = "-"
+				col = G.C.RED
+			end
+			lives_UI.config.object:update()
+			G.HUD:recalculate()
+			attention_text({
+				text = text .. tostring(math.abs(mod)),
+				scale = 1,
+				hold = 0.7,
+				cover = lives_UI.parent,
+				cover_colour = col,
+				align = "cm",
+			})
+			play_sound("highlight2", 0.685, 0.2)
+			play_sound("generic1")
+			return true
+		end,
+	}))
+end
+
 function MP.UI_UTILS.update_blind_HUD()
 	if MP.LOBBY.code then
 		G.HUD_blind.alignment.offset.y = -10
@@ -46,3 +83,4 @@ function MP.UI_UTILS.hide_enemy_location()
 		G.HUD:add_child(MP.UIDEF.round_score(), row_dollars_chips)
 	end
 end
+
