@@ -905,6 +905,11 @@ function MP.UTILS.calc_coop_score(local_score)
 	return total_score
 end
 
+function MP.UTILS.is_coop()
+	if not MP.LOBBY.code then return false end
+	return MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival"
+end
+
 -- Returns the local player for the current client.
 -- @param players table: array of player tables
 -- @param my_id string: the id of the local player

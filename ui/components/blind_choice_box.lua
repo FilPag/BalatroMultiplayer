@@ -31,7 +31,8 @@ local function get_blind_amount_MP(type, blind_choice)
 		return "????"
 	end
 
-	local amount = get_blind_amount_ref(G.GAME.round_resets.blind_ante) * blind_choice.config.mult * G.GAME.starting_params.ante_scaling
+	local amount = get_blind_amount_ref(G.GAME.round_resets.blind_ante) * blind_choice.config.mult *
+			G.GAME.starting_params.ante_scaling
 
 	if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" and type == "Boss" then
 		amount = amount * #MP.LOBBY.players
@@ -51,11 +52,11 @@ end
 
 function MP.UIDEF.blind_choice_box(config)
 	-- Setup life_or_death_text
-	local life_or_death_text
-	if G.GAME.round_resets.blind_choices[config.type] == "bl_mp_nemesis" then
-		life_or_death_text = MP.UIDEF.blind_choice_life_or_death_text()
-	elseif config.type == "Small" or config.type == "Big" then
-		life_or_death_text = create_UIBox_blind_tag(config.type, config.run_info)
+	local extras
+	if config.type == "Small" or config.type == "Big" then
+		extras = create_UIBox_blind_tag(config.type, config.run_info)
+	else
+		extras = MP.UIDEF.blind_choice_extras(G.GAME.round_resets.blind_choices[config.type])
 	end
 
 	-- Setup animation atlas and position
@@ -417,19 +418,27 @@ function MP.UIDEF.blind_choice_box(config)
 				n = G.UIT.R,
 				config = { id = "blind_extras", align = "cm" },
 				nodes = {
-					life_or_death_text,
+					extras,
 				}
 			},
 		},
 	}
 end
 
-function MP.UIDEF.blind_choice_life_or_death_text()
+function MP.UIDEF.blind_choice_extras(blind_type)
 	local texts = {
-		{ key = "k_bl_life",  colour = G.C.FILTER, scale = 0.55, bump = true },
-		{ key = "k_bl_or",    colour = G.C.WHITE,  scale = 0.35 },
-		{ key = "k_bl_death", colour = G.C.FILTER, scale = 0.55, bump = true },
+		{ key = "ph_up_ante_1", colour = G.C.FILTER, scale = 0.55, bump = true },
+		{ key = "ph_up_ante_2", colour = G.C.WHITE,  scale = 0.35 },
+		{ key = "ph_up_ante_3", colour = G.C.WHITE,  scale = 0.35 },
 	}
+	if blind_type == "bl_mp_nemesis" then
+		texts = {
+			{ key = "k_bl_life",  colour = G.C.FILTER, scale = 0.55, bump = true },
+			{ key = "k_bl_or",    colour = G.C.WHITE,  scale = 0.35 },
+			{ key = "k_bl_death", colour = G.C.FILTER, scale = 0.55, bump = true },
+		}
+	end
+
 	local nodes = {}
 	for i, t in ipairs(texts) do
 		local dt = DynaText({

@@ -26,7 +26,7 @@ function Game:update_selecting_hand(dt)
 		MP.GAME.end_pvp = false
 	end
 
-	if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" then
+	if MP.UTILS.is_coop() then
 		if G.GAME.chips - G.GAME.blind.chips >= 0 then
 			G.hand:unhighlight_all()
 			G.STATE_COMPLETE = false
