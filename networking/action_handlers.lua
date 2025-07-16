@@ -1,3 +1,32 @@
+--- @class client_data
+--- @field username string
+--- @field colour string
+--- @field modHash string
+--- @field isCached boolean
+--- @field isReady boolean
+--- @field firstReady boolean
+
+--- @player_state
+--- @class player_state
+--- @field lives number
+--- @field score number 
+--- @field highest_score number 
+--- @field hands_left number
+--- @field ante number
+--- @field skips number
+--- @field furthest_blind number
+--- @field lives_blocker boolean
+--- @field location string
+
+--- @class lobby_info
+--- @field host string
+--- @field hostHash string
+--- @field hostCached boolean
+--- @field isHost boolean
+--- @field local_id string
+--- @field players? table[] @ Array of player objects: { username: string, modHash: string, isCached: boolean, id: string }
+
+
 local json = require "json"
 Client = {}
 
@@ -74,20 +103,13 @@ local function action_connected()
 end
 
 local function action_joinedLobby(code, type)
+	MP.FLAGS.join_pressed = false
 	MP.LOBBY.code = code
 	MP.LOBBY.type = type
 	MP.ACTIONS.sync_client()
 	MP.ACTIONS.lobby_info()
 	MP.UI.update_connection_status()
 end
-
---- @class lobby_info
---- @field host string
---- @field hostHash string
---- @field hostCached boolean
---- @field isHost boolean
---- @field local_id string
---- @field players? table[] @ Array of player objects: { username: string, modHash: string, isCached: boolean, id: string }
 
 --- @param lobby_info lobby_info
 local function action_lobbyInfo(lobby_info)
@@ -151,38 +173,9 @@ local function action_start_blind()
 	end
 end
 
-local function action_ally_info(score_str, hand_left_str)
-	local score = MP.INSANE_INT.from_string(score_str)
-	local hands_left = tonumber(hand_left_str)
-
-	local new_total = MP.INSANE_INT.empty()
-
-	-- for each player add add score to new total
-	if score == nil or hands_left == nil then
-		sendDebugMessage("Invalid score or hands_left", "MULTIPLAYER")
-		return
-	end
-
-	G.E_MANAGER:add_event(Event({
-		trigger = 'ease',
-		blocking = false,
-		ref_table = G.GAME,
-		ref_value = 'chips',
-		ease_to = G.GAME.chips + math.floor(score.coeffiocient),
-		delay = 0.5,
-		func = (function(t) return math.floor(t) end)
-	}))
-	local chip_UI_count = G.HUD:get_UIE_by_ID("chip_UI_count")
-	if chip_UI_count then chip_UI_count:juice_up() end
-end
-
 local function action_game_state_update(player_id, updates)
 	MP.player_state_manager.process(player_id, updates)
 end
-
----@param score_str string
----@param hands_left_str string
----@param skips_str string
 
 local function action_stop_game()
 	if G.STAGE ~= G.STAGES.MAIN_MENU then
@@ -301,6 +294,11 @@ local function update_overlay_toggles(changed_keys)
 			G.FUNCS.toggle(config_uie)
 		end
 	end
+end
+
+local function action_invalidLobby()
+	MP.FLAGS.join_pressed = false
+	MP.UTILS.overlay_message("Invalid lobby code")
 end
 
 local function action_lobby_options(options)
@@ -734,6 +732,42 @@ local function action_pause_ante_timer(time)
 	MP.GAME.timer_started = false
 end
 
+local action_table = {
+	connected = function() action_connected() end,
+	version = function() action_version() end,
+	disconnected = function() action_disconnected() end,
+	invalidLobby = function() action_invalidLobby() end,
+	joinedLobby = function(parsedAction) action_joinedLobby(parsedAction.code, parsedAction.type) end,
+	lobbyInfo = function(parsedAction) action_lobbyInfo(parsedAction) end,
+	startGame = function(parsedAction) action_start_game(parsedAction.players, parsedAction.seed, parsedAction.stake) end,
+	startBlind = function() action_start_blind() end,
+	gameStateUpdate = function(parsedAction) action_game_state_update(parsedAction.id, parsedAction.updates) end,
+	stopGame = function() action_stop_game() end,
+	endPvP = function() action_end_pvp() end,
+	winGame = function() action_win_game() end,
+	loseGame = function() action_lose_game() end,
+	lobbyOptions = function(parsedAction) action_lobby_options(parsedAction.options) end,
+	setBossBlind = function(parsedAction) action_set_boss_blind(parsedAction.bossKey) end,
+	sendPhantom = function(parsedAction) action_send_phantom(parsedAction.key) end,
+	removePhantom = function(parsedAction) action_remove_phantom(parsedAction.key) end,
+	speedrun = function() action_speedrun() end,
+	asteroid = function() action_asteroid() end,
+	soldJoker = function() action_sold_joker() end,
+	letsGoGamblingNemesis = function() action_lets_go_gambling_nemesis() end,
+	eatPizza = function(parsedAction) action_eat_pizza(parsedAction.whole) end,
+	spentLastShop = function(parsedAction) action_spent_last_shop(parsedAction.amount) end,
+	magnet = function() action_magnet() end,
+	magnetResponse = function(parsedAction) action_magnet_response(parsedAction.key) end,
+	getEndGameJokers = function() action_get_end_game_jokers() end,
+	receiveEndGameJokers = function(parsedAction) action_receive_end_game_jokers(parsedAction.keys) end,
+	getNemesisDeck = function() action_get_nemesis_deck() end,
+	receiveNemesisDeck = function(parsedAction) action_receive_nemesis_deck(parsedAction.cards) end,
+	startAnteTimer = function(parsedAction) action_start_ante_timer(parsedAction.time) end,
+	pauseAnteTimer = function(parsedAction) action_pause_ante_timer(parsedAction.time) end,
+	error = function(parsedAction) action_error(parsedAction.message) end,
+	keepAlive = function() action_keep_alive() end,
+}
+
 function MP.NETWORKING.update(dt)
 	repeat
 		local msg = love.thread.getChannel("networkToUi"):pop()
@@ -743,7 +777,6 @@ function MP.NETWORKING.update(dt)
 			local ok, parsedAction = pcall(json.decode, msg)
 			if not ok or type(parsedAction) ~= "table" then
 				sendWarnMessage("Received non-JSON message: " .. tostring(msg), "MULTIPLAYER")
-				-- Optionally handle known plain string messages here
 				return
 			end
 
@@ -762,72 +795,9 @@ function MP.NETWORKING.update(dt)
 				sendTraceMessage(log, "MULTIPLAYER")
 			end
 
-			if parsedAction.action == "connected" then
-				action_connected()
-			elseif parsedAction.action == "version" then
-				action_version()
-			elseif parsedAction.action == "disconnected" then
-				action_disconnected()
-			elseif parsedAction.action == "joinedLobby" then
-				action_joinedLobby(parsedAction.code, parsedAction.type)
-			elseif parsedAction.action == "lobbyInfo" then
-				action_lobbyInfo(parsedAction)
-			elseif parsedAction.action == "startGame" then
-				action_start_game(parsedAction.players, parsedAction.seed, parsedAction.stake)
-			elseif parsedAction.action == "startBlind" then
-				action_start_blind()
-			elseif parsedAction.action == "allyInfo" then
-				action_ally_info(parsedAction.score, parsedAction.hands_left)
-			elseif parsedAction.action == "gameStateUpdate" then
-				action_game_state_update(parsedAction.id, parsedAction.updates)
-			elseif parsedAction.action == "stopGame" then
-				action_stop_game()
-			elseif parsedAction.action == "endPvP" then
-				action_end_pvp()
-			elseif parsedAction.action == "winGame" then
-				action_win_game()
-			elseif parsedAction.action == "loseGame" then
-				action_lose_game()
-			elseif parsedAction.action == "lobbyOptions" then
-				action_lobby_options(parsedAction.options)
-			elseif parsedAction.action == "setBossBlind" then
-				action_set_boss_blind(parsedAction.bossKey)
-			elseif parsedAction.action == "sendPhantom" then
-				action_send_phantom(parsedAction.key)
-			elseif parsedAction.action == "removePhantom" then
-				action_remove_phantom(parsedAction.key)
-			elseif parsedAction.action == "speedrun" then
-				action_speedrun()
-			elseif parsedAction.action == "asteroid" then
-				action_asteroid()
-			elseif parsedAction.action == "soldJoker" then
-				action_sold_joker()
-			elseif parsedAction.action == "letsGoGamblingNemesis" then
-				action_lets_go_gambling_nemesis()
-			elseif parsedAction.action == "eatPizza" then
-				action_eat_pizza(parsedAction.whole)
-			elseif parsedAction.action == "spentLastShop" then
-				action_spent_last_shop(parsedAction.amount)
-			elseif parsedAction.action == "magnet" then
-				action_magnet()
-			elseif parsedAction.action == "magnetResponse" then
-				action_magnet_response(parsedAction.key)
-			elseif parsedAction.action == "getEndGameJokers" then
-				action_get_end_game_jokers()
-			elseif parsedAction.action == "receiveEndGameJokers" then
-				action_receive_end_game_jokers(parsedAction.keys)
-			elseif parsedAction.action == "getNemesisDeck" then
-				action_get_nemesis_deck()
-			elseif parsedAction.action == "receiveNemesisDeck" then
-				action_receive_nemesis_deck(parsedAction.cards)
-			elseif parsedAction.action == "startAnteTimer" then
-				action_start_ante_timer(parsedAction.time)
-			elseif parsedAction.action == "pauseAnteTimer" then
-				action_pause_ante_timer(parsedAction.time)
-			elseif parsedAction.action == "error" then
-				action_error(parsedAction.message)
-			elseif parsedAction.action == "keepAlive" then
-				action_keep_alive()
+		local handler = action_table[parsedAction.action]
+			if handler then
+				handler(parsedAction)
 			end
 		end
 	until not msg
