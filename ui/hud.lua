@@ -30,7 +30,11 @@ if MP.LOBBY.players and MP.GAME.players then
 	for i, player in ipairs(MP.GAME.players) do
 		local lobby_player = MP.LOBBY.players[i]
 		local username = lobby_player and lobby_player.username or ("Player " .. tostring(i))
-		table.insert(players, MP.UI.create_UIBox_player_row(username, player))
+		local colour = G.C.RED
+		if MP.UTILS.is_coop() then
+			colour = lighten(G.C.BLUE, 0.5)
+		end
+		table.insert(players, MP.UI.create_UIBox_player_row(username, player, colour))
 	end
 end
 
@@ -61,124 +65,6 @@ function MP.UI.create_UIBox_mods_list(type)
 	}
 end
 
-function MP.UI.create_UIBox_player_row(username, player_state)
-	local player_name = username
-	local lives = player_state.lives
-	local highest_score = player_state.highest_score
-	return {
-		n = G.UIT.R,
-		config = {
-			align = "cm",
-			padding = 0.05,
-			r = 0.1,
-			colour = darken(G.C.JOKER_GREY, 0.1),
-			emboss = 0.05,
-			hover = true,
-			force_focus = true,
-			on_demand_tooltip = {
-				text = { localize("k_mods_list") },
-				filler = { func = MP.UI.create_UIBox_mods_list, args = type },
-			},
-		},
-		nodes = {
-			{
-				n = G.UIT.C,
-				config = { align = "cl", padding = 0, minw = 5 },
-				nodes = {
-					{
-						n = G.UIT.C,
-						config = {
-							align = "cm",
-							padding = 0.02,
-							r = 0.1,
-							colour = G.C.RED,
-							minw = 2,
-							outline = 0.8,
-							outline_colour = G.C.RED,
-						},
-						nodes = {
-							{
-								n = G.UIT.T,
-								config = {
-									text = tostring(lives) .. " " .. localize("k_lives"),
-									scale = 0.4,
-									colour = G.C.UI.TEXT_LIGHT,
-								},
-							},
-						},
-					},
-					{
-						n = G.UIT.C,
-						config = { align = "cm", minw = 4.5, maxw = 4.5 },
-						nodes = {
-							{
-								n = G.UIT.T,
-								config = {
-									text = " " .. player_name,
-									scale = 0.45,
-									colour = G.C.UI.TEXT_LIGHT,
-									shadow = true,
-								},
-							},
-						},
-					},
-				},
-			},
-			{
-				n = G.UIT.C,
-				config = { align = "cm", padding = 0.05, colour = G.C.BLACK, r = 0.1 },
-				nodes = {
-					{
-						n = G.UIT.C,
-						config = { align = "cr", padding = 0.01, r = 0.1, colour = G.C.CHIPS, minw = 1.1 },
-						nodes = {
-							{
-								n = G.UIT.T,
-								config = {
-									text = tostring(player_state.hands_left),-- Will be hands in the future
-									scale = 0.45,
-									colour = G.C.UI.TEXT_LIGHT,
-								},
-							},
-							{ n = G.UIT.B, config = { w = 0.08, h = 0.01 } },
-						},
-					},
-					{
-						n = G.UIT.C,
-						config = { align = "cl", padding = 0.01, r = 0.1, colour = G.C.MULT, minw = 1.1 },
-						nodes = {
-							{ n = G.UIT.B, config = { w = 0.08, h = 0.01 } },
-							{
-								n = G.UIT.T,
-								config = {
-									text = "???", -- Will be discards in the future
-									scale = 0.45,
-									colour = G.C.UI.TEXT_LIGHT,
-								},
-							},
-						},
-					},
-				},
-			},
-			{
-				n = G.UIT.C,
-				config = { align = "cm", padding = 0.05, colour = G.C.L_BLACK, r = 0.1, minw = 1.5 },
-				nodes = {
-					{
-						n = G.UIT.T,
-						config = {
-							text = MP.INSANE_INT.to_string(highest_score),
-							scale = 0.45,
-							colour = G.C.FILTER,
-							shadow = true,
-						},
-					},
-				},
-			},
-		},
-	}
-end
-
 local ease_round_ref = ease_round
 function ease_round(mod)
 	if MP.LOBBY.code and (not MP.LOBBY.config.disable_live_and_timer_hud) then
@@ -196,8 +82,6 @@ function G.FUNCS.mp_timer_button(e)
 		end
 	end
 end
-
-
 
 function G.FUNCS.set_timer_box(e)
 	if MP.GAME.timer_started then

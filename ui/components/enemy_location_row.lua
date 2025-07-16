@@ -51,7 +51,6 @@ function MP.UIDEF.enemy_location_row(ref_table, ref_value)
               ref_value = ref_value,
               scale = 0.35,
               colour = G.C.WHITE,
-              id = "chip_UI_count",
               shadow = true,
             },
           },

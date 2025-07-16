@@ -245,7 +245,7 @@ return {
 				"une seule personne, si",
 				"vous aimez, n'hésitez pas à",
 			},
-			loc_ready = "Prêt pour le PvP",
+			loc_ready_pvp = "Prêt pour le PvP",
 			loc_selecting = "Sélectionne une Blinde",
 			loc_shop = "Dans le magasin",
 			loc_playing = "Joue ",

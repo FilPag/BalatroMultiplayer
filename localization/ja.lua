@@ -262,7 +262,7 @@ return {
 				"よろしくお願いします！",
 			},
 			ml_lobby_info = { "ロビー", "情報" },
-			loc_ready = "準備OK！",
+			loc_ready_pvp = "準備OK！",
 			loc_selecting = "ブラインド選択",
 			loc_shop = "ショップ",
 			loc_playing = "",

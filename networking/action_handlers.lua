@@ -15,7 +15,11 @@ end
 --- Handles setting the boss blind in the game.
 --- @param bossKey BossKey
 local function action_set_boss_blind(bossKey)
-	sendTraceMessage(string.format("Received boss key: %s", bossKey), "MULTIPLAYER")
+	if G.GAME.round_resets.blind_choices.Boss == bossKey then 
+			MP.next_coop_boss = nil
+		return 
+	end
+
 	G.GAME.round_resets.blind_choices.Boss = bossKey
 	MP.next_coop_boss = bossKey
 
