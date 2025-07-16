@@ -1,6 +1,5 @@
 local player_state_manager = SMODS.load_file('networking/player_state_manager.lua', 'Multiplayer')()
 
-
 local create_UIBox_blind_choice_ref = create_UIBox_blind_choice
 ---@diagnostic disable-next-line: lowercase-global
 function create_UIBox_blind_choice(type, run_info)
@@ -8,6 +7,8 @@ function create_UIBox_blind_choice(type, run_info)
 	if not MP.LOBBY.code then
 		return create_UIBox_blind_choice_ref(type, run_info)
 	end
+
+	sendDebugMessage("Creating blind choice box for type: " .. tostring(type), "MULTIPLAYER")
 
 	-- Set default blind if not present
 	G.GAME.blind_on_deck = G.GAME.blind_on_deck or "Small"
@@ -20,84 +21,23 @@ function create_UIBox_blind_choice(type, run_info)
 
 	-- Build blind_choice object
 	local blind_choice = {
-		config = G.P_BLINDS[blind_choice_key],
+		config = G.P_BLINDS[G.GAME.round_resets.blind_choices[type]],
 	}
-	-- Setup animation atlas and position
-	local blind_atlas = blind_choice.config.atlas or "blind_chips"
-	local blind_pos = blind_choice.config.pos
 
-	if G.GAME.round_resets.blind_choices[type] == "bl_mp_nemesis" then
-		local nemesis_blind_col = MP.UTILS.get_nemesis_key() or nil
-
-		blind_atlas = "mp_player_blind_col"
-		blind_pos = G.P_BLINDS[nemesis_blind_col].pos
-	end
-
-	blind_choice.animation = AnimatedSprite(0, 0, 1.4, 1.4, G.ANIMATION_ATLAS[blind_atlas], blind_pos)
-	blind_choice.animation:define_draw_steps({
-		{ shader = "dissolve", shadow_height = 0.05 },
-		{ shader = "dissolve" },
-	})
-
-	-- Build extras UI
-	local extras = nil
-	
 	-- Orbital choices setup
-	setup_orbital_choices(type)
-
-	-- Blind ante fallback
+	MP.UTILS.setup_orbital_choices(type)
 	G.GAME.round_resets.blind_ante = G.GAME.round_resets.blind_ante or G.GAME.round_resets.ante
 
-	-- Localization
-	local loc_target = localize({
-		type = "raw_descriptions",
-		key = blind_choice.config.key,
-		set = "Blind",
-		vars = { blind_choice.config.key == "bl_ox" and localize(G.GAME.current_round.most_played_poker_hand, "poker_hands") or "" },
-	})
--- Text table
-	local text_table = loc_target
-	if G.GAME.round_resets.pvp_blind_choices[type] then
-		text_table[#text_table + 1] = localize("k_bl_mostchips")
-	end
-
-	-- Blind color
-	local blind_col = get_blind_main_colour(type)
-
-	-- Blind amount
-	local blind_amt = get_blind_amt(type, blind_choice)
-	-- Coop Survival scaling
-	if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" and type == "Boss" then
-		blind_amt = blind_amt * #MP.LOBBY.players
-	end
-
-	
-
-	-- Blind state and reward
-	local blind_state = G.GAME.round_resets.blind_states[type]
-	if blind_state == "Select" then blind_state = "Current" end
-	local _reward = not (G.GAME.modifiers.no_blind_reward and G.GAME.modifiers.no_blind_reward[type])
-
-	-- Params for UI
-	local params = {
-		type = type,
+	-- config for UI
+	local config = {
 		run_info = run_info,
+		type = type,
 		blind_choice = blind_choice,
-		extras = extras,
-		blind_col = blind_col,
-		blind_amt = blind_amt,
-		text_table = text_table,
-		blind_state = blind_state,
 		disabled = disabled,
-		stake_sprite = stake_sprite,
-		_reward = _reward,
 	}
 
-	return MP.UIDEF.blind_choice_box(run_info, params)
+	return MP.UIDEF.blind_choice_box(config)
 end
-
-
--- the 5 hooks below handle ui related stuff with custom blinds
 
 local get_blind_main_colourref = get_blind_main_colour
 function get_blind_main_colour(type) -- handles ui colour stuff
@@ -882,7 +822,7 @@ function G.FUNCS.select_blind(e)
 		MP.GAME.ante_key = tostring(math.random())
 		MP.ACTIONS.play_hand(0, G.GAME.round_resets.hands)
 		MP.ACTIONS.set_location("loc_playing-" .. (e.config.ref_table.key or e.config.ref_table.name))
-		hide_enemy_location()
+		MP.UI_UTILS.hide_enemy_location()
 	end
 end
 
