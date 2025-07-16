@@ -141,7 +141,11 @@ function G.FUNCS.mp_toggle_ready(e)
   MP.GAME.ready_blind_text = MP.GAME.ready_blind and localize("b_unready") or localize("b_ready")
 
   if MP.GAME.ready_blind then
-    MP.ACTIONS.set_location("loc_ready")
+    if MP.UTILS.is_coop() then 
+      MP.ACTIONS.set_location("loc_ready_boss")
+    else
+      MP.ACTIONS.set_location("loc_ready_pvp")
+    end
     MP.ACTIONS.ready_blind(e)
   else
     MP.ACTIONS.set_location("loc_selecting")

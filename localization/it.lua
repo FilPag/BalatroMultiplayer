@@ -167,7 +167,7 @@ return {
 			return_to = "Ritorna alla",
 			enemy_loc_1 = "Posizione del",
 			enemy_loc_2 = "Nemico",
-			loc_ready = "Pronto per lo scontro",
+			loc_ready_pvp = "Pronto per lo scontro",
 			loc_selecting = "Selezionando un buio",
 			loc_shop = "Nel negozio",
 			loc_playing = "Combattendo ",

@@ -245,7 +245,7 @@ return {
 				"één persoon, als je het leuk vindt",
 				"denk erover na om",
 			},
-			loc_ready = "Klaar voor PvP",
+			loc_ready_pvp = "Klaar voor PvP",
 			loc_selecting = "Blind aan het kiezen",
 			loc_shop = "Shoppen",
 			loc_playing = "Speelt ",

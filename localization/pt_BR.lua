@@ -286,7 +286,7 @@ return {
 				"gostou considere",
 			},
 			ml_lobby_info = { "Lobby", "Info" },
-			loc_ready = "Pronto para Duelar",
+			loc_ready_pvp = "Pronto para Duelar",
 			loc_selecting = "Escolhendo um Blind",
 			loc_shop = "Comprando",
 			loc_playing = "Jogando ",

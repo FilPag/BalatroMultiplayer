@@ -256,7 +256,7 @@ return {
 				"Mēnā e pīrangi ana,",
 			},
 			ml_lobby_info = { "Kōwhiringa", "Rūma" },
-			loc_ready = "Kua rite",
+			loc_ready_pvp = "Kua rite",
 			loc_selecting = "E kōwhiiri Ārai ana",
 			loc_shop = "E hokohoko ana",
 			loc_playing = "Kei te ",

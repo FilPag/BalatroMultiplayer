@@ -260,7 +260,7 @@ return {
 				"spodobał,",
 			},
 			ml_lobby_info = { "Informacje", "o Lobby" },
-			loc_ready = "Gotowość do PVP",
+			loc_ready_pvp = "Gotowość do PVP",
 			loc_selecting = "Wybiera Przeszkadzajkę",
 			loc_shop = "W Sklepie",
 			loc_playing = "Gra w ",

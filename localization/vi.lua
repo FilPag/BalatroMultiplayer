@@ -276,7 +276,7 @@ return {
 				"thích nó, hãy",
 			},
 			ml_lobby_info = { "T.Tin", "Phòng" },
-			loc_ready = "Sẵn sàng Đối Đầu",
+			loc_ready_pvp = "Sẵn sàng Đối Đầu",
 			loc_selecting = "Đang chọn Blind",
 			loc_shop = "Đang đi chợ",
 			loc_playing = "Đang đánh ",
