@@ -242,7 +242,7 @@ function MP.UIDEF.blind_choice_box(config)
 													{ n = G.UIT.O, config = { object = config.blind_choice.animation } },
 												},
 											},
-											config.text_table and config.text_table[1] and {
+											text_table and text_table[1] and {
 												n = G.UIT.R,
 												config = {
 													align = "cm",
@@ -251,7 +251,7 @@ function MP.UIDEF.blind_choice_box(config)
 													minw = 2.9,
 												},
 												nodes = {
-													config.text_table[1]
+													text_table[1]
 													and {
 														n = G.UIT.R,
 														config = { align = "cm", maxw = 2.8 },
@@ -273,7 +273,7 @@ function MP.UIDEF.blind_choice_box(config)
 															{
 																n = G.UIT.T,
 																config = {
-																	text = config.text_table[1] or "-",
+																	text = text_table[1] or "-",
 																	scale = 0.32,
 																	colour = config.disabled
 																			and G.C.UI.TEXT_INACTIVE
@@ -284,14 +284,14 @@ function MP.UIDEF.blind_choice_box(config)
 														},
 													}
 													or nil,
-													config.text_table[2] and {
+													text_table[2] and {
 														n = G.UIT.R,
 														config = { align = "cm", maxw = 2.8 },
 														nodes = {
 															{
 																n = G.UIT.T,
 																config = {
-																	text = config.text_table[2] or "-",
+																	text = text_table[2] or "-",
 																	scale = 0.32,
 																	colour = config.disabled and G.C.UI.TEXT_INACTIVE
 																			or G.C.WHITE,
@@ -300,14 +300,14 @@ function MP.UIDEF.blind_choice_box(config)
 															},
 														},
 													} or nil,
-													config.text_table[3] and {
+													text_table[3] and {
 														n = G.UIT.R,
 														config = { align = "cm", maxw = 2.8 },
 														nodes = {
 															{
 																n = G.UIT.T,
 																config = {
-																	text = config.text_table[3] or "-",
+																	text = text_table[3] or "-",
 																	scale = 0.32,
 																	colour = config.disabled and G.C.UI.TEXT_INACTIVE
 																			or G.C.WHITE,

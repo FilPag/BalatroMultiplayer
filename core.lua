@@ -19,6 +19,7 @@ MP.LOBBY = {
 	isHost = false,
 }
 MP.GAME = {}
+MP.NETWORKING = {}
 MP.UI = {}
 MP.UI_UTILS = {}
 MP.UIDEF = {}
@@ -26,7 +27,7 @@ MP.ACTIONS = {}
 MP.INTEGRATIONS = {
 	TheOrder = SMODS.Mods["Multiplayer"].config.integrations.TheOrder,
 }
-
+MP.player_state_manager = SMODS.load_file('networking/player_state_manager.lua', 'Multiplayer')()
 G.C.MULTIPLAYER = HEX("AC3232")
 
 function MP.load_mp_file(file)
@@ -160,8 +161,6 @@ MP.LOBBY.username = MP.UTILS.get_username()
 MP.LOBBY.blind_col = MP.UTILS.get_blind_col()
 
 MP.LOBBY.config.weekly = MP.UTILS.get_weekly()
-
-
 if not SMODS.current_mod.lovely then
 	G.E_MANAGER:add_event(Event({
 		no_delete = true,
@@ -190,16 +189,12 @@ SMODS.Atlas({
 	py = 34,
 })
 
-MP.load_mp_dir("compatibility")
-
-MP.load_mp_file("networking/action_handlers.lua")
-
-MP.load_mp_dir("ui/components") -- Gamemodes and rulesets need these
-
 MP.load_mp_dir("rulesets")
 if MP.LOBBY.config.weekly then -- this could be a function but why bother
 	MP.load_mp_file("rulesets/weeklies/"..MP.LOBBY.config.weekly..".lua")
 end
+
+MP.load_mp_dir("compatibility")
 
 MP.load_mp_dir("objects/editions")
 MP.load_mp_dir("objects/enhancements")
@@ -209,9 +204,10 @@ MP.load_mp_dir("objects/decks")
 MP.load_mp_dir("objects/jokers")
 MP.load_mp_dir("objects/consumables")
 MP.load_mp_dir("objects/challenges")
+MP.load_mp_dir("networking")
 MP.load_mp_dir("gamemodes")
-MP.load_mp_dir("function_overrides")
 MP.load_mp_dir("rulesets")
+MP.load_mp_dir("function_overrides")
 MP.apply_rulesets()
 
 MP.load_mp_dir("ui")

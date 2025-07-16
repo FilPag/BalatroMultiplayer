@@ -93,11 +93,6 @@ local function default_update_handler(player, key, value, context)
 	player[key] = value
 end
 
--- Logs unknown update keys for easier debugging/maintenance
-local function log_unknown_update_key(key)
-	sendWarningMessage("Unknown update key: " .. tostring(key), "MULTIPLAYER")
-end
-
 -- Cooperative mode update handler
 local function handle_coop_updates(updates)
 	if not updates.score then return end
@@ -146,7 +141,6 @@ function M.process(player_id, updates)
 		if handler then
 			handler(player, value, context)
 		else
-			log_unknown_update_key(key)
 			default_update_handler(player, key, value, context)
 		end
 	end
