@@ -40,6 +40,8 @@ MP.LOBBY = {
 }
 MP.GAME = {}
 MP.UI = {}
+MP.UI_UTILS = {}
+MP.UIDEF = {}
 MP.ACTIONS = {}
 MP.INTEGRATIONS = {
 	TheOrder = SMODS.Mods["Multiplayer"].config.integrations.TheOrder,
@@ -187,6 +189,9 @@ MP.load_mp_dir("objects/decks")
 MP.load_mp_dir("objects/jokers")
 MP.load_mp_dir("objects/consumables")
 MP.load_mp_dir("objects/challenges")
+MP.load_mp_dir("gamemodes")
+MP.load_mp_dir("function_overrides")
+MP.load_mp_dir("rulesets")
 MP.apply_rulesets()
 
 MP.load_mp_dir("ui/components")

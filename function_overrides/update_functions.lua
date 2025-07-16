@@ -1,40 +1,39 @@
 local update_selecting_hand_ref = Game.update_selecting_hand
 function Game:update_selecting_hand(dt)
-  if G.GAME.current_round.hands_left < G.GAME.round_resets.hands
-      and #G.hand.cards < 1
-      and #G.deck.cards < 1
-      and #G.play.cards < 1
-      and MP.LOBBY.code
-  then
-    G.GAME.current_round.hands_left = 0
-    if MP.is_online_boss() then
-      MP.ACTIONS.play_hand(G.GAME.chips, 0)
-      G.STATE_COMPLETE = false
-      G.STATE = G.STATES.HAND_PLAYED
-    else
-      G.STATE_COMPLETE = false
-      G.STATE = G.STATES.NEW_ROUND
-    end
-    return
-  end
-  update_selecting_hand_ref(self, dt)
+	if G.GAME.current_round.hands_left < G.GAME.round_resets.hands
+			and #G.hand.cards < 1
+			and #G.deck.cards < 1
+			and #G.play.cards < 1
+			and MP.LOBBY.code
+	then
+		G.GAME.current_round.hands_left = 0
+		if MP.is_online_boss() then
+			MP.ACTIONS.play_hand(G.GAME.chips, 0)
+			G.STATE_COMPLETE = false
+			G.STATE = G.STATES.HAND_PLAYED
+		else
+			G.STATE_COMPLETE = false
+			G.STATE = G.STATES.NEW_ROUND
+		end
+		return
+	end
+	update_selecting_hand_ref(self, dt)
 
-  if MP.GAME.end_pvp and MP.is_online_boss() then
-    G.hand:unhighlight_all()
-    G.STATE_COMPLETE = false
-    G.STATE = G.STATES.NEW_ROUND
-    MP.GAME.end_pvp = false
-  end
+	if MP.GAME.end_pvp and MP.is_online_boss() then
+		G.hand:unhighlight_all()
+		G.STATE_COMPLETE = false
+		G.STATE = G.STATES.NEW_ROUND
+		MP.GAME.end_pvp = false
+	end
 
-  if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" then
-    if G.GAME.chips - G.GAME.blind.chips >= 0 then
-      G.hand:unhighlight_all()
-      G.STATE_COMPLETE = false
-      G.STATE = G.STATES.NEW_ROUND
-      MP.GAME.end_pvp = false
-      player_state_manager.reset_scores()
-    end
-  end
+	if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" then
+		if G.GAME.chips - G.GAME.blind.chips >= 0 then
+			G.hand:unhighlight_all()
+			G.STATE_COMPLETE = false
+			G.STATE = G.STATES.NEW_ROUND
+			MP.GAME.end_pvp = false
+		end
+	end
 end
 
 local update_shop_ref = Game.update_shop

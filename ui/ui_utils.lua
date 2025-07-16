@@ -43,6 +43,6 @@ function MP.UI_UTILS.hide_enemy_location()
 	if row_dollars_chips then
 		row_dollars_chips.children[1]:remove()
 		row_dollars_chips.children[1] = nil
-		G.HUD:add_child(MP.UIEF.round_score(), row_dollars_chips)
+		G.HUD:add_child(MP.UIDEF.round_score(), row_dollars_chips)
 	end
 end
