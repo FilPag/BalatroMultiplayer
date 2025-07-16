@@ -218,6 +218,7 @@ local function action_lose_game()
 		blockable = true,
 		blocking = false,
 		func = function()
+			MP.GAME.won = true
 			MP.end_game_jokers_payload = ""
 			MP.nemesis_deck_string = ""
 			MP.end_game_jokers_received = false
