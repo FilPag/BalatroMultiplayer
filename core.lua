@@ -38,6 +38,9 @@ MP.LOBBY = {
 	players = {},
 	isHost = false,
 }
+MP.FLAGS = {
+	join_pressed = false,
+}
 MP.GAME = {}
 MP.NETWORKING = {}
 MP.UI = {}

@@ -573,6 +573,8 @@ function G.UIDEF.create_UIBox_join_lobby_button()
 									keyboard_offset = 1,
 									minw = 5,
 									callback = function(val)
+										if MP.FLAGS.join_pressed then return end
+										MP.FLAGS.join_pressed = true
 										MP.ACTIONS.join_lobby(MP.LOBBY.temp_code)
 									end,
 								}),
@@ -708,7 +710,16 @@ function G.FUNCS.skip_tutorial(e)
 end
 
 function G.FUNCS.join_from_clipboard(e)
+	if MP.FLAGS.join_pressed then return end
+	MP.FLAGS.join_pressed = true
 	MP.LOBBY.temp_code = MP.UTILS.get_from_clipboard()
+
+	if #MP.LOBBY.temp_code > 5 then
+		MP.UTILS.overlay_message("Lobby does not exist or is invalid.")
+		MP.FLAGS.join_pressed = false
+		return
+	end
+
 	MP.ACTIONS.join_lobby(MP.LOBBY.temp_code)
 end
 
