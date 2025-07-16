@@ -1,5 +1,5 @@
 local create_UIBox_game_over_ref = create_UIBox_game_over
-function MP.UI.create_UIBox_game_over()
+function create_UIBox_game_over()
   if not MP.LOBBY.code then
     return create_UIBox_game_over_ref()
   end
@@ -312,7 +312,7 @@ function MP.UI.create_UIBox_game_over()
 end
 
 local create_UIBox_win_ref = create_UIBox_win
-function MP.UI.create_UIBox_win()
+function create_UIBox_win()
   if not MP.LOBBY.code then
     return create_UIBox_win_ref()
   end
