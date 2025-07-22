@@ -107,6 +107,11 @@ function MP.UTILS.get_nemesis_key() -- calling this function assumes the user is
 	local enemy = MP.UTILS.get_nemesis()
 	local enemy_colour = MP.UTILS.get_nemesis_lobby_data().colour
 	local ret = MP.UTILS.blind_col_numtokey(enemy_colour)
+
+	if not enemy or not enemy.lives then
+		return ret
+	end
+
 	if tonumber(enemy.lives) <= 1 and tonumber(MP.UTILS.get_local_player().lives) <= 1 then
 		if G.STATE ~= G.STATES.ROUND_EVAL then -- very messy fix that mostly works. breaks in a different way... but far harder to notice
 			ret = "bl_final_heart"
@@ -773,13 +778,22 @@ function MP.UTILS.MP_SAVE()
 		end
 	end
 
+	local blind  = nil
+	local state = G.STATES.SHOP
+
+	if G.GAME.blind and G.GAME.blind.key ~= "bl_mp_nemesis" then
+			sendDebugMessage(tostring(G.GAME.blind.key), "BATROO")
+			blind = G.GAME.blind:save()
+			state = G.STATE
+	end
+
 	return {
 		cardAreas = cardAreas,
 		tags = tags,
 		GAME = G.GAME,
-		STATE = G.STATE,
+		STATE = state,
 		ACTION = G.action,
-		BLIND = G.GAME.blind and G.GAME.blind:save() or nil,
+		BLIND = blind,
 		BACK = G.GAME.selected_back and G.GAME.selected_back:save() or nil,
 		VERSION = G.VERSION,
 	}
