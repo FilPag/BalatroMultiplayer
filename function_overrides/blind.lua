@@ -43,7 +43,7 @@ local ease_background_colour_blindref = ease_background_colour_blind
 function ease_background_colour_blind(state, blind_override) -- handles background
   local blindname = ((blind_override or (G.GAME.blind and G.GAME.blind.name ~= '' and G.GAME.blind.name)) or 'Small Blind')
   local blindname = (blindname == '' and 'Small Blind' or blindname)
-  if blindname == "bl_mp_nemesis" then
+  if blindname == "bl_mp_nemesis" and MP.is_online_boss() then
     blind_override = MP.UTILS.get_nemesis_key()
     for k, v in pairs(G.P_BLINDS) do
       if blind_override == k then
