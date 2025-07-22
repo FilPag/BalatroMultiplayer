@@ -22,12 +22,19 @@ MP.INSANE_INT.create = function(coeffiocient, exponent, e_count)
     }
 end
 
+MP.INSANE_INT.to_number = function(insane_int)
+    local base = insane_int.coeffiocient or 0
+    local exp = insane_int.exponent or 0
+    local e_count = insane_int.e_count or 0
+    return base * (10 ^ exp) * (10 ^ (e_count * 10000))
+end
+
 MP.INSANE_INT.from_string = function(str)
-	local e_count = 0
-	while #str > 0 and string.lower(string.sub(str, 1, 1)) == "e" do
-		e_count = e_count + 1
-		str = string.sub(str, 2)
-	end
+    local e_count = 0
+    while #str > 0 and string.lower(string.sub(str, 1, 1)) == "e" do
+        e_count = e_count + 1
+        str = string.sub(str, 2)
+    end
 
     local parts = MP.UTILS.string_split(str, "e")
 
@@ -44,7 +51,8 @@ MP.INSANE_INT.to_string = function(insane_int_display)
         return e .. number_format(insane_int_display.coeffiocient)
     end
 
-    return e .. number_format(insane_int_display.coeffiocient, 10000) .. "e" .. number_format(insane_int_display.exponent)
+    return e ..
+    number_format(insane_int_display.coeffiocient, 10000) .. "e" .. number_format(insane_int_display.exponent)
 end
 
 -- This doesn't really fit with the comment at the top,
