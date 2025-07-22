@@ -11,7 +11,6 @@ function create_UIBox_game_over()
     { card_limit = G.GAME.starting_params.joker_slots, type = "joker", highlight_limit = 1 }
   )
 
-	G.SETTINGS.PAUSED = false
   local eased_red = copy_table(G.GAME.round_resets.ante <= G.GAME.win_ante and G.C.RED or G.C.BLUE)
   eased_red[4] = 0
   ease_value(eased_red, 4, 0.8, nil, nil, true)
@@ -314,7 +313,6 @@ function create_UIBox_win()
     { card_limit = G.GAME.starting_params.joker_slots, type = "joker", highlight_limit = 1 }
   )
 
-	G.SETTINGS.PAUSED = false
   if not MP.end_game_jokers_received then
     MP.ACTIONS.get_end_game_jokers()
   else
@@ -383,16 +381,6 @@ function create_UIBox_win()
                 nodes = {
                   { n = G.UIT.O, config = { object = MP.end_game_jokers } },
                 },
-              },
-              {
-                n = G.UIT.C,
-                config = {
-                  maxw = 0.8,
-                  minw = 0.8,
-                  minh = 0.7,
-                  colour = G.C.CLEAR,
-                  no_fill = false
-                }
               },
               {
                 n = G.UIT.R,
