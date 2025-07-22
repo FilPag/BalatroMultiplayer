@@ -110,7 +110,7 @@ local function handle_coop_updates(updates)
 				blockable = true,
 				ref_table = G.GAME,
 				ref_value = 'chips',
-				ease_to = MP.coop_score.coeffiocient,
+				ease_to = MP.INSANE_INT.to_number(MP.coop_score),
 				delay = 0.5,
 				func = (function(t) return math.floor(t) end)
 			}))
