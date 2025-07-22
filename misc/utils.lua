@@ -116,6 +116,11 @@ function MP.UTILS.get_nemesis_key() -- calling this function assumes the user is
 	local enemy = MP.UTILS.get_nemesis()
 	local enemy_colour = MP.UTILS.get_nemesis_lobby_data().colour
 	local ret = MP.UTILS.blind_col_numtokey(enemy_colour)
+
+	if not enemy or not enemy.lives then
+		return ret
+	end
+
 	if tonumber(enemy.lives) <= 1 and tonumber(MP.UTILS.get_local_player().lives) <= 1 then
 		if G.STATE ~= G.STATES.ROUND_EVAL then -- very messy fix that mostly works. breaks in a different way... but far harder to notice
 			ret = "bl_final_heart"
