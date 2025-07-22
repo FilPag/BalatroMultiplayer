@@ -1148,11 +1148,8 @@ function Game:update(dt)
 	if (MP.LOBBY.code and not in_lobby) or (not MP.LOBBY.code and in_lobby) then
 		in_lobby = not in_lobby
 		G.F_NO_SAVING = in_lobby
-		if G.STATE == G.STATES.MENU then
-			-- Only return to menu if we're not in a run/game
-			self.FUNCS.go_to_menu()
-			MP.reset_game_states()
-		end
+		self.FUNCS.go_to_menu()
+		MP.reset_game_states()
 	end
 	gameUpdateRef(self, dt)
 end
