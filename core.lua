@@ -1,5 +1,4 @@
 MP = SMODS.current_mod
-G.FPS_CAP = 60
 MP.LOBBY = {
 	connected = false,
 	temp_code = "",
