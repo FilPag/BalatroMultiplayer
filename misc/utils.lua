@@ -881,12 +881,12 @@ function MP.UTILS.get_player_by_id(player_id)
 end
 
 function MP.UTILS.get_local_player_lobby_data()
-	local players = MP.GAME.players
+	local players = MP.LOBBY.players
 	local my_id = MP.LOBBY.local_id
 	if not players then error("MP.LOBBY.players is nil") end
 
 	for i, player in ipairs(players) do
-		if player.id and player.id ~= my_id then
+		if player.id and player.id == my_id then
 			return player
 		end
 	end
