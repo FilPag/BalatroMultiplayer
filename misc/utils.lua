@@ -847,6 +847,42 @@ function MP.UTILS.ease_score(score_table, new_score, delay)
 	end
 end
 
+-- Save current run and return as table
+function MP.UTILS.MP_SAVE()
+	local cardAreas = {}
+	for k, v in pairs(G) do
+		if (type(v) == "table") and v.is and v:is(CardArea) then
+			local cardAreaSer = v:save()
+			if cardAreaSer then cardAreas[k] = cardAreaSer end
+		end
+	end
+
+	local tags = {}
+	for k, v in ipairs(G.GAME.tags) do
+		if (type(v) == "table") and v.is and v:is(Tag) then
+			local tagSer = v:save()
+			if tagSer then tags[k] = tagSer end
+		end
+	end
+
+	local state = G.STATE
+	if G.GAME.blind and G.GAME.blind.name == "bl_mp_nemesis" then
+		state = G.STATES.NEW_ROUND
+		G.GAME.blind.chips = 0
+	end
+
+	return {
+		cardAreas = cardAreas,
+		tags = tags,
+		GAME = G.GAME,
+		STATE = state,
+		ACTION = G.action,
+		BLIND = G.GAME.blind and G.GAME.blind:save() or nil,
+		BACK = G.GAME.selected_back and G.GAME.selected_back:save() or nil,
+		VERSION = G.VERSION,
+	}
+end
+
 function MP.UTILS.is_coop()
 	if not MP.LOBBY.code then return false end
 	return MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival"
