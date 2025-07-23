@@ -153,6 +153,11 @@ function G.FUNCS.mp_toggle_ready(e)
   end
 end
 
+function G.FUNCS.toggle_lobby_ready(e)
+  local player = MP.UTILS.get_local_player_lobby_data()
+  MP.ACTIONS.send_lobby_ready(not player.isReady)
+end
+
 local can_play_ref = G.FUNCS.can_play
 G.FUNCS.can_play = function(e)
   if G.GAME.current_round.hands_left <= 0 then

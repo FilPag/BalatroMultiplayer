@@ -117,7 +117,6 @@ local function action_lobbyInfo(lobby_info)
 	MP.LOBBY.isHost = lobby_info.isHost
 	MP.LOBBY.players = lobby_info.players or {}
 	MP.LOBBY.local_id = lobby_info.local_id
-	MP.LOBBY.ready_to_start = MP.LOBBY.isHost and #MP.LOBBY.players >= 2
 
 	MP.ACTIONS.update_player_usernames()
 end
@@ -456,6 +455,23 @@ local function action_spent_last_shop(amount)
 	enemy.spent_in_shop[enemy.spent_in_shop + 1] = tonumber(amount)
 end
 
+local function action_set_lobby_ready(isReady, player_id)
+	MP.UTILS.get_player_by_id(player_id).isReady = isReady
+
+	if not MP.LOBBY.isHost then return end
+	local ready_check = true
+
+	for _, player in ipairs(MP.LOBBY.players) do
+		if player.id ~= MP.LOBBY.local_id then
+			ready_check = ready_check and player.isReady
+		end
+	end
+	sendDebugMessage(tostring(ready_check), "MULTIPLAYER_LOBBY")
+
+	MP.LOBBY.ready_to_start = ready_check
+	MP.ACTIONS.update_player_usernames()
+end
+
 local function action_magnet()
 	local card = nil
 	for _, v in pairs(G.jokers.cards) do
@@ -687,6 +703,7 @@ local action_table = {
 	lobbyInfo = function(parsedAction) action_lobbyInfo(parsedAction) end,
 	startGame = function(parsedAction) action_start_game(parsedAction.players, parsedAction.seed, parsedAction.stake) end,
 	startBlind = function() action_start_blind() end,
+	setLobbyReady = function(parsedAction) action_set_lobby_ready(parsedAction.isReady, parsedAction.playerId) end,
 	gameStateUpdate = function(parsedAction) action_game_state_update(parsedAction.id, parsedAction.updates) end,
 	stopGame = function() action_stop_game() end,
 	endPvP = function() action_end_pvp() end,
