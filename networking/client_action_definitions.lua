@@ -112,11 +112,8 @@ function MP.ACTIONS.play_hand(score, hands_left)
     fixed_score = string.sub(string.gsub(fixed_score, "%.", ","), 1, -3)
   end
   fixed_score = string.gsub(fixed_score, ",", "") -- Remove commas
-  sendDebugMessage("Fixed score: " .. fixed_score, "MULTIPLAYER")
-  sendDebugMessage("Score: " .. tostring(score), "MULTIPLAYER")
 
   local insane_int_score = MP.INSANE_INT.from_string(fixed_score)
-  sendDebugMessage("INSANE_INT: " .. MP.INSANE_INT.to_string(insane_int_score), "MULTIPLAYER")
   if MP.INSANE_INT.greater_than(insane_int_score, MP.GAME.highest_score) then
     MP.GAME.highest_score = insane_int_score
   end
@@ -160,9 +157,6 @@ function MP.ACTIONS.skip(skips)
   Client.send(json.encode({ action = "skip", skips = skips }))
 end
 
-
-
----
 --- @class GameStateData
 --- @field ante number Current ante
 --- @field furthest_blind number Furthest blind reached
