@@ -189,7 +189,7 @@ local function create_player_nodes(players, text_scale)
 					n = G.UIT.B,
 					config = {
 						w = 0.1,
-					 h = 0.1,
+						h = 0.1,
 						colour = G.C.ORANGE,
 					},
 				},
@@ -206,7 +206,7 @@ local function create_player_nodes(players, text_scale)
 				shadow = false,
 				colour = G.C.PURPLE,
 				col = true,
-				ref_table = {index = i}
+				ref_table = { index = i }
 			}))
 		end
 		table.insert(player_nodes, player_row)
@@ -263,20 +263,7 @@ function G.UIDEF.create_UIBox_lobby_menu()
 							mid = true,
 						},
 						nodes = {
-							Disableable_Button({
-								id = "lobby_menu_start",
-								button = "lobby_start_game",
-								colour = G.C.BLUE,
-								minw = 3.65,
-								minh = 1.55,
-								label = { localize("b_start") },
-								disabled_text = MP.LOBBY.isHost and localize("b_wait_for_players")
-										or localize("b_wait_for_host_start"),
-								scale = text_scale * 2,
-								col = true,
-								enabled_ref_table = MP.LOBBY,
-								enabled_ref_value = "ready_to_start",
-							}),
+							MP.UI.lobby_ready_button(text_scale),
 							{
 								n = G.UIT.C,
 								config = {
@@ -963,7 +950,7 @@ end
 function MP.UI.hash_str_to_view(str, text_colour)
 	local t = {}
 
-	
+
 
 
 	if not str then
@@ -1077,6 +1064,7 @@ function G.FUNCS.lobby_start_game(e)
 end
 
 function G.FUNCS.lobby_options(e)
+	MP.ACTIONS.send_lobby_ready(false)
 	G.FUNCS.overlay_menu({
 		definition = G.UIDEF.create_UIBox_lobby_options(),
 	})
@@ -1096,6 +1084,7 @@ function G.FUNCS.lobby_leave(e)
 end
 
 function G.FUNCS.lobby_choose_deck(e)
+	MP.ACTIONS.send_lobby_ready(false)
 	G.FUNCS.setup_run(e)
 	if G.OVERLAY_MENU then
 		G.OVERLAY_MENU:get_UIE_by_ID("run_setup_seed"):remove()
