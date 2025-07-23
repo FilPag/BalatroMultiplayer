@@ -32,6 +32,7 @@ MP.LOBBY = {
 		challenge = "",
 	},
 	username = "Guest",
+	ready_text = "Ready",
 	id = "",
 	blind_col = 1,
 	players = {},
@@ -132,6 +133,9 @@ function MP.reset_game_states()
 		wait_for_enemys_furthest_blind = false,
 		disable_live_and_timer_hud = false,
 	}
+
+	MP.LOBBY.ready_text = localize("b_ready")
+	MP.LOBBY.ready_to_start = false
 end
 
 MP.reset_game_states()
