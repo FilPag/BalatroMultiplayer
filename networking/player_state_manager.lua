@@ -88,8 +88,17 @@ update_handlers.location = function(player, value, context)
 	player.location = M.parse_enemy_location(value)
 end
 
+update_handlers.ante = function(player, value, context)
+	if context.is_local then
+		sendTraceMessge("Playing ante up play_sound", "MULTIPLAYER")
+		play_sound('highlight2', 0.685, 0.2)
+		play_sound('generic1')
+	end
+end
+
 -- Default handler for any other keys
 local function default_update_handler(player, key, value, context)
+	sendDebugMessage(string.format("Unhandled update key: %s with value: %s for player %s", key, tostring(value), player.id), "MULTIPLAYER")
 	player[key] = value
 end
 

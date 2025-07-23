@@ -1,5 +1,7 @@
 local function next_taxes_total_mult_gain(card)
-	local sells = MP.GAME.enemy.sells_per_ante[G.GAME.round_resets.ante] or 0
+	local enemy = MP.UTILS.get_nemesis()
+	if not enemy then return 0 end
+	local sells = enemy.sells_per_ante[G.GAME.round_resets.ante] or 0
 
 	-- If PvP hasn't been reached for the first time, accumulate sells from previous Antes
 	if G.GAME.round_resets.ante <= MP.LOBBY.config.pvp_start_round then
