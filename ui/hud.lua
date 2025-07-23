@@ -140,7 +140,7 @@ if MP.LOBBY.players and MP.GAME.players then
 		local username = lobby_player and lobby_player.username or ("Player " .. tostring(i))
 		local colour = G.C.RED
 		if MP.UTILS.is_coop() then
-			--colour = lighten(G.C.BLUE, 0.5)
+			colour = lighten(G.C.BLUE, 0.5)
 		end
 		table.insert(players, MP.UI.create_UIBox_player_row(username, player, colour))
 	end
