@@ -112,15 +112,18 @@ function MP.ACTIONS.play_hand(score, hands_left)
     fixed_score = string.sub(string.gsub(fixed_score, "%.", ","), 1, -3)
   end
   fixed_score = string.gsub(fixed_score, ",", "") -- Remove commas
+  sendDebugMessage("Fixed score: " .. fixed_score, "MULTIPLAYER")
+  sendDebugMessage("Score: " .. tostring(score), "MULTIPLAYER")
 
-  local insane_int_score = MP.INSANE_INT.from_string(tostring(score))
+  local insane_int_score = MP.INSANE_INT.from_string(fixed_score)
+  sendDebugMessage("INSANE_INT: " .. MP.INSANE_INT.to_string(insane_int_score), "MULTIPLAYER")
   if MP.INSANE_INT.greater_than(insane_int_score, MP.GAME.highest_score) then
     MP.GAME.highest_score = insane_int_score
   end
 
   MP.UTILS.get_local_player().score = MP.INSANE_INT.add(insane_int_score, MP.UTILS.get_local_player().score)
 
-  local target = nul
+  local target = nil
   if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" then
     target = G.GAME.blind.chips
   end
@@ -155,6 +158,30 @@ end
 
 function MP.ACTIONS.skip(skips)
   Client.send(json.encode({ action = "skip", skips = skips }))
+end
+
+
+
+---
+--- @class GameStateData
+--- @field ante number Current ante
+--- @field furthest_blind number Furthest blind reached
+--- @field hands_left number Hands left in round
+--- @field hands_max number Max hands per round
+--- @field discards_left number Discards left
+--- @field discards_max number Max discards per round
+--- @field highest_score table Highest score (InsaneInt)
+--- @field lives number Lives remaining
+--- @field lives_blocker boolean If life loss is blocked
+--- @field location string Current location/state
+--- @field score table Current score (InsaneInt)
+--- @field skips number Skips used
+--- @field spent_in_shop table Chips spent in shop (array of numbers)
+---
+--- Update the player's game state on the server.
+--- @param updates GameStateData|table Table of fields to update (partial GameStateData)
+MP.ACTIONS.update_player_state = function(updates)
+  Client.send(json.encode({ action = "updatePlayerGameState", updates = updates }))
 end
 
 function MP.ACTIONS.send_phantom(key)
