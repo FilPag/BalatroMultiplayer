@@ -75,8 +75,8 @@ update_handlers.score = function(player, value, context)
 		local dollars_earned = G.HUD_blind and G.HUD_blind:get_UIE_by_ID("dollars_to_be_earned")
 		if blind_count then blind_count:juice_up() end
 		if dollars_earned then dollars_earned:juice_up() end
-		-- Don't update player.score for nemesis, handled by UI
-	else
+
+	elseif not context.is_local then
 		player.score = MP.INSANE_INT.from_string(value)
 	end
 end
