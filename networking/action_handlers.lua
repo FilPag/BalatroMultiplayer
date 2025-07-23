@@ -410,25 +410,30 @@ local action_asteroid = action_asteroid
 						max_level = v.level
 					end
 				end
-				update_hand_text({ sound = "button", volume = 0.7, pitch = 0.8, delay = 0.3 }, {
-					handname = localize(hand_type, "poker_hands"),
-					chips = G.GAME.hands[hand_type].chips,
-					mult = G.GAME.hands[hand_type].mult,
-					level = G.GAME.hands[hand_type].level,
-				})
-				level_up_hand(nil, hand_type, false, -1)
-				update_hand_text(
-					{ sound = "button", volume = 0.7, pitch = 1.1, delay = 0 },
-					{ mult = 0, chips = 0, handname = "", level = "" }
-				)
 			end
+			update_hand_text({ sound = "button", volume = 0.7, pitch = 0.8, delay = 0.3 }, {
+				handname = localize(hand_type, "poker_hands"),
+				chips = G.GAME.hands[hand_type].chips,
+				mult = G.GAME.hands[hand_type].mult,
+				level = G.GAME.hands[hand_type].level,
+			})
+			level_up_hand(nil, hand_type, false, -1)
+			update_hand_text(
+				{ sound = "button", volume = 0.7, pitch = 1.1, delay = 0 },
+				{ mult = 0, chips = 0, handname = "", level = "" }
+			)
 		end
 
 local function action_sold_joker()
 	-- HACK: this action is being sent when any card is being sold, since Taxes is now reworked
-	MP.GAME.enemy.sells = MP.GAME.enemy.sells + 1
-	MP.GAME.enemy.sells_per_ante[G.GAME.round_resets.ante] = (
-		(MP.GAME.enemy.sells_per_ante[G.GAME.round_resets.ante] or 0) + 1
+	local enemy = MP.UTILS.get_nemesis()
+	if not enemy then return end
+	enemy.sells = (enemy.sells or 0) + 1
+	if not enemy.sells_per_ante then
+		enemy.sells_per_ante = {}
+	end
+	enemy.sells_per_ante[G.GAME.round_resets.ante] = (
+		(enemy.sells_per_ante[G.GAME.round_resets.ante] or 0) + 1
 	)
 end
 
@@ -446,13 +451,19 @@ local function action_eat_pizza(discards)
 	ease_discard(discards)
 end
 
-local function action_spent_last_shop(amount)
+local function action_spent_last_shop(player_id, amount)
+	-- TODO make support more than one player
 	local enemy = MP.UTILS.get_nemesis()
 	if not enemy then
 		sendWarnMessage("No enemy found for spent_last_shop action", "MULTIPLAYER")
 		return
 	end
-	enemy.spent_in_shop[enemy.spent_in_shop + 1] = tonumber(amount)
+
+	if not enemy.spent_in_shop then
+		enemy.spent_in_shop = {}
+	end
+
+	enemy.spent_in_shop[#enemy.spent_in_shop + 1] = tonumber(amount)
 end
 
 local function action_set_lobby_ready(isReady, player_id)
@@ -466,7 +477,6 @@ local function action_set_lobby_ready(isReady, player_id)
 			ready_check = ready_check and player.isReady
 		end
 	end
-	sendDebugMessage(tostring(ready_check), "MULTIPLAYER_LOBBY")
 
 	MP.LOBBY.ready_to_start = ready_check
 	MP.ACTIONS.update_player_usernames()
@@ -677,7 +687,8 @@ local function action_receive_player_deck(player_id, cards)
 	G.FUNCS.load_player_deck(player)
 end
 
-local function action_start_ante_timer(time)
+-- Special cases since they're used elsewhere
+function MP.action_start_ante_timer(time)
 	if type(time) == "string" then
 		time = tonumber(time)
 	end
@@ -686,7 +697,7 @@ local function action_start_ante_timer(time)
 	G.E_MANAGER:add_event(MP.timer_event)
 end
 
-local function action_pause_ante_timer(time)
+function MP.action_pause_ante_timer(time)
 	if type(time) == "string" then
 		time = tonumber(time)
 	end
@@ -718,14 +729,14 @@ local action_table = {
 	soldJoker = function() action_sold_joker() end,
 	letsGoGamblingNemesis = function() action_lets_go_gambling_nemesis() end,
 	eatPizza = function(parsedAction) action_eat_pizza(parsedAction.discards) end,
-	spentLastShop = function(parsedAction) action_spent_last_shop(parsedAction.amount) end,
+	spentLastShop = function(parsedAction) action_spent_last_shop(parsedAction.playerId, parsedAction.amount) end,
 	magnet = function() action_magnet() end,
 	magnetResponse = function(parsedAction) action_magnet_response(parsedAction.key) end,
 	getEndGameJokers = function() action_get_end_game_jokers() end,
 	receiveEndGameJokers = function(parsedAction) action_receive_end_game_jokers(parsedAction.keys) end,
 	receivePlayerDeck = function(parsedAction) action_receive_player_deck(parsedAction.playerId, parsedAction.cards) end,
-	startAnteTimer = function(parsedAction) action_start_ante_timer(parsedAction.time) end,
-	pauseAnteTimer = function(parsedAction) action_pause_ante_timer(parsedAction.time) end,
+	startAnteTimer = function(parsedAction) MP.action_start_ante_timer(parsedAction.time) end,
+	pauseAnteTimer = function(parsedAction) MP.action_pause_ante_timer(parsedAction.time) end,
 	error = function(parsedAction) action_error(parsedAction.message) end,
 	keepAlive = function() action_keep_alive() end,
 }
