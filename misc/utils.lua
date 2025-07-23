@@ -778,13 +778,10 @@ function MP.UTILS.MP_SAVE()
 		end
 	end
 
-	local blind  = nil
-	local state = G.STATES.SHOP
-
-	if G.GAME.blind and G.GAME.blind.key ~= "bl_mp_nemesis" then
-			sendDebugMessage(tostring(G.GAME.blind.key), "BATROO")
-			blind = G.GAME.blind:save()
-			state = G.STATE
+	local state = G.STATE
+	if G.GAME.blind and G.GAME.blind.name == "bl_mp_nemesis" then
+		state = G.STATES.NEW_ROUND
+		G.GAME.blind.chips = 0
 	end
 
 	return {
@@ -793,7 +790,7 @@ function MP.UTILS.MP_SAVE()
 		GAME = G.GAME,
 		STATE = state,
 		ACTION = G.action,
-		BLIND = blind,
+		BLIND = G.GAME.blind and G.GAME.blind:save() or nil,
 		BACK = G.GAME.selected_back and G.GAME.selected_back:save() or nil,
 		VERSION = G.VERSION,
 	}
@@ -821,8 +818,6 @@ function MP.UTILS.is_coop()
 	if not MP.LOBBY.code then return false end
 	return MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival"
 end
-
-
 
 -- Returns the local player for the current client.
 -- @param players table: array of player tables
