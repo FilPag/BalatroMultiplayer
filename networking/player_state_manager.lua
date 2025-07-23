@@ -52,9 +52,12 @@ update_handlers.lives = function(player, value, context)
 			G.GAME.blind.dollars = 0
 		end
 		player.lives = value
-		local hud_ante = G.HUD:get_UIE_by_ID("hud_ante")
-		if hud_ante then hud_ante.children[2].children[1]:juice_up() end
-		sendTraceMessage(string.format("Received gameStateUpdate for local player %s", MP.LOBBY.local_id), "MULTIPLAYER")
+
+		if G.HUD then
+			local hud_ante = G.HUD:get_UIE_by_ID("hud_ante")
+			if hud_ante then hud_ante.children[2].children[1]:juice_up() end
+			sendTraceMessage(string.format("Received gameStateUpdate for local player %s", MP.LOBBY.local_id), "MULTIPLAYER")
+		end
 	else
 		player.lives = value
 	end
@@ -89,8 +92,7 @@ update_handlers.location = function(player, value, context)
 end
 
 update_handlers.ante = function(player, value, context)
-	if context.is_local then
-		sendTraceMessge("Playing ante up play_sound", "MULTIPLAYER")
+	if context.is_local and value > 1 then
 		play_sound('highlight2', 0.685, 0.2)
 		play_sound('generic1')
 	end
@@ -98,7 +100,6 @@ end
 
 -- Default handler for any other keys
 local function default_update_handler(player, key, value, context)
-	sendDebugMessage(string.format("Unhandled update key: %s with value: %s for player %s", key, tostring(value), player.id), "MULTIPLAYER")
 	player[key] = value
 end
 
