@@ -113,7 +113,7 @@ function MP.ACTIONS.play_hand(score, hands_left)
   end
   fixed_score = string.gsub(fixed_score, ",", "") -- Remove commas
 
-  local insane_int_score = MP.INSANE_INT.from_string(fixed_score)
+  local insane_int_score = MP.INSANE_INT.from_string(tostring(score))
   if MP.INSANE_INT.greater_than(insane_int_score, MP.GAME.highest_score) then
     MP.GAME.highest_score = insane_int_score
   end
