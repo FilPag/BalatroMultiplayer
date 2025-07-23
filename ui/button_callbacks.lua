@@ -240,8 +240,12 @@ function G.FUNCS.select_blind(e)
 	select_blind_ref(e)
 	if MP.LOBBY.code then
 		MP.GAME.ante_key = tostring(math.random())
-		MP.ACTIONS.play_hand(0, G.GAME.round_resets.hands)
-		MP.ACTIONS.set_location("loc_playing-" .. (e.config.ref_table.key or e.config.ref_table.name))
+    MP.UTILS.get_local_player().score = MP.INSANE_INT.empty()
+    MP.ACTIONS.update_player_state({
+      score = "0",
+      hands_left = G.GAME.round_resets.hands,
+      location = "loc_playing-" .. (e.config.ref_table.key or e.config.ref_table.name),
+    })
 		MP.UI_UTILS.hide_enemy_location()
 	end
 end
@@ -253,7 +257,6 @@ G.FUNCS.skip_blind = function(e)
 		if not MP.GAME.timer_started then
 			MP.GAME.timer = MP.GAME.timer + MP.LOBBY.config.timer_increment_seconds
 		end
-		MP.ACTIONS.skip(G.GAME.skips)
 
 		--Update the furthest blind
 		local temp_furthest_blind = 0
@@ -265,75 +268,76 @@ G.FUNCS.skip_blind = function(e)
 
 		MP.GAME.furthest_blind = (temp_furthest_blind > MP.GAME.furthest_blind) and temp_furthest_blind or
 				MP.GAME.furthest_blind
-		MP.ACTIONS.set_furthest_blind(MP.GAME.furthest_blind)
-	end
+
+    MP.ACTIONS.update_player_state({
+      furthest_blind = MP.GAME.furthest_blind,
+      skips = G.GAME.skips
+    })
+  end
 end
 
 function G.FUNCS.open_kofi(e)
-	love.system.openURL("https://ko-fi.com/virtualized")
+  love.system.openURL("https://ko-fi.com/virtualized")
 end
 
 function G.FUNCS:continue_in_singleplayer(e)
-	MP.LOBBY.code = nil
-	MP.ACTIONS.leave_lobby()
-	MP.UI.update_connection_status()
+  MP.LOBBY.code = nil
+  MP.ACTIONS.leave_lobby()
+  MP.UI.update_connection_status()
 
-	local saveText = MP.UTILS.MP_SAVE()
-	G.SAVED_GAME = saveText
-	G.SETTINGS.current_setup = 'Continue'
-	G:delete_run()
+  local saveText = MP.UTILS.MP_SAVE()
+  G.SAVED_GAME = saveText
+  G.SETTINGS.current_setup = 'Continue'
+  G:delete_run()
 
-	G.E_MANAGER:add_event(Event({
-		trigger = 'immediate',
+  G.E_MANAGER:add_event(Event({
+    trigger = 'immediate',
     blockable = false,
-		no_delete = true,
-		func = function()
-			G.FUNCS.start_setup_run(nil)
-			return true
-		end
-	}))
+    no_delete = true,
+    func = function()
+      G.FUNCS.start_setup_run(nil)
+      return true
+    end
+  }))
 end
 
 local start_run_ref = G.FUNCS.start_run
 G.FUNCS.start_run = function(e, args)
-	if MP.LOBBY.code then
-		if not args.mp_start then
-			G.FUNCS.exit_overlay_menu()
-			local chosen_stake = args.stake
-			if MP.DECK.MAX_STAKE > 0 and chosen_stake > MP.DECK.MAX_STAKE then
-				MP.UTILS.overlay_message(
-					"Selected stake is incompatible with Multiplayer, stake set to "
-					.. SMODS.stake_from_index(MP.DECK.MAX_STAKE)
-				)
-				chosen_stake = MP.DECK.MAX_STAKE
-			end
-			if MP.LOBBY.isHost then
-				MP.LOBBY.config.back = args.challenge and "Challenge Deck"
-						or (args.deck and args.deck.name)
-						or G.GAME.viewed_back.name
-				MP.LOBBY.config.stake = chosen_stake
-				MP.LOBBY.config.sleeve = G.viewed_sleeve
-				MP.LOBBY.config.challenge = args.challenge and args.challenge.id or ""
-				MP.ACTIONS.lobby_options()
-			end
-			MP.LOBBY.deck.back = args.challenge and "Challenge Deck"
-					or (args.deck and args.deck.name)
-					or G.GAME.viewed_back.name
-			MP.LOBBY.deck.stake = chosen_stake
-			MP.LOBBY.deck.sleeve = G.viewed_sleeve
-			MP.LOBBY.deck.challenge = args.challenge and args.challenge.id or ""
-			MP.ACTIONS.update_player_usernames()
-		else
-			start_run_ref(e, {
-				challenge = args.challenge,
-				stake = tonumber(MP.LOBBY.deck.stake),
-				seed = args.seed,
-			})
-		end
-	else
-		start_run_ref(e, args)
-	end
+  if MP.LOBBY.code then
+    if not args.mp_start then
+      G.FUNCS.exit_overlay_menu()
+      local chosen_stake = args.stake
+      if MP.DECK.MAX_STAKE > 0 and chosen_stake > MP.DECK.MAX_STAKE then
+        MP.UTILS.overlay_message(
+          "Selected stake is incompatible with Multiplayer, stake set to "
+          .. SMODS.stake_from_index(MP.DECK.MAX_STAKE)
+        )
+        chosen_stake = MP.DECK.MAX_STAKE
+      end
+      if MP.LOBBY.isHost then
+        MP.LOBBY.config.back = args.challenge and "Challenge Deck"
+            or (args.deck and args.deck.name)
+            or G.GAME.viewed_back.name
+        MP.LOBBY.config.stake = chosen_stake
+        MP.LOBBY.config.sleeve = G.viewed_sleeve
+        MP.LOBBY.config.challenge = args.challenge and args.challenge.id or ""
+        MP.ACTIONS.lobby_options()
+      end
+      MP.LOBBY.deck.back = args.challenge and "Challenge Deck"
+          or (args.deck and args.deck.name)
+          or G.GAME.viewed_back.name
+      MP.LOBBY.deck.stake = chosen_stake
+      MP.LOBBY.deck.sleeve = G.viewed_sleeve
+      MP.LOBBY.deck.challenge = args.challenge and args.challenge.id or ""
+      MP.ACTIONS.update_player_usernames()
+    else
+      start_run_ref(e, {
+        challenge = args.challenge,
+        stake = tonumber(MP.LOBBY.deck.stake),
+        seed = args.seed,
+      })
+    end
+  else
+    start_run_ref(e, args)
+  end
 end
-
-
-
