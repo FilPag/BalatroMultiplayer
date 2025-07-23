@@ -281,6 +281,7 @@ function G.FUNCS:continue_in_singleplayer(e)
 
 	G.E_MANAGER:add_event(Event({
 		trigger = 'immediate',
+    blockable = false,
 		no_delete = true,
 		func = function()
 			G.FUNCS.start_setup_run(nil)
