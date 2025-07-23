@@ -85,7 +85,7 @@ function MP.UI.create_UIBox_player_row(username, player_state, colour)
               {
                 n = G.UIT.T,
                 config = {
-                  text = tostring(player_state.hands_left), -- Will be hands in the future
+                  text = tostring(player_state.hands_max), -- Will be hands in the future
                   scale = 0.45,
                   colour = G.C.UI.TEXT_LIGHT,
                 },
@@ -101,7 +101,7 @@ function MP.UI.create_UIBox_player_row(username, player_state, colour)
               {
                 n = G.UIT.T,
                 config = {
-                  text = "???", -- Will be discards in the future
+                  text = tostring(player_state.discards_max),
                   scale = 0.45,
                   colour = G.C.UI.TEXT_LIGHT,
                 },

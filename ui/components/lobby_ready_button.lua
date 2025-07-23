@@ -14,6 +14,7 @@ MP.UI.lobby_ready_button = function(text_scale)
       enabled_ref_value = "ready_to_start",
     })
   else
+    local player = MP.UTILS.get_local_player_lobby_data()
     return {
       n = G.UIT.C,
       config = {
@@ -22,7 +23,7 @@ MP.UI.lobby_ready_button = function(text_scale)
         align = "cm",
         r = 0.1,
         hover = true,
-        colour = G.C.RED,
+        colour = player.isReady and G.C.GREEN or G.C.RED,
         maxw = 3.45,
         minw = 3.65,
         minh = 1.55,
