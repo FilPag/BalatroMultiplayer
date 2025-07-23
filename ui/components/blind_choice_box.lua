@@ -18,7 +18,7 @@ local function get_blind_loc_name(type, blind_choice)
 	if key == "bl_mp_nemesis" then
 		local enemy = MP.UTILS.get_nemesis_lobby_data()
 		if enemy and enemy.username and #enemy.username > 0 then
-			return { { string = enemy.username, colour = G.C.BLUE } }
+			return { { string = enemy.username, colour = G.C.UI.TEXT} }
 		end
 	end
 	return { { string = localize({ type = "name_text", key = blind_choice and blind_choice.config and blind_choice.config.key or key, set = "Blind" }), colour = G.C.WHITE } }
