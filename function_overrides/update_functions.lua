@@ -82,23 +82,26 @@ local update_draw_to_hand_ref = Game.update_draw_to_hand
 function Game:update_draw_to_hand(dt)
 	if MP.LOBBY.code then
 		if
-				not G.STATE_COMPLETE
-				and G.GAME.current_round.hands_played == 0
-				and G.GAME.current_round.discards_used == 0
-				and G.GAME.facing_blind
+			not G.STATE_COMPLETE
+			and G.GAME.current_round.hands_played == 0
+			and G.GAME.current_round.discards_used == 0
+			and G.GAME.facing_blind
 		then
 			if G.GAME.round_resets.pvp_blind_choices[G.GAME.blind_on_deck] then
 				G.GAME.blind.pvp = true
 			else
 				G.GAME.blind.pvp = false
 			end
-			if MP.is_online_boss() and G.GAME.blind.config.blind.key == "bl_mp_nemesis" then
+
+			-- Multiplayer nemesis HUD and event logic
+			if MP.is_online_boss and MP.is_online_boss() and G.GAME.blind.config.blind.key == "bl_mp_nemesis" then
 				G.E_MANAGER:add_event(Event({
 					trigger = "after",
 					delay = 0,
 					blockable = false,
 					func = function()
 						G.HUD_blind:get_UIE_by_ID("HUD_blind_name").config.object:pop_out(0)
+						-- Use MP.UTILS.get_nemesis_lobby_data() for username ref_table
 						MP.UI_UTILS.update_blind_HUD()
 						G.E_MANAGER:add_event(Event({
 							trigger = "after",
@@ -107,7 +110,6 @@ function Game:update_draw_to_hand(dt)
 							func = function()
 								G.HUD_blind:get_UIE_by_ID("HUD_blind_name").config.object.config.string = {
 									{
-										-- Show the enemy player for the current client, supports n players
 										ref_table = MP.UTILS.get_nemesis_lobby_data(),
 										ref_value = "username",
 									},
@@ -117,6 +119,10 @@ function Game:update_draw_to_hand(dt)
 								return true
 							end,
 						}))
+
+						-- Pincher unlock and after_pvp flags
+						MP.GAME.pincher_unlock = true
+						G.after_pvp = true
 						return true
 					end,
 				}))
