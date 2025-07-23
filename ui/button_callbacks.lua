@@ -136,7 +136,6 @@ G.FUNCS.pvp_ready_button = function(e)
 end
 
 function G.FUNCS.mp_toggle_ready(e)
-  sendTraceMessage("Toggling Ready", "MULTIPLAYER")
   MP.GAME.ready_blind = not MP.GAME.ready_blind
   MP.GAME.ready_blind_text = MP.GAME.ready_blind and localize("b_unready") or localize("b_ready")
 

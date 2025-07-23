@@ -207,12 +207,12 @@ end
 
 function MP.ACTIONS.start_ante_timer()
   Client.send(json.encode({ action = "startAnteTimer", time = tostring(MP.GAME.timer) }))
-  action_start_ante_timer(MP.GAME.timer)
+  MP.action_start_ante_timer(MP.GAME.timer)
 end
 
 function MP.ACTIONS.pause_ante_timer()
   Client.send(json.encode({ action = "pauseAnteTimer", time = tostring(MP.GAME.timer) }))
-  action_pause_ante_timer(MP.GAME.timer) -- TODO
+  MP.action_pause_ante_timer(MP.GAME.timer) -- TODO
 end
 
 function MP.ACTIONS.fail_timer()

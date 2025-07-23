@@ -26,6 +26,9 @@ SMODS.Consumable({
 		return true
 	end,
 	use = function(self, card, area, copier)
+		if not MP.LOBBY.code then
+			return false
+		end
 		local asteroids = MP.GAME.asteroids
 		update_hand_text({sound = 'button', volume = 0.7, pitch = 0.8, delay = 0.3}, {handname=localize('k_asteroids'),chips = localize('k_amount_short'), mult = MP.GAME.asteroids})
 		G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2, func = function()
@@ -37,6 +40,8 @@ SMODS.Consumable({
 		update_hand_text({delay = 0}, {mult = MP.GAME.asteroids})
 		delay(2.5)
 		update_hand_text({sound = 'button', volume = 0.7, pitch = 1.1, delay = 0}, {mult = 0, chips = 0, handname = '', level = ''})
+		MP.ACTIONS.asteroid()
+
 	end,
 	mp_credits = {
 		idea = { "Zilver" },
