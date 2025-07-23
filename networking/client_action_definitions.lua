@@ -31,6 +31,25 @@ function MP.ACTIONS.start_game()
   Client.send(json.encode({ action = "startGame" }))
 end
 
+function MP.ACTIONS.send_lobby_ready(value)
+  local player = MP.UTILS.get_local_player_lobby_data()
+
+  if not player then
+    sendErrorMessage("No local player data found to toggle ready state.", "MULTIPLAYER")
+    return
+  end
+
+  player.isReady = value
+
+  local ready_button_ref = G.MAIN_MENU_UI:get_UIE_by_ID("lobby_ready_button")
+  if ready_button_ref then
+    MP.LOBBY.ready_text = player.isReady and localize("b_unready") or localize("b_ready")
+    ready_button_ref.config.colour = player.isReady and G.C.GREEN or G.C.RED
+  end
+
+  Client.send(json.encode({ action = "setLobbyReady", isReady = player.isReady }))
+end
+
 function MP.ACTIONS.ready_blind(e)
   MP.GAME.next_blind_context = e
   Client.send(json.encode({ action = "readyBlind" }))

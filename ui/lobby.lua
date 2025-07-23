@@ -230,7 +230,7 @@ end
 function MP.UI.hash_str_to_view(str, text_colour)
 	local t = {}
 
-	
+
 
 
 	if not str then
@@ -328,6 +328,7 @@ function G.FUNCS.lobby_ready_up(e)
 end
 
 function G.FUNCS.lobby_options(e)
+	MP.ACTIONS.send_lobby_ready(false)
 	G.FUNCS.overlay_menu({
 		definition = G.UIDEF.create_UIBox_lobby_options(),
 	})
@@ -353,6 +354,7 @@ function G.FUNCS.lobby_leave(e)
 end
 
 function G.FUNCS.lobby_choose_deck(e)
+	MP.ACTIONS.send_lobby_ready(false)
 	G.FUNCS.setup_run(e)
 	if G.OVERLAY_MENU then
 		G.OVERLAY_MENU:get_UIE_by_ID("run_setup_seed"):remove()
