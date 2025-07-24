@@ -206,8 +206,8 @@ function G.UIDEF.create_UIBox_custom_seed_overlay()
 end
 
 function G.UIDEF.create_UIBox_view_hash(index)
-	local modsString = MP.LOBBY.players[index] and MP.LOBBY.players[index].modHash or nil
-	_, modsString = MP.UTILS.parse_Hash(modsString)
+	local modHash = MP.LOBBY.players[index] and MP.LOBBY.players[index].modHash or nil
+	local modsTable = MP.UTILS.parse_Hash(modHash).Mods
 	return (
 		create_UIBox_generic_options({
 			contents = {
@@ -217,8 +217,8 @@ function G.UIDEF.create_UIBox_view_hash(index)
 						padding = 0.07,
 						align = "cm",
 					},
-					nodes = MP.UI.hash_str_to_view(
-						modsString,
+					nodes = MP.UI.Mods_View(
+						modsTable,
 						G.C.UI.TEXT_LIGHT
 					),
 				},
@@ -227,17 +227,16 @@ function G.UIDEF.create_UIBox_view_hash(index)
 	)
 end
 
-function MP.UI.hash_str_to_view(str, text_colour)
+function MP.UI.Mods_View(modsTable, text_colour)
 	local t = {}
 
-
-
-
-	if not str then
+	if not modsTable then
 		return t
 	end
 
-	for s in str:gmatch("[^;]+") do
+	sendDebugMessage("MODS_TABLE: " .. tprint(modsTable), "MULTIPLAYER")
+
+	for k, v in pairs(modsTable) do
 		table.insert(t, {
 			n = G.UIT.R,
 			config = {
@@ -248,7 +247,7 @@ function MP.UI.hash_str_to_view(str, text_colour)
 				{
 					n = G.UIT.T,
 					config = {
-						text = s,
+						text = tostring(k) .. " - " .. tostring(v),
 						shadow = true,
 						scale = 0.4,
 						colour = text_colour,
