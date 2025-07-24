@@ -328,9 +328,58 @@ function Game:update_new_round(dt)
 	update_new_round_ref(self, dt)
 end
 
+local game_main_menu_ref = Game.main_menu
+---@diagnostic disable-next-line: duplicate-set-field
+function Game:main_menu(change_context)
+	MP.UI.update_connection_status()
+	local ret = game_main_menu_ref(self, change_context)
+
+	MP.UI_UTILS.add_custom_multiplayer_cards(change_context)
+
+	-- Add version to main menu
+	UIBox({
+		definition = {
+			n = G.UIT.ROOT,
+			config = {
+				align = "cm",
+				colour = G.C.UI.TRANSPARENT_DARK,
+			},
+			nodes = {
+				{
+					n = G.UIT.T,
+					config = {
+						scale = 0.3,
+						text = MULTIPLAYER_VERSION,
+						colour = G.C.UI.TEXT_LIGHT,
+					},
+				},
+			},
+		},
+		config = {
+			align = "tri",
+			bond = "Weak",
+			offset = {
+				x = 0,
+				y = 0.6,
+			},
+			major = G.ROOM_ATTACH,
+		},
+	})
+
+	return ret
+end
+
+local in_lobby = false
 local game_update_ref = Game.update
 ---@diagnostic disable-next-line: duplicate-set-field
 function Game:update(dt)
+	-- Track lobby state transitions
+	if (MP.LOBBY.code and not in_lobby) or (not MP.LOBBY.code and in_lobby) then
+		in_lobby = not in_lobby
+		G.F_NO_SAVING = in_lobby
+		self.FUNCS.go_to_menu()
+		MP.reset_game_states()
+	end
 	game_update_ref(self, dt)
 	MP.NETWORKING.update(dt)
 end
