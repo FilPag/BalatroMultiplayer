@@ -72,7 +72,6 @@ function MP.ACTIONS.set_username(username)
       colour = MP.LOBBY.blind_col,
       modHash = MP.MOD_STRING
     }))
-    sendDebugMessage("MOD_STRING: " .. MP.MOD_STRING, "MULTIPLAYER")
   end
 end
 
@@ -241,7 +240,7 @@ function MP.ACTIONS.fail_timer()
 end
 
 function MP.ACTIONS.sync_client()
-  Client.send(json.encode({ action = "syncClient", isCached = tostring(_RELEASE_MODE) }))
+  Client.send(json.encode({ action = "syncClient", isCached = _RELEASE_MODE }))
 end
 
 -- #endregion Client to Server
