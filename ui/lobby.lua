@@ -98,10 +98,10 @@ end
 
 local function all_players_same_order_config(players)
 	if not players or #players == 0 then return true end
-	local first_order = players[1].config and players[1].config.theOrder
+	local first_order =  MP.UTILS.parse_Hash(players[1].modHash).theOrder
 	for i = 2, #players do
-		local p = players[i]
-		if p.config and p.config.theOrder ~= first_order then
+		local p_order = MP.UTILS.parse_Hash(players[i].modHash).theOrder
+		if p_order ~= first_order then
 			return false
 		end
 	end
@@ -109,7 +109,7 @@ local function all_players_same_order_config(players)
 end
 
 local function check_player_configs(player)
-	if player and player.cached == false then
+	if player and player.isCached == false then
 		return MP.UTILS.wrapText(
 			string.format(localize("k_warning_cheating"), MP.UTILS.random_message()),
 			100
@@ -132,17 +132,12 @@ local function get_lobby_text()
 	end
 
 	for i, player in ipairs(players) do
-		if player.username == MP.LOBBY.username then
-			goto continue
+		if player.id ~= MP.LOBBY.id then
+			local msg, col = check_player_configs(player)
+			if msg then return msg, col end
 		end
-
-		local msg, col = check_player_configs(player)
-		if msg then return msg, col end
-
-		::continue::
 	end
 
-	SMODS.Mods["Multiplayer"].config.unlocked = MP.UTILS.unlock_check()
 	if not SMODS.Mods["Multiplayer"].config.unlocked then
 		return localize("k_warning_unlock_profile"), SMODS.Gradients.warning_text
 	end
@@ -154,14 +149,16 @@ local function get_lobby_text()
 	-- The hash check itself remains useful for debugging but shouldn't be presented
 	-- as a blocking warning alongside serious compatibility issues.
 	-- steph
-	if players and #players > 1 then
-		local hash = players[1].hash
+
+	-- TODO : Revisit this logic if we want to reintroduce mod hash warnings as colour or something
+	--[[if players and #players > 1 then
+		local modHash = players[1].modHash
 		for i = 2, #players do
-			if players[i].hash ~= hash then
+			if players[i].modHash ~= modHash then
 				return localize("k_mod_hash_warning"), G.C.UI.TEXT_LIGHT
 			end
 		end
-	end
+	end --]]
 
 	-- ???: What is this supposed to accomplish?
 	if MP.LOBBY.username == "Guest" then
@@ -933,8 +930,8 @@ function G.UIDEF.create_UIBox_custom_seed_overlay()
 end
 
 function G.UIDEF.create_UIBox_view_hash(index)
-	local modsString = MP.LOBBY.players[index] and MP.LOBBY.players[index].modHash or nil
-	_, modsString = MP.UTILS.parse_Hash(modsString)
+	local modHash = MP.LOBBY.players[index] and MP.LOBBY.players[index].modHash or nil
+	local modsTable = MP.UTILS.parse_Hash(modHash).Mods
 	return (
 		create_UIBox_generic_options({
 			contents = {
@@ -942,10 +939,10 @@ function G.UIDEF.create_UIBox_view_hash(index)
 					n = G.UIT.C,
 					config = {
 						padding = 0.2,
-						align = "cm",
+						align = "lm",
 					},
-					nodes = MP.UI.hash_str_to_view(
-						modsString,
+					nodes = MP.UI.Mods_View(
+						modsTable,
 						G.C.UI.TEXT_LIGHT
 					),
 				},
@@ -954,28 +951,27 @@ function G.UIDEF.create_UIBox_view_hash(index)
 	)
 end
 
-function MP.UI.hash_str_to_view(str, text_colour)
+function MP.UI.Mods_View(modsTable, text_colour)
 	local t = {}
 
-
-
-
-	if not str then
+	if not modsTable then
 		return t
 	end
 
-	for s in str:gmatch("[^;]+") do
+	sendDebugMessage("MODS_TABLE: " .. tprint(modsTable), "MULTIPLAYER")
+
+	for k, v in pairs(modsTable) do
 		table.insert(t, {
 			n = G.UIT.R,
 			config = {
 				padding = 0.05,
-				align = "cm",
+				align = "lm",
 			},
 			nodes = {
 				{
 					n = G.UIT.T,
 					config = {
-						text = s,
+						text = tostring(k) .. " - " .. tostring(v),
 						shadow = true,
 						scale = 0.45,
 						colour = text_colour,
