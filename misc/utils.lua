@@ -382,72 +382,6 @@ function MP.UTILS.merge_tables(t1, t2)
 	return copy
 end
 
-local ease_dollars_ref = ease_dollars
-function ease_dollars(mod, instant)
-	sendTraceMessage(string.format("Client sent message: action:moneyMoved,amount:%s", tostring(mod)), "MULTIPLAYER")
-	return ease_dollars_ref(mod, instant)
-end
-
-local sell_card_ref = Card.sell_card
-function Card:sell_card()
-	if self.ability and self.ability.name then
-		sendTraceMessage(
-			string.format("Client sent message: action:soldCard,card:%s", self.ability.name),
-			"MULTIPLAYER"
-		)
-	end
-	return sell_card_ref(self)
-end
-
-local reroll_shop_ref = G.FUNCS.reroll_shop
-function G.FUNCS.reroll_shop(e)
-	sendTraceMessage(
-		string.format("Client sent message: action:rerollShop,cost:%s", G.GAME.current_round.reroll_cost),
-		"MULTIPLAYER"
-	)
-
-	-- Update reroll stats if in a multiplayer game
-	if MP.LOBBY.code and MP.GAME.stats then
-		MP.GAME.stats.reroll_count = MP.GAME.stats.reroll_count + 1
-		MP.GAME.stats.reroll_cost_total = MP.GAME.stats.reroll_cost_total + G.GAME.current_round.reroll_cost
-	end
-
-	return reroll_shop_ref(e)
-end
-
-local buy_from_shop_ref = G.FUNCS.buy_from_shop
-function G.FUNCS.buy_from_shop(e)
-	local c1 = e.config.ref_table
-	if c1 and c1:is(Card) then
-		sendTraceMessage(
-			string.format("Client sent message: action:boughtCardFromShop,card:%s,cost:%s", c1.ability.name, c1.cost),
-			"MULTIPLAYER"
-		)
-	end
-	return buy_from_shop_ref(e)
-end
-
-local use_card_ref = G.FUNCS.use_card
-function G.FUNCS.use_card(e, mute, nosave)
-	if e.config and e.config.ref_table and e.config.ref_table.ability and e.config.ref_table.ability.name then
-		sendTraceMessage(
-			string.format("Client sent message: action:usedCard,card:%s", e.config.ref_table.ability.name),
-			"MULTIPLAYER"
-		)
-	end
-	return use_card_ref(e, mute, nosave)
-end
-
--- Hook for end of pvp context (slightly scuffed)
-local evaluate_round_ref = G.FUNCS.evaluate_round
-G.FUNCS.evaluate_round = function()
-	if G.after_pvp then
-		G.after_pvp = nil
-		SMODS.calculate_context({ mp_end_of_pvp = true })
-	end
-	evaluate_round_ref()
-end
-
 -- Pre-compile a reversed list of all the centers
 local reversed_centers = nil
 
@@ -551,8 +485,6 @@ function MP.UTILS.encrypt_ID()
 	return encryptID
 end
 
-
-
 function MP.UTILS.parse_Hash(hash)
 	-- Split hash string into parts by ';'
 	local parts = {}
@@ -597,32 +529,6 @@ function MP.UTILS.parse_Hash(hash)
 	end
 
 	return config
-end
-
-function MP.UTILS.parse_modlist(mod_string)
-	if not mod_string or mod_string == "" then
-		return {}
-	end
-
-	local mods = {}
-
-	for mod_entry in string.gmatch(mod_string, "([^;]+)") do
-		if mod_entry ~= "" and not string.find(mod_entry, "=") then
-			local mod_name, mod_version
-
-			local dash_pos = string.find(mod_entry, "-")
-			if dash_pos then
-				mod_name = string.sub(mod_entry, 1, dash_pos - 1)
-				mod_version = string.sub(mod_entry, dash_pos + 1)
-			else
-				mod_name = mod_entry
-			end
-
-			mods[mod_name] = mod_version
-		end
-	end
-
-	return mods
 end
 
 function MP.UTILS.sum_numbers_in_table(t)
@@ -932,3 +838,23 @@ function MP.UTILS.get_nemesis_lobby_data()
 		end
 	end
 end
+
+function MP.UTILS.have_player_usernames_changed()
+	if not MP.LOBBY.code then return false end
+
+	local prev_usernames = MP.LOBBY._prev_usernames or {}
+	local players = MP.LOBBY.players or {}
+
+	if #prev_usernames ~= #players then
+		return true
+	end
+
+	for i, player in ipairs(players) do
+		if prev_usernames[i] ~= player.username then
+			return true
+		end
+	end
+
+	return false
+end
+
