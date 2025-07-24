@@ -6,7 +6,7 @@ function MP.ACTIONS.connect()
 end
 
 function MP.ACTIONS.update_player_usernames()
-  if MP.have_player_usernames_changed() then
+  if MP.UTILS.have_player_usernames_changed() then
     set_main_menu_UI()
   end
 end
@@ -127,7 +127,7 @@ function MP.ACTIONS.play_hand(score, hands_left)
   Client.send(json.encode({ action = "playHand", score = fixed_score, hands_left = hands_left, target_score = target }))
 end
 
-function MP.ACTIONS.lobby_options()
+function MP.ACTIONS.lobby_options(_)
   local options = {}
   for k, v in pairs(MP.LOBBY.config) do
     options[k] = v

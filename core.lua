@@ -1,4 +1,5 @@
 MP = SMODS.current_mod
+G.FPS_CAP = 60
 MP.LOBBY = {
 	connected = false,
 	temp_code = "",
@@ -198,8 +199,11 @@ MP.load_mp_dir("rulesets")
 MP.load_mp_dir("function_overrides")
 MP.apply_rulesets()
 
-MP.load_mp_dir("ui/components")
 MP.load_mp_dir("ui")
+MP.load_mp_dir("ui/generic")
+MP.load_mp_dir("ui/game")
+MP.load_mp_dir("ui/lobby")
+MP.load_mp_dir("ui/main_menu")
 
 MP.load_mp_file("misc/disable_restart.lua")
 MP.load_mp_file("misc/mod_hash.lua")

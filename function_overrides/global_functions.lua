@@ -26,7 +26,8 @@ function reset_blinds()
 	MP.ACTIONS.new_round()
 
 	if MP.LOBBY.code then
-		local mp_small_choice, mp_big_choice, mp_boss_choice = MP.Gamemodes[MP.LOBBY.config.gamemode]:get_blinds_by_ante(G.GAME.round_resets.ante, G.GAME.round_resets.blind_choices)
+		local mp_small_choice, mp_big_choice, mp_boss_choice = MP.Gamemodes[MP.LOBBY.config.gamemode]:get_blinds_by_ante(
+		G.GAME.round_resets.ante, G.GAME.round_resets.blind_choices)
 		G.GAME.round_resets.blind_choices.Small = mp_small_choice
 		G.GAME.round_resets.blind_choices.Big = mp_big_choice
 		if MP.LOBBY.config.gamemode ~= "gamemode_mp_coopSurvival" then
@@ -43,3 +44,72 @@ function get_blind_main_colour(type) -- handles ui colour stuff
 	end
 	return get_blind_main_colourref(type)
 end
+
+local ease_dollars_ref = ease_dollars
+function ease_dollars(mod, instant)
+	sendTraceMessage(string.format("Client sent message: action:moneyMoved,amount:%s", tostring(mod)), "MULTIPLAYER")
+	return ease_dollars_ref(mod, instant)
+end
+
+local set_main_menu_UI_ref = set_main_menu_UI
+---@diagnostic disable-next-line: lowercase-global
+function set_main_menu_UI()
+	if MP.LOBBY.code then
+		if G.MAIN_MENU_UI then
+			G.MAIN_MENU_UI:remove()
+		end
+		if G.STAGE == G.STAGES.MAIN_MENU then
+			G.FUNCS.display_lobby_main_menu_UI()
+		end
+	else
+		set_main_menu_UI_ref()
+	end
+end
+
+function nope_a_joker(card)
+	attention_text({
+		text = localize("k_nope_ex"),
+		scale = 0.8,
+		hold = 0.8,
+		major = card,
+		backdrop_colour = G.C.SECONDARY_SET.Tarot,
+		align = (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK) and "tm" or "cm",
+		offset = {
+			x = 0,
+			y = (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK) and -0.2 or 0,
+		},
+		silent = true,
+	})
+	G.E_MANAGER:add_event(Event({
+		trigger = "after",
+		delay = 0.06 * G.SETTINGS.GAMESPEED,
+		blockable = false,
+		blocking = false,
+		func = function()
+			play_sound("tarot2", 0.76, 0.4)
+			return true
+		end,
+	}))
+	play_sound("tarot2", 1, 0.4)
+end
+
+function wheel_of_fortune_the_card(card)
+	math.randomseed(os.time())
+	local chance = math.random(4)
+	if chance == 1 then
+		local editions = {
+			{name = 'e_foil', weight = 499},
+			{name = 'e_holo', weight = 350},
+			{name = 'e_polychrome', weight = 150},
+			{name = 'e_negative', weight = 1}
+		}
+		local edition = poll_edition("main_menu"..os.time(), nil, nil, true, editions)
+		card:set_edition(edition, true)
+		MP.UI_UTILS.juice_up(card, 0.3, 0.5)
+		G.CONTROLLER.locks.edition = false	-- if this isn't done, set_edition will block inputs for 0.1s
+	else
+		nope_a_joker(card)
+		MP.UI_UTILS.juice_up(card, 0.3, 0.5)
+	end
+end
+
