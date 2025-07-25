@@ -313,7 +313,7 @@ function G.FUNCS.start_lobby(e)
   end
   MP.LOBBY.config.gamemode = gamemode_check and MP.LOBBY.config.gamemode or "gamemode_mp_attrition"
 
-  MP.ACTIONS.create_lobby(MP.LOBBY.config.ruleset, string.sub(MP.LOBBY.config.gamemode, 13))
+  MP.ACTIONS.create_lobby(MP.LOBBY.config.ruleset, MP.LOBBY.config.gamemode)
   G.FUNCS:exit_overlay_menu()
 end
 
