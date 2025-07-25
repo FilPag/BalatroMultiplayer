@@ -12,7 +12,7 @@ function MP.ACTIONS.update_player_usernames()
 end
 
 function MP.ACTIONS.create_lobby(ruleset, gamemode)
-  Client.send(json.encode({ action = "createLobby", ruleset = ruleset, gameMode = gamemode }))
+  Client.send(json.encode({ action = "createLobby", ruleset = ruleset, gameMode = gamemode}))
 end
 
 function MP.ACTIONS.join_lobby(code)
