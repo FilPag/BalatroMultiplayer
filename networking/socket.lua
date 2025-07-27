@@ -1,13 +1,9 @@
 -- Code for networking stuff that runs in a separate thread
 
--- Since threads run on a separate lua environment, we need to require
--- the necessary modules again
-return [[
 local CONFIG_URL, CONFIG_PORT = ...
 local json = require("json")
-
-require("love.filesystem")
 local socket = require("socket")
+require("love.filesystem")
 
 local DEBUGGING = false
 
@@ -31,6 +27,7 @@ end
 
 Networking = {}
 local isSocketClosed = true
+local shouldExit = false
 local networkToUiChannel = love.thread.getChannel("networkToUi")
 local uiToNetworkChannel = love.thread.getChannel("uiToNetwork")
 
@@ -49,8 +46,8 @@ function Networking.connect()
 	Networking.Client = socket.tcp()
 	-- Allow for 10 seconds to reconnect
 	Networking.Client:settimeout(10)
-
 	Networking.Client:setoption("tcp-nodelay", true)
+
 	local connectionResult, errorMessage = Networking.Client:connect(CONFIG_URL, CONFIG_PORT) -- Not sure if I want to make these values public yet
 
 	if connectionResult ~= 1 then
@@ -80,7 +77,21 @@ local mainThreadMessageQueue = function()
 			if msg then
 				if msg == "connect" then
 					Networking.connect()
-				else
+        elseif msg == "disconnect" then
+          if Networking.Client then
+            print("Disconnecting from server...")
+            Networking.Client:close()
+            isSocketClosed = true
+          end
+        elseif msg == "exit" then
+          if Networking.Client then
+            print("Exiting client...")
+            Networking.Client:close()
+            isSocketClosed = true
+          end
+          shouldExit = true
+          break -- Exit the inner loop
+        else
 					-- Send any non-empty message (JSON or otherwise) to the server
 					Networking.Client:send(msg .. "\n")
 				end
@@ -162,7 +173,7 @@ local networkCoroutine = coroutine.create(networkPacketQueue)
 -- then sends them to the main thread
 -- then advances timers
 -- and then sleeps
-while true do
+while not shouldExit do
 	coroutine.resume(mainThreadCoroutine)
 	coroutine.resume(networkCoroutine)
 
@@ -193,7 +204,7 @@ while true do
 		if isRetry then
 			retryCount = retryCount + 1
 			-- Send keepAlive without cutting the line
-			uiToNetworkChannel:push(json.encode({ action = "keepAlive" }))
+			uiToNetworkChannel:push(json.encode({ action = "k" }))
 
 			-- Restart the timer
 			timerCoroutine = coroutine.create(timer)
@@ -204,4 +215,3 @@ while true do
 	-- Sleeps for 200 milliseconds
 	socket.sleep(0.2)
 end
-]]

@@ -1,5 +1,5 @@
 MP.UI.lobby_ready_button = function(text_scale)
-  if MP.LOBBY.isHost then
+  if MP.LOBBY.is_host then
     return MP.UI.Disableable_Button({
       id = "lobby_menu_start",
       button = "lobby_start_game",
