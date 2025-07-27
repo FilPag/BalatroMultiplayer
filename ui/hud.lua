@@ -134,9 +134,10 @@ end
 function MP.UI.create_UIBox_players()
 
 local players = {}
-if MP.LOBBY.players and MP.GAME.players then
-	for i, player in ipairs(MP.GAME.players) do
-		local lobby_player = MP.LOBBY.players[i]
+if MP.LOBBY.players and MP.LOBBY.players then
+	for i, player in pairs(MP.LOBBY.players) do
+    player = player.game_state
+		local lobby_player = MP.LOBBY.players[i].profile
 		local username = lobby_player and lobby_player.username or ("Player " .. tostring(i))
 		local colour = G.C.RED
 		if MP.UTILS.is_coop() then

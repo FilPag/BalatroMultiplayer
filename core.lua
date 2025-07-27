@@ -1,3 +1,4 @@
+local NativeFS = require("nativefs")
 MP = SMODS.current_mod
 G.FPS_CAP = 60
 MP.LOBBY = {
@@ -35,10 +36,9 @@ MP.LOBBY = {
 	},
 	username = "Guest",
 	ready_text = "Ready",
-	id = "",
 	blind_col = 1,
 	players = {},
-	isHost = false,
+	local_player = {},
 }
 MP.FLAGS = {
 	join_pressed = false,
@@ -152,8 +152,8 @@ end
 
 MP.reset_game_states()
 
-MP.LOBBY.username = MP.UTILS.get_username()
-MP.LOBBY.blind_col = MP.UTILS.get_blind_col()
+MP.username = MP.UTILS.get_username()
+MP.blind_col = MP.UTILS.get_blind_col()
 
 if not SMODS.current_mod.lovely then
 	G.E_MANAGER:add_event(Event({
@@ -193,7 +193,6 @@ MP.load_mp_dir("objects/decks")
 MP.load_mp_dir("objects/jokers")
 MP.load_mp_dir("objects/consumables")
 MP.load_mp_dir("objects/challenges")
-MP.load_mp_dir("networking")
 MP.load_mp_dir("gamemodes")
 MP.load_mp_dir("rulesets")
 MP.load_mp_dir("function_overrides")
@@ -205,10 +204,41 @@ MP.load_mp_dir("ui/game")
 MP.load_mp_dir("ui/lobby")
 MP.load_mp_dir("ui/main_menu")
 
+MP.load_mp_file("networking/action_handlers.lua")
+MP.load_mp_file("networking/client_action_definitions.lua")
+MP.load_mp_file("networking/player_state_manager.lua")
+
+
 MP.load_mp_file("misc/disable_restart.lua")
 MP.load_mp_file("misc/mod_hash.lua")
 
-local SOCKET = MP.load_mp_file("networking/socket.lua")
-MP.NETWORKING_THREAD = love.thread.newThread(SOCKET)
+local restart_game_ref = SMODS.restart_game
+function SMODS.restart_game()
+  sendDebugMessage("Restarting game from Multiplayer Mod", "MULTIPLAYER")
+  Client.send("disconnect")
+  Client.send("exit")
+  MP.NETWORKING_THREAD:wait() -- Wait for the networking thread to finish before restarting
+  restart_game_ref()
+end
+
+local file_path = SMODS.current_mod.path .. 'networking\\socket.lua'
+file_path = file_path:gsub("/", "\\")
+local thread_code = NativeFS.read(file_path)
+MP.NETWORKING_THREAD = love.thread.newThread(thread_code)
+
+love.errorhandler_ref = love.errorhandler
+function love.errorhandler(msg, traceback)
+    if MP.NETWORKING_THREAD then
+        local uiToNetworkChannel = love.thread.getChannel("uiToNetwork")
+        uiToNetworkChannel:push("exit")
+        
+        -- Wait for thread to finish
+        MP.NETWORKING_THREAD:wait()
+        print("Network thread safely stopped")
+    end
+    return love.errorhandler_ref(msg, traceback)
+end
+
+
 MP.NETWORKING_THREAD:start(SMODS.Mods["Multiplayer"].config.server_url, SMODS.Mods["Multiplayer"].config.server_port)
 MP.ACTIONS.connect()

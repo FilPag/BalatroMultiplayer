@@ -37,7 +37,7 @@ function MP:generate_hash()
 	local mod_string = table.concat(mod_data, ";")
 	MP.MOD_STRING = mod_string
 	MP.MOD_HASH = hash(mod_string) or "0000"
-	MP.ACTIONS.set_username(MP.LOBBY.username)
+	MP.ACTIONS.set_client_data()
 end
 
 local hash_generated = false

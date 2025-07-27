@@ -19,11 +19,8 @@
 --- @field location string
 
 --- @class lobby_info
---- @field host string
 --- @field hostHash string
 --- @field hostCached boolean
---- @field isHost boolean
---- @field local_id string
 --- @field players? table[] @ Array of player objects: { username: string, modHash: string, isCached: boolean, id: string }
 
 
@@ -31,7 +28,7 @@ local json = require "json"
 Client = {}
 
 function Client.send(msg)
-	if msg ~= '{"action":"keepAliveAck"}' and msg ~= "action:keepAliveAck" then
+	if msg ~= '{"action":"a"}' then
 		sendTraceMessage(string.format("Client sent message: %s", msg), "MULTIPLAYER")
 	end
 	love.thread.getChannel("uiToNetwork"):push(msg)
@@ -94,41 +91,59 @@ end
 local function action_connected()
 	MP.LOBBY.connected = true
 	MP.UI.update_connection_status()
-	Client.send(json.encode({
-		action = "username",
-		username = MP.LOBBY.username,
-		colour = MP.LOBBY.blind_col,
-		modHash = MP.MOD_STRING
-	}))
+  MP.ACTIONS.set_client_data()
 end
 
-local function action_joinedLobby(code, type)
+-- Simple config update for lobby options
+local function update_lobby_options(options)
+  for k, v in pairs(options) do
+    MP.LOBBY.config[k] = v
+  end
+  if G.MAIN_MENU_UI then G.MAIN_MENU_UI:remove() end
+  set_main_menu_UI()
+  if G.OVERLAY_MENU then
+    G.FUNCS.exit_overlay_menu()
+  end
+end
+
+local function action_joined_lobby(action_data)
 	MP.FLAGS.join_pressed = false
-	MP.LOBBY.code = code
-	MP.LOBBY.type = type
+
+  MP.LOBBY.players = action_data.lobby_data.players or {}
+  update_lobby_options(action_data.lobby_data.lobby_options)
+
+  local player_id = action_data.player_id
+
+  for _, player in pairs(MP.LOBBY.players) do
+    if player.profile.id == player_id then
+      MP.LOBBY.local_player = player
+      MP.LOBBY.is_host = player.lobby_state.is_host
+    end
+  end
+
+	MP.LOBBY.code = action_data.lobby_data.code
 	MP.LOBBY.ready_to_start = false
-	MP.ACTIONS.sync_client()
-	MP.ACTIONS.lobby_info()
 	MP.UI.update_connection_status()
 end
 
---- @param lobby_info lobby_info
-local function action_lobbyInfo(lobby_info)
-	MP.LOBBY.isHost = lobby_info.isHost
-	MP.LOBBY.players = lobby_info.players or {}
-	MP.LOBBY.local_id = lobby_info.local_id
+local function player_joined_lobby(player)
+  MP.LOBBY.players[player.profile.id] = player
+  sendDebugMessage(tprint(MP.LOBBY.players), "MULTIPLAYER")
 
-	MP.ACTIONS.update_player_usernames()
+  if G.MAIN_MENU_UI then G.MAIN_MENU_UI:remove() end
+  set_main_menu_UI()
+end
+
+local function player_left_lobby(player_id)
+  MP.LOBBY.players[player_id] = nil
+  if G.MAIN_MENU_UI then G.MAIN_MENU_UI:remove() end
+  set_main_menu_UI()
 end
 
 local function action_error(message)
 	sendWarnMessage(message, "MULTIPLAYER")
 
 	MP.UTILS.overlay_message(message)
-end
-
-local function action_keep_alive()
-	Client.send(json.encode({ action = "keepAliveAck" }))
 end
 
 local function action_disconnected()
@@ -231,95 +246,11 @@ local function action_lose_game()
 	}))
 end
 
--- Helper: parse option value by type
-local function parse_option_value(type_str, v)
-	if type_str == "boolean" then
-		return (v == true or v == "true")
-	elseif type_str == "number" then
-		return tonumber(v)
-	elseif type_str == "string" then
-		return tostring(v)
-	else
-		return v
-	end
-end
-
--- Helper: check if any of the given keys changed between two tables
-local function any_key_changed(keys, old_tbl, new_tbl)
-	for _, k in ipairs(keys) do
-		if old_tbl[k] ~= new_tbl[k] then
-			return true
-		end
-	end
-	return false
-end
-
-local config_map = {
-	starting_lives = { type = "number" },
-	pvp_start_round = { type = "number" },
-	timer_base_seconds = { type = "number" },
-	timer_increment_seconds = { type = "number" },
-	showdown_starting_antes = { type = "number" },
-	different_decks = { type = "boolean" },
-	gold_on_life_loss = { type = "boolean" },
-	no_gold_on_round_loss = { type = "boolean" },
-	death_on_round_loss = { type = "boolean" },
-	different_seeds = { type = "boolean" },
-	multiplayer_jokers = { type = "boolean" },
-	normal_bosses = { type = "boolean" },
-	custom_seed = { type = "string" },
-	stake = { type = "number" },
-	back = { type = "string" },
-	challenge = { type = "string" },
-	-- Add more config keys here as needed
-}
-
-local function update_lobby_config(options)
-	local changed_keys = {}
-	local old_config = {}
-	for k, v in pairs(MP.LOBBY.config) do old_config[k] = v end
-
-	for k, v in pairs(options) do
-		local entry = config_map[k]
-		local parsed_v = entry and parse_option_value(entry.type, v) or v
-		if MP.LOBBY.config[k] ~= parsed_v then
-			MP.LOBBY.config[k] = parsed_v
-			changed_keys[k] = true
-		end
-	end
-	return changed_keys, old_config, MP.LOBBY.config
-end
-
-local function update_overlay_toggles(changed_keys)
-	if not G.OVERLAY_MENU then return end
-	for k in pairs(changed_keys) do
-		local config_uie = G.OVERLAY_MENU:get_UIE_by_ID(k .. "_toggle")
-		if config_uie then
-			G.FUNCS.toggle(config_uie)
-		end
-	end
-end
-
 local function action_invalidLobby()
 	MP.FLAGS.join_pressed = false
 	MP.UTILS.overlay_message("Invalid lobby code")
 end
 
-local function action_lobby_options(options)
-	local changed_keys, old_config, new_config = update_lobby_config(options)
-
-	-- Only update UI if deck, stake, or different_decks changed
-	if any_key_changed({ "stake", "back", "different_decks" }, old_config, new_config) then
-		if G.MAIN_MENU_UI then G.MAIN_MENU_UI:remove() end
-		set_main_menu_UI()
-	end
-
-	update_overlay_toggles(changed_keys)
-
-	if old_config.different_decks ~= new_config.different_decks then
-		G.FUNCS.exit_overlay_menu() -- throw out guest from any menu.
-	end
-end
 
 local function action_send_phantom(key)
 	local menu = G.OVERLAY_MENU -- we are spoofing a menu here, which disables duplicate protection
@@ -469,12 +400,12 @@ end
 local function action_set_lobby_ready(isReady, player_id)
 	MP.UTILS.get_player_by_id(player_id).isReady = isReady
 
-	if not MP.LOBBY.isHost then return end
+	if not MP.LOBBY.is_host then return end
 	local ready_check = true
 
 	for _, player in ipairs(MP.LOBBY.players) do
-		if player.id ~= MP.LOBBY.local_id then
-			ready_check = ready_check and player.isReady
+		if player.profile.id ~= MP.LOBBY.local_id then
+			ready_check = ready_check and player.lobby_state.is_ready
 		end
 	end
 
@@ -710,8 +641,9 @@ local action_table = {
 	version = function() action_version() end,
 	disconnected = function() action_disconnected() end,
 	invalidLobby = function() action_invalidLobby() end,
-	joinedLobby = function(parsedAction) action_joinedLobby(parsedAction.code, parsedAction.type) end,
-	lobbyInfo = function(parsedAction) action_lobbyInfo(parsedAction) end,
+	joinedLobby = function(parsedAction) action_joined_lobby(parsedAction) end,
+	playerJoinedLobby= function(parsedAction) player_joined_lobby(parsedAction.player) end,
+  playerLeftLobby = function(parsedAction) player_left_lobby(parsedAction.player_id) end,
 	startGame = function(parsedAction) action_start_game(parsedAction.players, parsedAction.seed, parsedAction.stake) end,
 	startBlind = function() action_start_blind() end,
 	setLobbyReady = function(parsedAction) action_set_lobby_ready(parsedAction.isReady, parsedAction.playerId) end,
@@ -720,7 +652,7 @@ local action_table = {
 	endPvP = function() action_end_pvp() end,
 	winGame = function() action_win_game() end,
 	loseGame = function() action_lose_game() end,
-	lobbyOptions = function(parsedAction) action_lobby_options(parsedAction.options) end,
+	lobbyOptions = function(parsedAction) update_lobby_options(parsedAction.options) end,
 	setBossBlind = function(parsedAction) action_set_boss_blind(parsedAction.bossKey) end,
 	sendPhantom = function(parsedAction) action_send_phantom(parsedAction.key) end,
 	removePhantom = function(parsedAction) action_remove_phantom(parsedAction.key) end,
@@ -738,7 +670,6 @@ local action_table = {
 	startAnteTimer = function(parsedAction) MP.action_start_ante_timer(parsedAction.time) end,
 	pauseAnteTimer = function(parsedAction) MP.action_pause_ante_timer(parsedAction.time) end,
 	error = function(parsedAction) action_error(parsedAction.message) end,
-	keepAlive = function() action_keep_alive() end,
 }
 
 function MP.NETWORKING.update(dt)
@@ -753,7 +684,7 @@ function MP.NETWORKING.update(dt)
 				return
 			end
 
-			if not ((parsedAction.action == "keepAlive") or (parsedAction.action == "keepAliveAck")) then
+			if not (parsedAction.action == "a") then
 				local log = string.format("Client got %s message: ", parsedAction.action)
 				for k, v in pairs(parsedAction) do
 					if parsedAction.action == "startGame" and k == "seed" then

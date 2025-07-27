@@ -19,7 +19,8 @@ function MP.UTILS.wrapText(text, maxChars)
 end
 
 function MP.UTILS.save_username(text)
-	MP.ACTIONS.set_username(text)
+  MP.username = text or "Guest"
+	MP.ACTIONS.set_client_data()
 	SMODS.Mods["Multiplayer"].config.username = text
 end
 
@@ -342,8 +343,8 @@ function MP.UTILS.add_nemesis_info(info_queue)
 
 	-- Find the first player that is not the local user (by id)
 	for _, player in ipairs(MP.LOBBY.players or {}) do
-		if player.id ~= my_id then
-			enemy_name = player.username
+		if player.profile.id ~= my_id then
+			enemy_name = player.profile.username
 			break
 		end
 	end
@@ -775,16 +776,7 @@ end
 -- @param players table: array of player tables
 -- @param my_id string: the id of the local player
 function MP.UTILS.get_local_player()
-	local players = MP.GAME.players
-	local my_id = MP.LOBBY.local_id
-
-	if not players then return nil end
-	for i, player in ipairs(players) do
-		if player.id and player.id == my_id then
-			return player
-		end
-	end
-	return nil
+  return MP.LOBBY.local_player.game_state
 end
 
 function MP.UTILS.get_player_by_id(player_id)
@@ -792,7 +784,7 @@ function MP.UTILS.get_player_by_id(player_id)
 	if not players then error("MP.GAME.players is nil") end
 
 	for i, player in ipairs(players) do
-		if player.id and player.id == player_id then
+		if player.profile.id and player.profile.id == player_id then
 			return player
 		end
 	end
@@ -800,15 +792,7 @@ function MP.UTILS.get_player_by_id(player_id)
 end
 
 function MP.UTILS.get_local_player_lobby_data()
-	local players = MP.LOBBY.players
-	local my_id = MP.LOBBY.local_id
-	if not players then error("MP.LOBBY.players is nil") end
-
-	for i, player in ipairs(players) do
-		if player.id and player.id == my_id then
-			return player
-		end
-	end
+	return MP.LOBBY.local_player.profile
 end
 
 -- Returns the enemy player for the current client.
@@ -820,7 +804,7 @@ function MP.UTILS.get_nemesis()
 
 	if not players then error("MP.LOBBY.players is nil") end
 	for i, player in ipairs(players) do
-		if player.id and player.id ~= my_id then
+		if player.profile.id and player.profile.id ~= my_id then
 			return player
 		end
 	end
@@ -833,7 +817,7 @@ function MP.UTILS.get_nemesis_lobby_data()
 	if not players then error("MP.LOBBY.players is nil") end
 
 	for i, player in ipairs(players) do
-		if player.id and player.id ~= my_id then
+		if player.profile.id and player.profile.id ~= my_id then
 			return player
 		end
 	end
