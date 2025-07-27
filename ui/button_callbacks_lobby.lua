@@ -313,7 +313,7 @@ function G.FUNCS.start_lobby(e)
   end
   MP.LOBBY.config.gamemode = gamemode_check and MP.LOBBY.config.gamemode or "gamemode_mp_attrition"
 
-  MP.ACTIONS.create_lobby(MP.LOBBY.config.ruleset, string.sub(MP.LOBBY.config.gamemode, 13))
+  MP.ACTIONS.create_lobby(MP.LOBBY.config.ruleset, MP.LOBBY.config.gamemode)
   G.FUNCS:exit_overlay_menu()
 end
 
@@ -330,7 +330,7 @@ function G.FUNCS.start_run(e, args)
         )
         chosen_stake = MP.DECK.MAX_STAKE
       end
-      if MP.LOBBY.isHost then
+      if MP.LOBBY.is_host then
         MP.LOBBY.config.back = args.challenge and "Challenge Deck"
             or (args.deck and args.deck.name)
             or G.GAME.viewed_back.name

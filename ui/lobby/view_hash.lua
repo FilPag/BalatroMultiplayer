@@ -1,6 +1,6 @@
 function MP.UIDEF.create_UIBox_view_hash(index)
-	local modHash = MP.LOBBY.players[index] and MP.LOBBY.players[index].modHash or nil
-	local modsTable = MP.UTILS.parse_Hash(modHash).Mods
+	local mod_hash = MP.LOBBY.players[index] and MP.LOBBY.players[index].profile.mod_hash or nil
+	local modsTable = MP.UTILS.parse_Hash(mod_hash).Mods
 	return (
 		create_UIBox_generic_options({
 			contents = {
