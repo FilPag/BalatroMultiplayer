@@ -330,7 +330,7 @@ function G.FUNCS.start_run(e, args)
         )
         chosen_stake = MP.DECK.MAX_STAKE
       end
-      if MP.LOBBY.isHost then
+      if MP.LOBBY.is_host then
         MP.LOBBY.config.back = args.challenge and "Challenge Deck"
             or (args.deck and args.deck.name)
             or G.GAME.viewed_back.name

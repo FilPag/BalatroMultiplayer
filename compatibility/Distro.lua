@@ -21,7 +21,7 @@ if SMODS.Mods["Distro"] and SMODS.Mods["Distro"].can_load then
 
 	function get_multiplayer_details()
 		-- For 2 players: host is players[1], guest is players[2]
-		local enemy_username = MP.LOBBY.isHost and MP.LOBBY.players[2].username or MP.LOBBY.players[1].username
+		local enemy_username = MP.LOBBY.is_host and MP.LOBBY.players[2].profile.username or MP.LOBBY.players[1].profile.username
 		return "Multiplayer Versus " .. enemy_username .. " | " .. tostring(MP.UTILS.get_local_player().lives) .. " Lives Left"
 	end
 
@@ -86,12 +86,12 @@ if SMODS.Mods["Distro"] and SMODS.Mods["Distro"].can_load then
 
 		if MP.LOBBY.code then
 			local enemy_username = nil
-			if MP.LOBBY.isHost then
+			if MP.LOBBY.is_host then
 				if MP.LOBBY.players[2] then
-					enemy_username = MP.LOBBY.players[2].username
+					enemy_username = MP.LOBBY.players[2].profile.username
 				end
 			else
-				enemy_username = MP.LOBBY.players[1] and MP.LOBBY.players[1].username or nil
+				enemy_username = MP.LOBBY.players[1] and MP.LOBBY.players[1].profile.username or nil
 			end
 
 			DiscordIPC.activity = {

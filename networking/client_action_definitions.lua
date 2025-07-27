@@ -5,6 +5,10 @@ function MP.ACTIONS.connect()
   Client.send("connect")
 end
 
+function MP.ACTIONS.disconnect()
+  Client.send("disconnect")
+end
+
 function MP.ACTIONS.update_player_usernames()
   if MP.UTILS.have_player_usernames_changed() then
     set_main_menu_UI()
@@ -63,20 +67,21 @@ function MP.ACTIONS.stop_game()
   Client.send(json.encode({ action = "stopGame" }))
 end
 
-function MP.ACTIONS.set_username(username)
-  MP.LOBBY.username = username or "Guest"
+function MP.ACTIONS.set_client_data()
   if MP.LOBBY.connected then
     Client.send(json.encode({
-      action = "username",
-      username = MP.LOBBY.username,
-      colour = MP.LOBBY.blind_col,
-      modHash = MP.MOD_STRING
+      action = "setClientData",
+      username = MP.username,
+      colour = MP.blind_col,
+      version = MULTIPLAYER_VERSION,
+      mod_hash = MP.MOD_STRING
     }))
+
   end
 end
 
 function MP.ACTIONS.set_blind_col(num)
-  MP.LOBBY.blind_col = num or 1
+  MP.blind_col = num or 1
 end
 
 function MP.ACTIONS.fail_round(hands_used)
