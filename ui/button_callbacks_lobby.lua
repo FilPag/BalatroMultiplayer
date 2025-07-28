@@ -22,7 +22,7 @@ end
 
 G.FUNCS.change_showdown_starting_antes = function(args)
   MP.LOBBY.config.showdown_starting_antes = args.to_val
-  MP.ACTIONS.lobby_options()
+  MP.ACTIONS.update_lobby_options()
 end
 
 function G.FUNCS.toggle_different_seeds()
@@ -32,17 +32,17 @@ end
 
 G.FUNCS.change_starting_lives = function(args)
   MP.LOBBY.config.starting_lives = args.to_val
-  MP.ACTIONS.lobby_options()
+  MP.ACTIONS.update_lobby_options()
 end
 
 G.FUNCS.change_starting_pvp_round = function(args)
   MP.LOBBY.config.pvp_start_round = args.to_val
-  MP.ACTIONS.lobby_options()
+  MP.ACTIONS.update_lobby_options()
 end
 
 G.FUNCS.change_timer_base_seconds = function(args)
   MP.LOBBY.config.timer_base_seconds = tonumber(args.to_val:sub(1, -2))
-  MP.ACTIONS.lobby_options()
+  MP.ACTIONS.update_lobby_options()
 end
 
 G.FUNCS.change_timer_increment_seconds = function(args)
@@ -94,7 +94,7 @@ end
 
 function G.FUNCS.custom_seed_reset(e)
   MP.LOBBY.config.custom_seed = "random"
-  MP.ACTIONS.lobby_options()
+  MP.ACTIONS.update_lobby_options()
 end
 
 function G.FUNCS.display_custom_seed(e)
@@ -165,7 +165,9 @@ function G.FUNCS.join_lobby(e)
 end
 
 function G.FUNCS.lobby_choose_deck(e)
-  MP.ACTIONS.send_lobby_ready(false)
+  if not MP.LOBBY.is_host then
+    MP.ACTIONS.send_lobby_ready(false)
+  end
   G.FUNCS.setup_run(e)
   if G.OVERLAY_MENU then
     G.OVERLAY_MENU:get_UIE_by_ID("run_setup_seed"):remove()
@@ -180,7 +182,9 @@ function G.FUNCS.lobby_leave(e)
 end
 
 function G.FUNCS.lobby_options(e)
-  MP.ACTIONS.send_lobby_ready(false)
+  if not MP.LOBBY.is_host then
+    MP.ACTIONS.send_lobby_ready(false)
+  end
   G.FUNCS.overlay_menu({
     definition = G.UIDEF.create_UIBox_lobby_options(),
   })
@@ -337,7 +341,7 @@ function G.FUNCS.start_run(e, args)
         MP.LOBBY.config.stake = chosen_stake
         MP.LOBBY.config.sleeve = G.viewed_sleeve
         MP.LOBBY.config.challenge = args.challenge and args.challenge.id or ""
-        MP.ACTIONS.lobby_options()
+        MP.ACTIONS.update_lobby_options()
       end
       MP.LOBBY.deck.back = args.challenge and "Challenge Deck"
           or (args.deck and args.deck.name)
@@ -359,8 +363,7 @@ function G.FUNCS.start_run(e, args)
 end
 
 function G.FUNCS.toggle_lobby_ready(e)
-  local player = MP.UTILS.get_local_player_lobby_data()
-  MP.ACTIONS.send_lobby_ready(not player.isReady)
+  MP.ACTIONS.send_lobby_ready(not MP.LOBBY.local_player.is_ready)
 end
 
 function G.FUNCS.view_code(e)

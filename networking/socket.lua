@@ -8,12 +8,10 @@ local client = nil
 local isConnected = false
 local shouldExit = false
 local lastKeepAlive = 0
-local retryCount = 0
 
 -- Constants
 local KEEP_ALIVE_INTERVAL = 7
-local RETRY_TIMEOUT = 3
-local MAX_RETRIES = 3
+local CONNECTION_TIMEOUT_INTERVAL = 30  -- Simplified: just disconnect after 30s of no activity
 local SLEEP_TIME = 0.2
 local CONNECTION_TIMEOUT = 10
 
@@ -38,7 +36,6 @@ local function closeConnection()
 		client = nil
 	end
 	isConnected = false
-	retryCount = 0
 end
 
 local function connect()
@@ -111,7 +108,7 @@ local function processNetworkMessages()
 	if not client or not isConnected then return end
 	
 	-- Process multiple packets per cycle to prevent message buildup
-	local maxPackets = 10
+	local maxPackets = 25
 	local processed = 0
 	
 	while processed < maxPackets do
@@ -137,22 +134,23 @@ local function handleKeepAlive()
 	local currentTime = os.time()
 	local timeSinceLastMessage = currentTime - lastKeepAlive
 	
+	-- Send keep-alive every KEEP_ALIVE_INTERVAL seconds
 	if timeSinceLastMessage >= KEEP_ALIVE_INTERVAL then
-		retryCount = retryCount + 1
-		
-		if retryCount > MAX_RETRIES then
-			closeConnection()
-			sendDisconnected("Connection closed due to inactivity")
-			return
-		end
-		
 		local keepAliveMsg = json.encode({ action = "k" })
-		if not sendMessage(keepAliveMsg) then
+		
+		if sendMessage(keepAliveMsg) then
+			lastKeepAlive = currentTime
+		else
+			-- Failed to send, connection is probably dead
 			closeConnection()
 			sendDisconnected("Failed to send keep-alive")
-		else
-			lastKeepAlive = currentTime
 		end
+	end
+	
+	-- Disconnect if no activity for too long
+	if timeSinceLastMessage >= CONNECTION_TIMEOUT_INTERVAL then
+		closeConnection()
+		sendDisconnected("Connection closed due to inactivity")
 	end
 end
 
