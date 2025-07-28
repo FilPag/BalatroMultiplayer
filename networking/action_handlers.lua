@@ -139,6 +139,7 @@ end
 local function player_left_lobby(player_id, host_id)
   MP.LOBBY.players[player_id] = nil
 	MP.LOBBY.players[host_id].lobby_state.is_host = true
+	MP.LOBBY.players[host_id].lobby_state.is_ready = true
 
 	if host_id == MP.LOBBY.local_player.profile.id then
 		MP.LOBBY.is_host = true

@@ -133,7 +133,7 @@ function MP.ACTIONS.update_lobby_options(_)
 
 	MP.LOBBY.ready_to_start = false
   for _, player in pairs(MP.LOBBY.players) do
-    if not player.is_host then
+    if not player.lobby_state.is_host then
       player.lobby_state.is_ready = false
     end
   end
