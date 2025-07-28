@@ -134,8 +134,14 @@ local function player_joined_lobby(player)
   set_main_menu_UI()
 end
 
-local function player_left_lobby(player_id)
+local function player_left_lobby(player_id, host_id)
   MP.LOBBY.players[player_id] = nil
+	MP.LOBBY.players[host_id].lobby_state.is_host = true
+
+	if host_id == MP.LOBBY.local_player.profile.id then
+		MP.LOBBY.is_host = true
+	end
+
   if G.MAIN_MENU_UI then G.MAIN_MENU_UI:remove() end
   set_main_menu_UI()
 end
@@ -643,7 +649,7 @@ local action_table = {
 	invalidLobby = function() action_invalidLobby() end,
 	joinedLobby = function(parsedAction) action_joined_lobby(parsedAction) end,
 	playerJoinedLobby= function(parsedAction) player_joined_lobby(parsedAction.player) end,
-  playerLeftLobby = function(parsedAction) player_left_lobby(parsedAction.player_id) end,
+  playerLeftLobby = function(parsedAction) player_left_lobby(parsedAction.player_id, parsedAction.host_id) end,
 	startGame = function(parsedAction) action_start_game(parsedAction.players, parsedAction.seed, parsedAction.stake) end,
 	startBlind = function() action_start_blind() end,
 	setLobbyReady = function(parsedAction) action_set_lobby_ready(parsedAction.isReady, parsedAction.playerId) end,

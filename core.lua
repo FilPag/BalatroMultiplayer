@@ -215,14 +215,32 @@ MP.load_mp_file("misc/mod_hash.lua")
 local restart_game_ref = SMODS.restart_game
 function SMODS.restart_game()
   sendDebugMessage("Restarting game from Multiplayer Mod", "MULTIPLAYER")
-  Client.send("disconnect")
-  Client.send("exit")
-  MP.NETWORKING_THREAD:wait() -- Wait for the networking thread to finish before restarting
+  
+  -- Safely send disconnect/exit commands
+  if MP.NETWORKING_THREAD and MP.NETWORKING_THREAD:isRunning() then
+    local uiToNetworkChannel = love.thread.getChannel("uiToNetwork")
+    uiToNetworkChannel:push("disconnect")
+    uiToNetworkChannel:push("exit")
+    
+    -- Wait with timeout to prevent infinite hanging
+    local start_time = love.timer.getTime()
+    local timeout = 5 -- 5 seconds timeout
+    
+    while MP.NETWORKING_THREAD:isRunning() and (love.timer.getTime() - start_time) < timeout do
+      love.timer.sleep(0.1)
+    end
+    
+    -- Force kill if still running
+    if MP.NETWORKING_THREAD:isRunning() then
+      sendDebugMessage("Force killing networking thread after timeout", "MULTIPLAYER")
+      -- Note: Lua threads can't be force-killed, but we can proceed anyway
+    end
+  end
+  
   restart_game_ref()
 end
 
-local file_path = SMODS.current_mod.path .. 'networking\\socket.lua'
-file_path = file_path:gsub("/", "\\")
+local file_path = SMODS.current_mod.path .. 'networking/socket.lua'
 local thread_code = NativeFS.read(file_path)
 MP.NETWORKING_THREAD = love.thread.newThread(thread_code)
 
@@ -232,9 +250,19 @@ function love.errorhandler(msg, traceback)
         local uiToNetworkChannel = love.thread.getChannel("uiToNetwork")
         uiToNetworkChannel:push("exit")
         
-        -- Wait for thread to finish
-        MP.NETWORKING_THREAD:wait()
-        print("Network thread safely stopped")
+        -- Wait with timeout to prevent infinite hanging
+        local start_time = love.timer.getTime()
+        local timeout = 3 -- 3 seconds timeout
+        
+        while MP.NETWORKING_THREAD:isRunning() and (love.timer.getTime() - start_time) < timeout do
+            love.timer.sleep(0.1)
+        end
+        
+        if MP.NETWORKING_THREAD:isRunning() then
+            print("Network thread did not exit gracefully within timeout")
+        else
+            print("Network thread safely stopped")
+        end
     end
     return love.errorhandler_ref(msg, traceback)
 end
