@@ -18,7 +18,7 @@ function MP.UIDEF.create_UIBox_custom_seed_overlay()
 								prompt_text = localize("k_enter_seed"),
 								callback = function(val)
 									MP.LOBBY.config.custom_seed = MP.LOBBY.temp_seed
-									MP.ACTIONS.lobby_options()
+									MP.ACTIONS.update_lobby_options()
 								end,
 							}),
 							{

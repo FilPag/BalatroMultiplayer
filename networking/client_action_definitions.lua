@@ -36,31 +36,24 @@ function MP.ACTIONS.start_game()
 end
 
 function MP.ACTIONS.send_lobby_ready(value)
-  local player = MP.UTILS.get_local_player_lobby_data()
-
-  if not player then
-    sendErrorMessage("No local player data found to toggle ready state.", "MULTIPLAYER")
-    return
-  end
-
-  player.isReady = value
+  MP.LOBBY.local_player.is_ready = value
 
   local ready_button_ref = G.MAIN_MENU_UI:get_UIE_by_ID("lobby_ready_button")
   if ready_button_ref then
-    MP.LOBBY.ready_text = player.isReady and localize("b_unready") or localize("b_ready")
-    ready_button_ref.config.colour = player.isReady and G.C.GREEN or G.C.RED
+    MP.LOBBY.ready_text = MP.LOBBY.local_player.is_ready and localize("b_unready") or localize("b_ready")
+    ready_button_ref.config.colour = MP.LOBBY.local_player.is_ready and G.C.GREEN or G.C.RED
   end
 
-  Client.send(json.encode({ action = "setLobbyReady", isReady = player.isReady }))
+  Client.send(json.encode({ action = "setReady", is_ready = MP.LOBBY.local_player.is_ready }))
 end
 
 function MP.ACTIONS.ready_blind(e)
   MP.GAME.next_blind_context = e
-  Client.send(json.encode({ action = "readyBlind" }))
+  MP.ACTIONS.send_lobby_ready(true)
 end
 
 function MP.ACTIONS.unready_blind()
-  Client.send(json.encode({ action = "unreadyBlind" }))
+  MP.ACTIONS.send_lobby_ready(false)
 end
 
 function MP.ACTIONS.stop_game()
@@ -132,12 +125,21 @@ function MP.ACTIONS.play_hand(score, hands_left)
   Client.send(json.encode({ action = "playHand", score = fixed_score, hands_left = hands_left, target_score = target }))
 end
 
-function MP.ACTIONS.lobby_options(_)
+function MP.ACTIONS.update_lobby_options(_)
   local options = {}
   for k, v in pairs(MP.LOBBY.config) do
     options[k] = v
   end
-  Client.send(json.encode({ action = "lobbyOptions", options = options }))
+
+	MP.LOBBY.ready_to_start = false
+  for _, player in pairs(MP.LOBBY.players) do
+    if not player.is_host then
+      player.lobby_state.is_ready = false
+    end
+  end
+
+  set_main_menu_UI()
+  Client.send(json.encode({ action = "updateLobbyOptions", options = options }))
 end
 
 ---@param boss string
