@@ -240,7 +240,9 @@ function SMODS.restart_game()
   restart_game_ref()
 end
 
-local file_path = SMODS.current_mod.path .. 'networking/socket.lua'
+-- Detect OS and use appropriate path separator
+local path_separator = package.config:sub(1,1) -- Gets the first character which is the path separator
+local file_path = SMODS.current_mod.path .. 'networking' .. path_separator .. 'socket.lua'
 local thread_code = NativeFS.read(file_path)
 MP.NETWORKING_THREAD = love.thread.newThread(thread_code)
 
