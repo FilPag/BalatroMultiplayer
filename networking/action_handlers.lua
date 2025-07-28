@@ -99,8 +99,11 @@ local function update_lobby_options(options)
   for k, v in pairs(options) do
     MP.LOBBY.config[k] = v
   end
-  if G.MAIN_MENU_UI then G.MAIN_MENU_UI:remove() end
+
+	MP.LOBBY.local_player.is_ready = false
+
   set_main_menu_UI()
+
   if G.OVERLAY_MENU then
     G.FUNCS.exit_overlay_menu()
   end
@@ -128,7 +131,6 @@ end
 
 local function player_joined_lobby(player)
   MP.LOBBY.players[player.profile.id] = player
-  sendDebugMessage(tprint(MP.LOBBY.players), "MULTIPLAYER")
 
   if G.MAIN_MENU_UI then G.MAIN_MENU_UI:remove() end
   set_main_menu_UI()
@@ -403,20 +405,21 @@ local function action_spent_last_shop(player_id, amount)
 	enemy.spent_in_shop[#enemy.spent_in_shop + 1] = tonumber(amount)
 end
 
-local function action_set_lobby_ready(isReady, player_id)
-	MP.UTILS.get_player_by_id(player_id).isReady = isReady
+local function action_player_ready(is_ready, player_id)
+	MP.LOBBY.players[player_id].lobby_state.is_ready = is_ready
 
 	if not MP.LOBBY.is_host then return end
 	local ready_check = true
 
-	for _, player in ipairs(MP.LOBBY.players) do
-		if player.profile.id ~= MP.LOBBY.local_id then
-			ready_check = ready_check and player.lobby_state.is_ready
+	for _, player in pairs(MP.LOBBY.players) do
+		if not player.lobby_state.is_ready then
+			ready_check = false
+			break
 		end
 	end
 
 	MP.LOBBY.ready_to_start = ready_check
-	MP.ACTIONS.update_player_usernames()
+  set_main_menu_UI()
 end
 
 local function action_magnet()
@@ -652,13 +655,13 @@ local action_table = {
   playerLeftLobby = function(parsedAction) player_left_lobby(parsedAction.player_id, parsedAction.host_id) end,
 	startGame = function(parsedAction) action_start_game(parsedAction.players, parsedAction.seed, parsedAction.stake) end,
 	startBlind = function() action_start_blind() end,
-	setLobbyReady = function(parsedAction) action_set_lobby_ready(parsedAction.isReady, parsedAction.playerId) end,
+	playerReady = function(parsedAction) action_player_ready(parsedAction.is_ready , parsedAction.player_id) end,
 	gameStateUpdate = function(parsedAction) action_game_state_update(parsedAction.id, parsedAction.updates) end,
 	stopGame = function() action_stop_game() end,
 	endPvP = function() action_end_pvp() end,
 	winGame = function() action_win_game() end,
 	loseGame = function() action_lose_game() end,
-	lobbyOptions = function(parsedAction) update_lobby_options(parsedAction.options) end,
+	updateLobbyOptions = function(parsedAction) update_lobby_options(parsedAction.options) end,
 	setBossBlind = function(parsedAction) action_set_boss_blind(parsedAction.bossKey) end,
 	sendPhantom = function(parsedAction) action_send_phantom(parsedAction.key) end,
 	removePhantom = function(parsedAction) action_remove_phantom(parsedAction.key) end,
