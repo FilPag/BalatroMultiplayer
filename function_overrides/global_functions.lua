@@ -27,7 +27,7 @@ function reset_blinds()
 
 	if MP.LOBBY.code then
 		local mp_small_choice, mp_big_choice, mp_boss_choice = MP.Gamemodes[MP.LOBBY.config.gamemode]:get_blinds_by_ante(
-		G.GAME.round_resets.ante, G.GAME.round_resets.blind_choices)
+			G.GAME.round_resets.ante, G.GAME.round_resets.blind_choices)
 		G.GAME.round_resets.blind_choices.Small = mp_small_choice
 		G.GAME.round_resets.blind_choices.Big = mp_big_choice
 		if MP.LOBBY.config.gamemode ~= "gamemode_mp_coopSurvival" then
@@ -60,6 +60,12 @@ function set_main_menu_UI()
 		end
 		if G.STAGE == G.STAGES.MAIN_MENU then
 			G.FUNCS.display_lobby_main_menu_UI()
+
+			local ready_button_ref = G.MAIN_MENU_UI:get_UIE_by_ID("lobby_ready_button")
+			if ready_button_ref then
+				MP.LOBBY.ready_text = MP.LOBBY.local_player.is_ready and localize("b_unready") or localize("b_ready")
+				ready_button_ref.config.colour = MP.LOBBY.local_player.is_ready and G.C.GREEN or G.C.RED
+			end
 		end
 	else
 		set_main_menu_UI_ref()
@@ -98,18 +104,17 @@ function wheel_of_fortune_the_card(card)
 	local chance = math.random(4)
 	if chance == 1 then
 		local editions = {
-			{name = 'e_foil', weight = 499},
-			{name = 'e_holo', weight = 350},
-			{name = 'e_polychrome', weight = 150},
-			{name = 'e_negative', weight = 1}
+			{ name = 'e_foil',       weight = 499 },
+			{ name = 'e_holo',       weight = 350 },
+			{ name = 'e_polychrome', weight = 150 },
+			{ name = 'e_negative',   weight = 1 }
 		}
-		local edition = poll_edition("main_menu"..os.time(), nil, nil, true, editions)
+		local edition = poll_edition("main_menu" .. os.time(), nil, nil, true, editions)
 		card:set_edition(edition, true)
 		MP.UI_UTILS.juice_up(card, 0.3, 0.5)
-		G.CONTROLLER.locks.edition = false	-- if this isn't done, set_edition will block inputs for 0.1s
+		G.CONTROLLER.locks.edition = false -- if this isn't done, set_edition will block inputs for 0.1s
 	else
 		nope_a_joker(card)
 		MP.UI_UTILS.juice_up(card, 0.3, 0.5)
 	end
 end
-
