@@ -201,7 +201,7 @@ function G.UIDEF.create_UIBox_lobby_menu()
                     },
                     scale = text_scale * 1.2,
                     col = true,
-                    enabled_ref_table = MP.LOBBY.local_player,
+                    enabled_ref_table = MP.LOBBY,
                     enabled_ref_value = "is_host",
                   }) or MP.UI.Disableable_Button({
                     id = "lobby_choose_deck",
