@@ -18,7 +18,7 @@ MP.UI.lobby_ready_button = function(text_scale)
     return {
       n = G.UIT.C,
       config = {
-        id = "lobby_ready_button",
+        id = "ready_button",
         button = "toggle_lobby_ready",
         align = "cm",
         r = 0.1,

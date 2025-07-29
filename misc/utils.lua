@@ -799,11 +799,11 @@ end
 -- @param players table: array of player tables
 -- @param my_id string: the id of the local player
 function MP.UTILS.get_nemesis()
-	local players = MP.GAME.players
+	local players = MP.LOBBY.players
 	local my_id = MP.LOBBY.local_id
 
 	if not players then error("MP.LOBBY.players is nil") end
-	for i, player in ipairs(players) do
+	for i, player in pairs(players) do
 		if player.profile.id and player.profile.id ~= my_id then
 			return player
 		end
@@ -816,7 +816,7 @@ function MP.UTILS.get_nemesis_lobby_data()
 	local my_id = MP.LOBBY.local_id
 	if not players then error("MP.LOBBY.players is nil") end
 
-	for i, player in ipairs(players) do
+	for i, player in pairs(players) do
 		if player.profile.id and player.profile.id ~= my_id then
 			return player
 		end
@@ -833,7 +833,7 @@ function MP.UTILS.have_player_usernames_changed()
 		return true
 	end
 
-	for i, player in ipairs(players) do
+	for i, player in pairs(players) do
 		if prev_usernames[i] ~= player.username then
 			return true
 		end

@@ -93,7 +93,7 @@ function G.FUNCS.custom_seed_overlay(e)
 end
 
 function G.FUNCS.custom_seed_reset(e)
-  MP.LOBBY.config.custom_seed = "random"
+  MP.LOBBY.config.custom_seed = generate_starting_seed()
   MP.ACTIONS.update_lobby_options()
 end
 

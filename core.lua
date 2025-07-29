@@ -52,7 +52,7 @@ MP.ACTIONS = {}
 MP.INTEGRATIONS = {
 	TheOrder = SMODS.Mods["Multiplayer"].config.integrations.TheOrder,
 }
-MP.player_state_manager = SMODS.load_file('networking/player_state_manager.lua', 'Multiplayer')()
+MP.game_state_manager = SMODS.load_file('networking/game_state_manager.lua', 'Multiplayer')()
 G.C.MULTIPLAYER = HEX("AC3232")
 
 function MP.load_mp_file(file)
@@ -106,19 +106,6 @@ function MP.reset_game_states()
 		comeback_bonus = 0,
 		end_pvp = false,
 		next_coop_boss = nil,
-		players = {}, --[[@type table<string, {score: any, score_text: string, hands: number, location: string, skips: number, lives: number, sells: number, spent_last_shop: number, highest_score: any}>]]
-		--[[enemy = {
-			score = MP.INSANE_INT.empty(),
-			score_text = "0",
-			hands = 4,
-			location = localize("loc_selecting"),
-			skips = 0,
-			lives = MP.LOBBY.config.starting_lives,
-			sells = 0,
-			sells_per_ante = {},
-			spent_in_shop = {},
-			highest_score = MP.INSANE_INT.empty(),
-		}, --]]
 		location = "loc_selecting",
 		next_blind_context = nil,
 		ante_key = tostring(math.random()),
@@ -206,8 +193,6 @@ MP.load_mp_dir("ui/main_menu")
 
 MP.load_mp_file("networking/action_handlers.lua")
 MP.load_mp_file("networking/client_action_definitions.lua")
-MP.load_mp_file("networking/player_state_manager.lua")
-
 
 MP.load_mp_file("misc/disable_restart.lua")
 MP.load_mp_file("misc/mod_hash.lua")
