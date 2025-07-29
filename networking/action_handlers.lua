@@ -110,14 +110,19 @@ local function update_lobby_options(options)
 end
 
 local function action_joined_lobby(action_data)
-	MP.FLAGS.join_pressed = false
+	if not MP.LOBBY.players then
+		MP.LOBBY.players = {}
+	end
 
+	MP.FLAGS.join_pressed = false
   MP.LOBBY.players = action_data.lobby_data.players or {}
   update_lobby_options(action_data.lobby_data.lobby_options)
 
   local player_id = action_data.player_id
 
   for _, player in pairs(MP.LOBBY.players) do
+		MP.LOBBY.players[player.profile.id] = player
+		MP.LOBBY.players[player.profile.id].game_state = MP.game_state_manager.create_player_game_state(player.profile.id, player.game_state)
     if player.profile.id == player_id then
       MP.LOBBY.local_player = player
       MP.LOBBY.is_host = player.lobby_state.is_host
@@ -130,20 +135,31 @@ local function action_joined_lobby(action_data)
 end
 
 local function player_joined_lobby(player)
-  MP.LOBBY.players[player.profile.id] = player
+	MP.LOBBY.players[player.profile.id] = player
+	MP.LOBBY.players[player.profile.id].game_state = MP.game_state_manager.create_player_game_state(player.profile.id, player.game_state)
 
   if G.MAIN_MENU_UI then G.MAIN_MENU_UI:remove() end
   set_main_menu_UI()
 end
 
+local function action_game_stopped()
+	if G.STAGE ~= G.STAGES.MAIN_MENU then
+		G.FUNCS.go_to_menu()
+		MP.UI.update_connection_status()
+		MP.reset_game_states()
+	end
+end
+
 local function player_left_lobby(player_id, host_id)
-  MP.LOBBY.players[player_id] = nil
 	MP.LOBBY.players[host_id].lobby_state.is_host = true
 	MP.LOBBY.players[host_id].lobby_state.is_ready = true
+  MP.LOBBY.players[player_id] = nil
 
 	if host_id == MP.LOBBY.local_player.profile.id then
 		MP.LOBBY.is_host = true
 	end
+
+	action_game_stopped()
 
   if G.MAIN_MENU_UI then G.MAIN_MENU_UI:remove() end
   set_main_menu_UI()
@@ -152,6 +168,7 @@ end
 local function action_error(message)
 	sendWarnMessage(message, "MULTIPLAYER")
 
+	MP.FLAGS.join_pressed = false
 	MP.UTILS.overlay_message(message)
 end
 
@@ -165,24 +182,27 @@ end
 
 ---@param deck string
 ---@param seed string
----@param stake_str string
-local function action_start_game(players, seed, stake_str)
+local function action_game_started(seed, stake)
 	MP.reset_game_states()
-	local stake = tonumber(stake_str)
-	MP.ACTIONS.set_ante(0)
-	MP.GAME.players = players
-
-	for _, player in ipairs(MP.GAME.players) do
-		player.location = MP.player_state_manager.parse_enemy_location(player.location)
-		player.score = MP.INSANE_INT.from_string(player.score) or MP.INSANE_INT.empty()
-		player.highest_score = MP.INSANE_INT.from_string(player.highest_score) or MP.INSANE_INT.empty()
+	if type(stake) == "string" then
+		stake = tonumber(stake) or 0
 	end
 
 	if not MP.LOBBY.config.different_seeds and MP.LOBBY.config.custom_seed ~= "random" then
 		seed = MP.LOBBY.config.custom_seed
+	else
+		seed = generate_starting_seed()
 	end
 
 	G.FUNCS.lobby_start_run(nil, { seed = seed, stake = stake })
+	G.E_MANAGER:add_event(Event({
+    trigger = 'immediate',
+    no_delete = true,
+    func = function()
+			MP.ACTIONS.UpdateHandsAndDiscards(G.GAME.starting_params.hands, G.GAME.starting_params.discards)
+      return true
+    end
+  }))
 	MP.LOBBY.ready_to_start = false
 end
 
@@ -198,15 +218,19 @@ local function action_start_blind()
 	end
 end
 
-local function action_game_state_update(player_id, updates)
-	MP.player_state_manager.process(player_id, updates)
-end
+local function action_game_state_update(player_id, game_state)
+	if not game_state then return end
 
-local function action_stop_game()
-	if G.STAGE ~= G.STAGES.MAIN_MENU then
-		G.FUNCS.go_to_menu()
-		MP.UI.update_connection_status()
-		MP.reset_game_states()
+	for key, value in pairs(game_state) do
+		if key == "score" then
+			value = MP.INSANE_INT.from_string(value)
+		elseif key == "highest_score" then
+			value = MP.INSANE_INT.from_string(value)
+		elseif key == "location" then
+			value = MP.game_state_manager.parse_enemy_location(value)
+		end
+
+		MP.LOBBY.players[player_id].game_state[key] = value
 	end
 end
 
@@ -654,11 +678,11 @@ local action_table = {
 	joinedLobby = function(parsedAction) action_joined_lobby(parsedAction) end,
 	playerJoinedLobby= function(parsedAction) player_joined_lobby(parsedAction.player) end,
   playerLeftLobby = function(parsedAction) player_left_lobby(parsedAction.player_id, parsedAction.host_id) end,
-	startGame = function(parsedAction) action_start_game(parsedAction.players, parsedAction.seed, parsedAction.stake) end,
+	gameStarted = function(parsedAction) action_game_started(parsedAction.seed, parsedAction.stake) end,
 	startBlind = function() action_start_blind() end,
 	playerReady = function(parsedAction) action_player_ready(parsedAction.is_ready , parsedAction.player_id) end,
-	gameStateUpdate = function(parsedAction) action_game_state_update(parsedAction.id, parsedAction.updates) end,
-	stopGame = function() action_stop_game() end,
+	gameStateUpdate = function(parsedAction) action_game_state_update(parsedAction.player_id, parsedAction.game_state) end,
+	gameStopped = function() action_game_stopped() end,
 	endPvP = function() action_end_pvp() end,
 	winGame = function() action_win_game() end,
 	loseGame = function() action_lose_game() end,

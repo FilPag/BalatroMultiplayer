@@ -32,19 +32,22 @@ function MP.ACTIONS.leave_lobby()
 end
 
 function MP.ACTIONS.start_game()
-  Client.send(json.encode({ action = "startGame" }))
+  --TODO ensure seeds are correct
+  Client.send(json.encode({ action = "startGame", seed = MP.LOBBY.config.custom_seed, stake = MP.LOBBY.config.stake }))
 end
 
 function MP.ACTIONS.send_lobby_ready(value)
   MP.LOBBY.local_player.is_ready = value
+  Client.send(json.encode({ action = "setReady", is_ready = MP.LOBBY.local_player.is_ready }))
 
-  local ready_button_ref = G.MAIN_MENU_UI:get_UIE_by_ID("lobby_ready_button")
+  if not G.MAIN_MENU_UI then return end
+
+  local ready_button_ref = G.MAIN_MENU_UI:get_UIE_by_ID("ready_button")
   if ready_button_ref then
     MP.LOBBY.ready_text = MP.LOBBY.local_player.is_ready and localize("b_unready") or localize("b_ready")
     ready_button_ref.config.colour = MP.LOBBY.local_player.is_ready and G.C.GREEN or G.C.RED
   end
 
-  Client.send(json.encode({ action = "setReady", is_ready = MP.LOBBY.local_player.is_ready }))
 end
 
 function MP.ACTIONS.ready_blind(e)
@@ -182,6 +185,10 @@ end
 --- @param updates GameStateData|table Table of fields to update (partial GameStateData)
 MP.ACTIONS.update_player_state = function(updates)
   Client.send(json.encode({ action = "updatePlayerGameState", updates = updates }))
+end
+
+MP.ACTIONS.UpdateHandsAndDiscards = function(hands_max, discards_max)
+  Client.send(json.encode({ action = "updateHandsAndDiscards", hands_max = hands_max, discards_max = discards_max }))
 end
 
 function MP.ACTIONS.send_phantom(key)

@@ -8,7 +8,6 @@ function ease_ante(mod)
 		return
 	end
 	MP.GAME.antes_keyed[MP.GAME.ante_key] = true
-	MP.ACTIONS.set_ante(G.GAME.round_resets.ante + mod)
 	G.E_MANAGER:add_event(Event({
 		trigger = "immediate",
 		func = function()
@@ -61,7 +60,7 @@ function set_main_menu_UI()
 		if G.STAGE == G.STAGES.MAIN_MENU then
 			G.FUNCS.display_lobby_main_menu_UI()
 
-			local ready_button_ref = G.MAIN_MENU_UI:get_UIE_by_ID("lobby_ready_button")
+			local ready_button_ref = G.MAIN_MENU_UI:get_UIE_by_ID("ready_button")
 			if ready_button_ref then
 				MP.LOBBY.ready_text = MP.LOBBY.local_player.is_ready and localize("b_unready") or localize("b_ready")
 				ready_button_ref.config.colour = MP.LOBBY.local_player.is_ready and G.C.GREEN or G.C.RED
