@@ -216,11 +216,8 @@ function G.FUNCS.select_blind(e)
   if MP.LOBBY.code then
     MP.GAME.ante_key = tostring(math.random())
     MP.UTILS.get_local_player().score = MP.INSANE_INT.empty()
-    MP.ACTIONS.update_player_state({
-      score = "0",
-      hands_left = G.GAME.round_resets.hands,
-      location = "loc_playing-" .. (e.config.ref_table.key or e.config.ref_table.name),
-    })
+    MP.ACTIONS.set_location("loc_playing-" .. (e.config.ref_table.key or e.config.ref_table.name))
+	  MP.ACTIONS.UpdateHandsAndDiscards(G.GAME.current_round.hands_left, G.GAME.current_round.discards_left)
     MP.UI_UTILS.hide_enemy_location()
   end
 end
