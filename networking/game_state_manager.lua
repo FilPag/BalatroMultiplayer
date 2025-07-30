@@ -19,33 +19,6 @@
 local M = {}
 
 
-local function localize_blind(val)
-	if not val or val == "" then return "" end
-	local loc = localize({ type = "name_text", key = val, set = "Blind" })
-	if loc ~= "ERROR" then return loc end
-	return (G.P_BLINDS[val] and G.P_BLINDS[val].name) or val
-end
-
-local function localize_player_location(val)
-	if not val or val == "" then return "Unknown" end
-	local loc = G.localization.misc.dictionary[val]
-	if loc then return loc end
-	return val
-end
-
-function M.parse_enemy_location(location)
-	if type(location) ~= "string" or location == "" then return "Unknown" end
-	local main, sub = location:match("([^%-]+)%-(.+)")
-	main = main or location
-	sub = sub or ""
-	return localize_player_location(main) .. localize_blind(sub)
-end
-
-function MP.juice_player_ui(uie_id)
-	local uie = G.HUD and G.HUD.get_UIE_by_ID and G.HUD:get_UIE_by_ID(uie_id)
-	if uie and uie.juice_up then uie:juice_up() end
-end
-
 function M.reset_scores()
 	for _, player in pairs(MP.GAME.players) do
 		player.score = MP.INSANE_INT.empty()
@@ -83,9 +56,10 @@ local function create_reactive_state(initial)
 	local listeners = {}
 	local proxy = initial or {}
 
-	setmetatable(proxy, {
+	proxy = setmetatable(proxy, {
 		__newindex = function(tbl, key, value)
 			local old = rawget(tbl, key)
+			sendTraceMessage("updating key: " .. key .. " from " .. tostring(old) .. " to " .. tostring(value))
 			rawset(tbl, key, value)
 			if old ~= value and listeners[key] then
 				for _, cb in ipairs(listeners[key]) do
@@ -114,6 +88,7 @@ function M.create_player_game_state(player_id, initial_state)
 	---@param new_value string
 	game_state.on_change("score", function(_, new_value)
 		local is_nemesis = G.GAME.blind and (G.GAME.blind.config.blind.key == "bl_mp_nemesis" or G.GAME.blind.pvp)
+		sendDebugMessage("Player " .. player_id .. " score changed to: " .. tprint(new_value))
 
 		if is_nemesis and not is_local then
 			local nemesis = MP.UTILS.get_nemesis()
