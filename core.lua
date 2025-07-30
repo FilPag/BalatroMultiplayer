@@ -52,7 +52,7 @@ MP.ACTIONS = {}
 MP.INTEGRATIONS = {
 	TheOrder = SMODS.Mods["Multiplayer"].config.integrations.TheOrder,
 }
-MP.game_state_manager = SMODS.load_file('networking/game_state_manager.lua', 'Multiplayer')()
+MP.UI_EVENT_HANDLER = SMODS.load_file('networking/ui_event_handler.lua', 'Multiplayer')()
 G.C.MULTIPLAYER = HEX("AC3232")
 
 function MP.load_mp_file(file)

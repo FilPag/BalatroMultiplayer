@@ -186,3 +186,31 @@ function MP.UI_UTILS.add_custom_multiplayer_cards(change_context)
 		func = make_wheel_of_fortune_a_card_func(MP.title_card),
 	}))
 end
+
+local function localize_blind(val)
+	if not val or val == "" then return "" end
+	local loc = localize({ type = "name_text", key = val, set = "Blind" })
+	if loc ~= "ERROR" then return loc end
+	return (G.P_BLINDS[val] and G.P_BLINDS[val].name) or val
+end
+
+local function localize_player_location(val)
+	if not val or val == "" then return "Unknown" end
+	local loc = G.localization.misc.dictionary[val]
+	if loc then return loc end
+	return val
+end
+
+function MP.UI_UTILS.parse_enemy_location(location)
+	if type(location) ~= "string" or location == "" then return "Unknown" end
+	local main, sub = location:match("([^%-]+)%-(.+)")
+	main = main or location
+	sub = sub or ""
+	return localize_player_location(main) .. localize_blind(sub)
+end
+
+function MP.UI_UTILS.juice_player_ui(uie_id)
+	local uie = G.HUD and G.HUD.get_UIE_by_ID and G.HUD:get_UIE_by_ID(uie_id)
+	if uie and uie.juice_up then uie:juice_up() end
+end
+

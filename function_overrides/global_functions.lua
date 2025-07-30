@@ -18,6 +18,20 @@ function ease_ante(mod)
 	}))
 end
 
+local end_round_ref = end_round
+function end_round()
+	if MP.LOBBY.code then
+		if MP.LOBBY.local_player.game_state.lives ~= 0 and MP.LOBBY.config.gold_on_life_loss then
+			MP.LOBBY.local_player.comeback_bonus_given = false
+			MP.LOBBY.local_player.comeback_bonus = (MP.LOBBY.local_player.comeback_bonus or 0) + 1
+		end
+		if MP.LOBBY.config.no_gold_on_round_loss and (G.GAME.blind and G.GAME.blind.dollars) then
+			G.GAME.blind.dollars = 0
+		end
+	end
+	end_round_ref()
+end
+
 local reset_blinds_ref = reset_blinds
 function reset_blinds()
 	reset_blinds_ref()
