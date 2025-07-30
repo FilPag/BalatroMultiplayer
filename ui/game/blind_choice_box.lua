@@ -35,7 +35,11 @@ local function get_blind_amount_MP(type, blind_choice)
 			G.GAME.starting_params.ante_scaling
 
 	if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" and type == "Boss" then
-		amount = amount * #MP.LOBBY.players
+    local num_players = 0
+    for _ in pairs(MP.LOBBY.players) do
+			num_players = num_players + 1
+		end
+		amount = amount * num_players
 	end
 
 	return amount

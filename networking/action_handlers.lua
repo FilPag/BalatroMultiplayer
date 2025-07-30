@@ -121,7 +121,6 @@ local function action_joined_lobby(action_data)
 
   for _, player in pairs(MP.LOBBY.players) do
 		MP.LOBBY.players[player.profile.id] = player
-		MP.LOBBY.players[player.profile.id].game_state = MP.game_state_manager.create_player_game_state(player.profile.id, player.game_state)
     if player.profile.id == player_id then
       MP.LOBBY.local_player = player
       MP.LOBBY.is_host = player.lobby_state.is_host
@@ -136,7 +135,6 @@ end
 
 local function player_joined_lobby(player)
 	MP.LOBBY.players[player.profile.id] = player
-	MP.LOBBY.players[player.profile.id].game_state = MP.game_state_manager.create_player_game_state(player.profile.id, player.game_state)
 
   if G.MAIN_MENU_UI then G.MAIN_MENU_UI:remove() end
   set_main_menu_UI()
@@ -211,6 +209,10 @@ local function action_start_blind()
 	MP.GAME.timer_started = false
 	MP.GAME.timer = MP.LOBBY.config.timer_base_seconds
 
+	for _, player in pairs(MP.LOBBY.players) do
+		player.game_state.score = MP.INSANE_INT.empty()
+	end
+
 	if MP.GAME.next_blind_context then
 		G.FUNCS.select_blind(MP.GAME.next_blind_context)
 	else
@@ -220,17 +222,22 @@ end
 
 local function action_game_state_update(player_id, game_state)
 	if not game_state then return end
+	local player = MP.LOBBY.players[player_id]
 
 	for key, value in pairs(game_state) do
 		if key == "score" then
+			sendTraceMessage(string.format("Updating score for player %s: %s", player_id, value), "MULTIPLAYER")
 			value = MP.INSANE_INT.from_string(value)
 		elseif key == "highest_score" then
 			value = MP.INSANE_INT.from_string(value)
 		elseif key == "location" then
-			value = MP.game_state_manager.parse_enemy_location(value)
+			value = MP.UI_UTILS.parse_enemy_location(value)
 		end
 
-		MP.LOBBY.players[player_id].game_state[key] = value
+		if player[key] ~= value then
+			player.game_state[key] = value
+			MP.UI_EVENT_HANDLER.dispatch(player_id, key)
+		end
 	end
 end
 
@@ -650,7 +657,7 @@ function G.FUNCS.load_player_deck(player)
 end
 
 local function action_receive_player_deck(player_id, cards)
-	local player = MP.UTILS.get_player_by_id(player_id)
+	local player = MP.LOBBY.players[player_id]
 	player.deck_str = cards
 	player.deck_received = true
 	G.FUNCS.load_player_deck(player)
