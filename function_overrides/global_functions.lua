@@ -62,8 +62,8 @@ function set_main_menu_UI()
 
 			local ready_button_ref = G.MAIN_MENU_UI:get_UIE_by_ID("ready_button")
 			if ready_button_ref then
-				MP.LOBBY.ready_text = MP.LOBBY.local_player.is_ready and localize("b_unready") or localize("b_ready")
-				ready_button_ref.config.colour = MP.LOBBY.local_player.is_ready and G.C.GREEN or G.C.RED
+				MP.LOBBY.ready_text = MP.LOBBY.local_player.lobby_state.is_ready and localize("b_unready") or localize("b_ready")
+				ready_button_ref.config.colour = MP.LOBBY.local_player.lobby_state.is_ready and G.C.GREEN or G.C.RED
 			end
 		end
 	else

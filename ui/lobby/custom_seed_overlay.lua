@@ -1,6 +1,6 @@
 function MP.UIDEF.create_UIBox_custom_seed_overlay()
 	return create_UIBox_generic_options({
-		back_func = "lobby_options",
+		back_func = "set_lobby_options",
 		contents = {
 			{
 				n = G.UIT.R,

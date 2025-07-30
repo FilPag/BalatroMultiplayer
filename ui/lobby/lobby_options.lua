@@ -118,7 +118,10 @@ function G.UIDEF.create_UIBox_lobby_options()
 														label = localize("b_opts_diff_seeds"),
 														ref_table = MP.LOBBY.config,
 														ref_value = "different_seeds",
-														callback = toggle_different_seeds,
+														callback = function() 
+															G.FUNCS.set_lobby_options()
+															MP.ACTIONS.update_lobby_options()
+														end,
 													}),
 												},
 											},

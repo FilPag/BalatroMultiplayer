@@ -100,7 +100,7 @@ local function update_lobby_options(options)
     MP.LOBBY.config[k] = v
   end
 
-	MP.LOBBY.local_player.is_ready = false
+	MP.LOBBY.local_player.lobby_state.is_ready = false
 
   set_main_menu_UI()
 
@@ -116,7 +116,6 @@ local function action_joined_lobby(action_data)
 
 	MP.FLAGS.join_pressed = false
   MP.LOBBY.players = action_data.lobby_data.players or {}
-  update_lobby_options(action_data.lobby_data.lobby_options)
 
   local player_id = action_data.player_id
 
@@ -131,6 +130,7 @@ local function action_joined_lobby(action_data)
 
 	MP.LOBBY.code = action_data.lobby_data.code
 	MP.LOBBY.ready_to_start = false
+  update_lobby_options(action_data.lobby_data.lobby_options)
 	MP.UI.update_connection_status()
 end
 
@@ -430,12 +430,14 @@ local function action_spent_last_shop(player_id, amount)
 	enemy.spent_in_shop[#enemy.spent_in_shop + 1] = tonumber(amount)
 end
 
-local function action_player_ready(is_ready, player_id)
-	MP.LOBBY.players[player_id].lobby_state.is_ready = is_ready
+---@param ready_states table<string, boolean> <player_id, is_ready
+local function action_lobby_ready_update(ready_states)
+	for player_id, is_ready in pairs(ready_states) do
+		MP.LOBBY.players[player_id].lobby_state.is_ready = is_ready
+	end
 
-	if not MP.LOBBY.is_host then return end
+
 	local ready_check = true
-
 	for _, player in pairs(MP.LOBBY.players) do
 		if not player.lobby_state.is_ready then
 			ready_check = false
@@ -443,8 +445,10 @@ local function action_player_ready(is_ready, player_id)
 		end
 	end
 
-	MP.LOBBY.ready_to_start = ready_check
-  set_main_menu_UI()
+	if ready_check ~= MP.LOBBY.ready_to_start then
+		MP.LOBBY.ready_to_start = ready_check
+		set_main_menu_UI()
+	end
 end
 
 local function action_magnet()
@@ -676,11 +680,11 @@ local action_table = {
 	disconnected = function() action_disconnected() end,
 	invalidLobby = function() action_invalidLobby() end,
 	joinedLobby = function(parsedAction) action_joined_lobby(parsedAction) end,
-	playerJoinedLobby= function(parsedAction) player_joined_lobby(parsedAction.player) end,
-  playerLeftLobby = function(parsedAction) player_left_lobby(parsedAction.player_id, parsedAction.host_id) end,
+	playerJoinedLobby = function(parsedAction) player_joined_lobby(parsedAction.player) end,
+	playerLeftLobby = function(parsedAction) player_left_lobby(parsedAction.player_id, parsedAction.host_id) end,
 	gameStarted = function(parsedAction) action_game_started(parsedAction.seed, parsedAction.stake) end,
 	startBlind = function() action_start_blind() end,
-	playerReady = function(parsedAction) action_player_ready(parsedAction.is_ready , parsedAction.player_id) end,
+	lobbyReady = function(parsedAction) action_lobby_ready_update(parsedAction.ready_states) end,
 	gameStateUpdate = function(parsedAction) action_game_state_update(parsedAction.player_id, parsedAction.game_state) end,
 	gameStopped = function() action_game_stopped() end,
 	endPvP = function() action_end_pvp() end,
