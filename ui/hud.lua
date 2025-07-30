@@ -1,5 +1,3 @@
-local Disableable_Toggle = MP.UI.Disableable_Toggle
-
 function G.FUNCS.lobby_info(e)
 	G.SETTINGS.paused = true
 	G.FUNCS.overlay_menu({
@@ -56,7 +54,7 @@ function MP.UI.create_UIBox_settings() -- optimize this please
 					align = "cr",
 					},
 				nodes = {
-				Disableable_Toggle({
+				MP.UI.Disableable_Toggle({
 					enabled_ref_table = MP.LOBBY,
 					label = localize("b_opts_cb_money"),
 					ref_table = MP.LOBBY.config,
@@ -67,7 +65,7 @@ function MP.UI.create_UIBox_settings() -- optimize this please
 					align = "cr",
 					},
 				nodes = {
-				Disableable_Toggle({
+				MP.UI.Disableable_Toggle({
 					enabled_ref_table = MP.LOBBY,
 					label = localize("b_opts_no_gold_on_loss"),
 					ref_table = MP.LOBBY.config,
@@ -78,7 +76,7 @@ function MP.UI.create_UIBox_settings() -- optimize this please
 					align = "cr",
 					},
 				nodes = {
-				Disableable_Toggle({
+				MP.UI.Disableable_Toggle({
 					enabled_ref_table = MP.LOBBY,
 					label = localize("b_opts_death_on_loss"),
 					ref_table = MP.LOBBY.config,
@@ -89,7 +87,7 @@ function MP.UI.create_UIBox_settings() -- optimize this please
 					align = "cr",
 					},
 				nodes = {
-				Disableable_Toggle({
+				MP.UI.Disableable_Toggle({
 					enabled_ref_table = MP.LOBBY,
 					label = localize("b_opts_diff_seeds"),
 					ref_table = MP.LOBBY.config,
@@ -100,7 +98,7 @@ function MP.UI.create_UIBox_settings() -- optimize this please
 					align = "cr",
 					},
 				nodes = {
-				Disableable_Toggle({
+				MP.UI.Disableable_Toggle({
 					enabled_ref_table = MP.LOBBY,
 					label = localize("b_opts_player_diff_deck"),
 					ref_table = MP.LOBBY.config,
@@ -111,7 +109,7 @@ function MP.UI.create_UIBox_settings() -- optimize this please
 					align = "cr",
 					},
 				nodes = {
-				Disableable_Toggle({
+				MP.UI.Disableable_Toggle({
 					enabled_ref_table = MP.LOBBY,
 					label = localize("b_opts_multiplayer_jokers"),
 					ref_table = MP.LOBBY.config,
@@ -122,7 +120,7 @@ function MP.UI.create_UIBox_settings() -- optimize this please
 					align = "cr",
 					},
 				nodes = {
-				Disableable_Toggle({
+				MP.UI.Disableable_Toggle({
 					enabled_ref_table = MP.LOBBY,
 					label = localize("b_opts_normal_bosses"),
 					ref_table = MP.LOBBY.config,

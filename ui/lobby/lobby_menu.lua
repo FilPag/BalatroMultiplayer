@@ -161,7 +161,7 @@ function G.UIDEF.create_UIBox_lobby_menu()
                 },
                 nodes = {
                   UIBox_button({
-                    button = "lobby_options",
+                    button = "set_lobby_options",
                     colour = G.C.ORANGE,
                     minw = 3.15,
                     minh = 1.35,
