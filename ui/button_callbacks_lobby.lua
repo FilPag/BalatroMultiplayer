@@ -181,13 +181,10 @@ function G.FUNCS.lobby_leave(e)
   G.STATE = G.STATES.MENU
 end
 
-function G.FUNCS.lobby_options(e)
-  if not MP.LOBBY.is_host then
-    MP.ACTIONS.send_lobby_ready(false)
-  end
-  G.FUNCS.overlay_menu({
-    definition = G.UIDEF.create_UIBox_lobby_options(),
-  })
+function G.FUNCS.set_lobby_options(e)
+	G.FUNCS.overlay_menu({
+		definition = G.UIDEF.create_UIBox_lobby_options(),
+	})
 end
 
 function G.FUNCS.lobby_ready_up(e)
@@ -363,7 +360,7 @@ function G.FUNCS.start_run(e, args)
 end
 
 function G.FUNCS.toggle_lobby_ready(e)
-  MP.ACTIONS.send_lobby_ready(not MP.LOBBY.local_player.is_ready)
+  MP.ACTIONS.send_lobby_ready(not MP.LOBBY.local_player.lobby_state.is_ready)
 end
 
 function G.FUNCS.view_code(e)
