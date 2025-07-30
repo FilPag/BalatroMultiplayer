@@ -17,8 +17,11 @@ local blind_set_blindref = Blind.set_blind
 function Blind:set_blind(blind, reset, silent)
   -- Adjust blind multiplier for coop survival mode
   if blind and MP.LOBBY.code and MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" and blind.boss then
-    blind.mult = blind.mult * #MP.LOBBY.players
-    MP.player_state_manager.reset_scores()
+    local num_players = 0
+    for _ in pairs(MP.LOBBY.players) do
+      num_players = num_players + 1
+    end
+    blind.mult = blind.mult * num_players
     G.GAME.chips = 0
   end
 

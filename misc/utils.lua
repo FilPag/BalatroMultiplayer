@@ -779,18 +779,6 @@ function MP.UTILS.get_local_player()
   return MP.LOBBY.local_player.game_state
 end
 
-function MP.UTILS.get_player_by_id(player_id)
-	local players = MP.LOBBY.players
-	if not players then error("MP.GAME.players is nil") end
-
-	for i, player in ipairs(players) do
-		if player.profile.id and player.profile.id == player_id then
-			return player
-		end
-	end
-	return nil
-end
-
 function MP.UTILS.get_local_player_lobby_data()
 	return MP.LOBBY.local_player.profile
 end
