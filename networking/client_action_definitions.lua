@@ -37,15 +37,15 @@ function MP.ACTIONS.start_game()
 end
 
 function MP.ACTIONS.send_lobby_ready(value)
-  MP.LOBBY.local_player.is_ready = value
-  Client.send(json.encode({ action = "setReady", is_ready = MP.LOBBY.local_player.is_ready }))
+  MP.LOBBY.local_player.lobby_state.is_ready = value
+  Client.send(json.encode({ action = "setReady", is_ready = MP.LOBBY.local_player.lobby_state.is_ready }))
 
   if not G.MAIN_MENU_UI then return end
 
   local ready_button_ref = G.MAIN_MENU_UI:get_UIE_by_ID("ready_button")
   if ready_button_ref then
-    MP.LOBBY.ready_text = MP.LOBBY.local_player.is_ready and localize("b_unready") or localize("b_ready")
-    ready_button_ref.config.colour = MP.LOBBY.local_player.is_ready and G.C.GREEN or G.C.RED
+    MP.LOBBY.ready_text = MP.LOBBY.local_player.lobby_state.is_ready and localize("b_unready") or localize("b_ready")
+    ready_button_ref.config.colour = MP.LOBBY.local_player.lobby_state.is_ready and G.C.GREEN or G.C.RED
   end
 
 end
@@ -141,12 +141,12 @@ function MP.ACTIONS.update_lobby_options(_)
     end
   end
 
-  set_main_menu_UI()
   Client.send(json.encode({ action = "updateLobbyOptions", options = options }))
 end
 
 ---@param boss string
 function MP.ACTIONS.set_Boss(boss)
+  -- TODO sync boss key with all clients
   Client.send(json.encode({ action = "setBossBlind", bossKey = boss }))
 end
 

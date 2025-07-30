@@ -1,5 +1,3 @@
-local Disableable_Toggle = MP.UI.Disableable_Toggle
-
 function G.FUNCS.lobby_info(e)
 	G.SETTINGS.paused = true
 	G.FUNCS.overlay_menu({
@@ -65,97 +63,77 @@ function MP.UI.create_UIBox_settings() -- optimize this please
 					align = "cr",
 				},
 				nodes = {
-					Disableable_Toggle({
-						enabled_ref_table = MP.LOBBY,
-						label = localize("b_opts_cb_money"),
-						ref_table = MP.LOBBY.config,
-						ref_value = "gold_on_life_loss",
-					}) }
-			},
-			{
-				n = G.UIT.R,
+				MP.UI.Disableable_Toggle({
+					enabled_ref_table = MP.LOBBY,
+					label = localize("b_opts_cb_money"),
+					ref_table = MP.LOBBY.config,
+					ref_value = "gold_on_life_loss",})}},
+			{n = G.UIT.R,
 				config = {
 					padding = 0,
 					align = "cr",
 				},
 				nodes = {
-					Disableable_Toggle({
-						enabled_ref_table = MP.LOBBY,
-						label = localize("b_opts_no_gold_on_loss"),
-						ref_table = MP.LOBBY.config,
-						ref_value = "no_gold_on_round_loss",
-					}) }
-			},
-			{
-				n = G.UIT.R,
+				MP.UI.Disableable_Toggle({
+					enabled_ref_table = MP.LOBBY,
+					label = localize("b_opts_no_gold_on_loss"),
+					ref_table = MP.LOBBY.config,
+					ref_value = "no_gold_on_round_loss",})}},
+			{n = G.UIT.R,
 				config = {
 					padding = 0,
 					align = "cr",
 				},
 				nodes = {
-					Disableable_Toggle({
-						enabled_ref_table = MP.LOBBY,
-						label = localize("b_opts_death_on_loss"),
-						ref_table = MP.LOBBY.config,
-						ref_value = "death_on_round_loss",
-					}) }
-			},
-			{
-				n = G.UIT.R,
+				MP.UI.Disableable_Toggle({
+					enabled_ref_table = MP.LOBBY,
+					label = localize("b_opts_death_on_loss"),
+					ref_table = MP.LOBBY.config,
+					ref_value = "death_on_round_loss",})}},
+			{n = G.UIT.R,
 				config = {
 					padding = 0,
 					align = "cr",
 				},
 				nodes = {
-					Disableable_Toggle({
-						enabled_ref_table = MP.LOBBY,
-						label = localize("b_opts_diff_seeds"),
-						ref_table = MP.LOBBY.config,
-						ref_value = "different_seeds",
-					}) }
-			},
-			{
-				n = G.UIT.R,
+				MP.UI.Disableable_Toggle({
+					enabled_ref_table = MP.LOBBY,
+					label = localize("b_opts_diff_seeds"),
+					ref_table = MP.LOBBY.config,
+					ref_value = "different_seeds",})}},
+			{n = G.UIT.R,
 				config = {
 					padding = 0,
 					align = "cr",
 				},
 				nodes = {
-					Disableable_Toggle({
-						enabled_ref_table = MP.LOBBY,
-						label = localize("b_opts_player_diff_deck"),
-						ref_table = MP.LOBBY.config,
-						ref_value = "different_decks",
-					}) }
-			},
-			{
-				n = G.UIT.R,
+				MP.UI.Disableable_Toggle({
+					enabled_ref_table = MP.LOBBY,
+					label = localize("b_opts_player_diff_deck"),
+					ref_table = MP.LOBBY.config,
+					ref_value = "different_decks",})}},
+			{n = G.UIT.R,
 				config = {
 					padding = 0,
 					align = "cr",
 				},
 				nodes = {
-					Disableable_Toggle({
-						enabled_ref_table = MP.LOBBY,
-						label = localize("b_opts_multiplayer_jokers"),
-						ref_table = MP.LOBBY.config,
-						ref_value = "multiplayer_jokers",
-					}) }
-			},
-			{
-				n = G.UIT.R,
+				MP.UI.Disableable_Toggle({
+					enabled_ref_table = MP.LOBBY,
+					label = localize("b_opts_multiplayer_jokers"),
+					ref_table = MP.LOBBY.config,
+					ref_value = "multiplayer_jokers",})}},
+			{n = G.UIT.R,
 				config = {
 					padding = 0,
 					align = "cr",
 				},
 				nodes = {
-					Disableable_Toggle({
-						enabled_ref_table = MP.LOBBY,
-						label = localize("b_opts_normal_bosses"),
-						ref_table = MP.LOBBY.config,
-						ref_value = "normal_bosses",
-					}) }
-			},
+				MP.UI.Disableable_Toggle({
+					enabled_ref_table = MP.LOBBY,
+					label = localize("b_opts_normal_bosses"),
+					ref_table = MP.LOBBY.config,
+					ref_value = "normal_bosses",})}},
 		}
 	}
 end
