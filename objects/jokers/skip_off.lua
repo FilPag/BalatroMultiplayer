@@ -18,7 +18,7 @@ SMODS.Joker({
 	config = { extra = { hands = 0, discards = 0, extra_hands = 1, extra_discards = 1 } },
 	loc_vars = function(self, info_queue, card)
 		MP.UTILS.add_nemesis_info(info_queue)
-		local nemesis = MP.UTILS.get_nemesis()
+		local nemesis = MP.UTILS.get_nemesis().game_state
 		if not nemesis then return { vars = { 0, 0, 0, 0, "" } } end
 		return {
 			vars = {
@@ -40,7 +40,7 @@ SMODS.Joker({
 		return MP.LOBBY.code and MP.LOBBY.config.multiplayer_jokers
 	end,
 	update = function(self, card, dt)
-		local nemesis = MP.UTILS.get_nemesis()
+		local nemesis = MP.UTILS.get_nemesis().game_state
 		if not nemesis then return end	
 
 		if G.STAGE == G.STAGES.RUN and G.GAME.skips ~= nil and nemesis.skips ~= nil then

@@ -32,7 +32,6 @@ function MP.ACTIONS.leave_lobby()
 end
 
 function MP.ACTIONS.start_game()
-  --TODO ensure seeds are correct
   Client.send(json.encode({ action = "startGame", seed = MP.LOBBY.config.custom_seed, stake = MP.LOBBY.config.stake }))
 end
 
@@ -114,11 +113,11 @@ function MP.ACTIONS.play_hand(score, hands_left)
   fixed_score = string.gsub(fixed_score, ",", "") -- Remove commas
 
   local insane_int_score = MP.INSANE_INT.from_string(fixed_score)
-  if MP.INSANE_INT.greater_than(insane_int_score, MP.GAME.highest_score) then
-    MP.GAME.highest_score = insane_int_score
+  if MP.INSANE_INT.greater_than(insane_int_score, MP.LOBBY.local_player.game_state.highest_score) then
+    MP.LOBBY.local_player.game_state.highest_score = insane_int_score
   end
 
-  MP.UTILS.get_local_player().score = MP.INSANE_INT.add(insane_int_score, MP.UTILS.get_local_player().score)
+  MP.LOBBY.local_player.game_state.score = MP.INSANE_INT.add(insane_int_score, MP.LOBBY.local_player.game_state.score)
 
   local target = nil
   if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" then
@@ -141,13 +140,15 @@ function MP.ACTIONS.update_lobby_options(_)
     end
   end
 
+  set_main_menu_UI()
   Client.send(json.encode({ action = "updateLobbyOptions", options = options }))
 end
 
 ---@param boss string
-function MP.ACTIONS.set_Boss(boss)
+---@param chips number 
+function MP.ACTIONS.set_Boss(boss, chips)
   -- TODO sync boss key with all clients
-  Client.send(json.encode({ action = "setBossBlind", bossKey = boss }))
+  Client.send(json.encode({ action = "setBossBlind", key = boss, chips = tostring(chips) }))
 end
 
 function MP.ACTIONS.set_ante(ante)

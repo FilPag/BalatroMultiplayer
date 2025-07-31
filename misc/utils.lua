@@ -71,7 +71,7 @@ end
 function MP.UTILS.get_nemesis_key() -- calling this function assumes the user is currently in a multiplayer game
 	-- Update to support n > 2 players
 	local enemy = MP.UTILS.get_nemesis()
-	local enemy_colour = MP.UTILS.get_nemesis_lobby_data().colour
+	local enemy_colour = enemy.profile.colour
 	local ret = MP.UTILS.blind_col_numtokey(enemy_colour)
 
 	if not enemy or not enemy.lives then
@@ -715,7 +715,7 @@ end
 
 function MP.UTILS.ease_score(score_table, new_score, delay)
 	delay = delay or 0.3
-	for _, field in ipairs({ "e_count", "exponent", "coeffiocient" }) do
+	for _, field in ipairs({ "e_count", "exponent", "coefficient" }) do
 		if new_score[field] ~= nil then
 			G.E_MANAGER:add_event(Event({
 				blockable = false,
@@ -788,7 +788,7 @@ end
 -- @param my_id string: the id of the local player
 function MP.UTILS.get_nemesis()
 	local players = MP.LOBBY.players
-	local my_id = MP.LOBBY.local_id
+	local my_id = MP.LOBBY.local_player.profile.id
 
 	if not players then error("MP.LOBBY.players is nil") end
 	for i, player in pairs(players) do
@@ -797,18 +797,6 @@ function MP.UTILS.get_nemesis()
 		end
 	end
 	return nil
-end
-
-function MP.UTILS.get_nemesis_lobby_data()
-	local players = MP.LOBBY.players
-	local my_id = MP.LOBBY.local_id
-	if not players then error("MP.LOBBY.players is nil") end
-
-	for i, player in pairs(players) do
-		if player.profile.id and player.profile.id ~= my_id then
-			return player
-		end
-	end
 end
 
 function MP.UTILS.have_player_usernames_changed()

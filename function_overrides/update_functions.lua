@@ -101,7 +101,6 @@ function Game:update_draw_to_hand(dt)
 					blockable = false,
 					func = function()
 						G.HUD_blind:get_UIE_by_ID("HUD_blind_name").config.object:pop_out(0)
-						-- Use MP.UTILS.get_nemesis_lobby_data() for username ref_table
 						MP.UI_UTILS.update_blind_HUD()
 						G.E_MANAGER:add_event(Event({
 							trigger = "after",
@@ -110,7 +109,7 @@ function Game:update_draw_to_hand(dt)
 							func = function()
 								G.HUD_blind:get_UIE_by_ID("HUD_blind_name").config.object.config.string = {
 									{
-										ref_table = MP.UTILS.get_nemesis_lobby_data(),
+										ref_table = MP.UTILS.get_nemesis().profile,
 										ref_value = "username",
 									},
 								}
@@ -248,7 +247,7 @@ function Game:update_hand_played(dt)
 			trigger = "immediate",
 			func = function()
 				if MP.LOBBY.config.gamemode ~= "gamemode_mp_coopSurvival" then
-					G.GAME.blind.chip_text = MP.INSANE_INT.to_string(MP.UTILS.get_nemesis().score)
+					G.GAME.blind.chip_text = MP.INSANE_INT.to_string(MP.UTILS.get_nemesis().game_state.score)
 				end
 				-- For now, never advance to next round
 				if G.GAME.current_round.hands_left < 1 then
