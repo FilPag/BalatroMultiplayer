@@ -12,11 +12,7 @@ handlers.lives = function(player, is_local, is_nemesis)
 end
 
 handlers.score = function(player, is_local, is_nemesis)
-	if is_nemesis and not is_local then
-		local nemesis = MP.UTILS.get_nemesis()
-		if nemesis and MP.UTILS and MP.UTILS.ease_score then
-			MP.UTILS.ease_score(nemesis.score, nemesis.score) -- No value passed
-		end
+	if is_nemesis and not is_local then	
 		local blind_count = G.HUD_blind and G.HUD_blind:get_UIE_by_ID("HUD_blind_count")
 		local dollars_earned = G.HUD_blind and G.HUD_blind:get_UIE_by_ID("dollars_to_be_earned")
 		if blind_count then blind_count:juice_up() end

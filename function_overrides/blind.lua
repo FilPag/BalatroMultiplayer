@@ -17,11 +17,6 @@ local blind_set_blindref = Blind.set_blind
 function Blind:set_blind(blind, reset, silent)
   -- Adjust blind multiplier for coop survival mode
   if blind and MP.LOBBY.code and MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" and blind.boss then
-    local num_players = 0
-    for _ in pairs(MP.LOBBY.players) do
-      num_players = num_players + 1
-    end
-    blind.mult = blind.mult * num_players
     G.GAME.chips = 0
   end
 
@@ -89,7 +84,20 @@ function Blind:disable()
 end
 
 G.FUNCS.multiplayer_blind_chip_UI_scale = function(e)
-  local score_ref = MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" and MP.GAME.coop or MP.UTILS.get_nemesis()
+  if not (MP.LOBBY and MP.LOBBY.code) then
+    return
+  end
+
+  local score_ref
+  if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" then
+    score_ref = MP.GAME.coop
+  else
+    local nemesis = MP.UTILS.get_nemesis()
+    if not nemesis then
+      return -- Exit early if no nemesis found
+    end
+    score_ref = nemesis.game_state
+  end
 
   if not score_ref or not score_ref.score then
     if score_ref then score_ref.score_text = "" end
@@ -99,7 +107,7 @@ G.FUNCS.multiplayer_blind_chip_UI_scale = function(e)
   local new_score_text = MP.INSANE_INT.to_string(score_ref.score)
   if G.GAME.blind and score_ref.score and score_ref.score_text ~= new_score_text then
     if not MP.INSANE_INT.greater_than(score_ref.score, MP.INSANE_INT.create(0, G.E_SWITCH_POINT, 0)) then
-      e.config.scale = scale_number(score_ref.score.coeffiocient, 0.7, 100000)
+      e.config.scale = scale_number(score_ref.score.coefficient, 0.7, 100000)
     end
     score_ref.score_text = new_score_text
   end
