@@ -1,5 +1,5 @@
 local function next_taxes_total_mult_gain(card)
-	local enemy = MP.UTILS.get_nemesis()
+	local enemy = MP.UTILS.get_nemesis().game_state
 	if not enemy then return 0 end
 	local sells = enemy.sells_per_ante[G.GAME.round_resets.ante] or 0
 

@@ -8,6 +8,7 @@ function G.UIDEF.create_UIBox_lobby_options()
 			{
 				n = G.UIT.R,
 				config = {
+					id = "lobby_options",
 					padding = 0,
 					align = "cm",
 				},
@@ -64,7 +65,6 @@ function G.UIDEF.create_UIBox_lobby_options()
 														label = localize("b_opts_cb_money"),
 														ref_table = MP.LOBBY.config,
 														ref_value = "gold_on_life_loss",
-														callback = MP.ACTIONS.update_lobby_options,
 													}),
 												},
 											},
@@ -82,7 +82,6 @@ function G.UIDEF.create_UIBox_lobby_options()
 														label = localize("b_opts_no_gold_on_loss"),
 														ref_table = MP.LOBBY.config,
 														ref_value = "no_gold_on_round_loss",
-														callback = MP.ACTIONS.update_lobby_options,
 													}),
 												},
 											},
@@ -100,7 +99,6 @@ function G.UIDEF.create_UIBox_lobby_options()
 														label = localize("b_opts_death_on_loss"),
 														ref_table = MP.LOBBY.config,
 														ref_value = "death_on_round_loss",
-														callback = MP.ACTIONS.update_lobby_options,
 													}),
 												},
 											},
@@ -119,8 +117,7 @@ function G.UIDEF.create_UIBox_lobby_options()
 														ref_table = MP.LOBBY.config,
 														ref_value = "different_seeds",
 														callback = function() 
-															G.FUNCS.set_lobby_options()
-															MP.ACTIONS.update_lobby_options()
+															G.FUNCS.open_lobby_options()
 														end,
 													}),
 												},
@@ -139,7 +136,6 @@ function G.UIDEF.create_UIBox_lobby_options()
 														label = localize("b_opts_player_diff_deck"),
 														ref_table = MP.LOBBY.config,
 														ref_value = "different_decks",
-														callback = MP.ACTIONS.update_lobby_options,
 													}),
 												},
 											},
@@ -157,7 +153,6 @@ function G.UIDEF.create_UIBox_lobby_options()
 														label = localize("b_opts_multiplayer_jokers"),
 														ref_table = MP.LOBBY.config,
 														ref_value = "multiplayer_jokers",
-														callback = MP.ACTIONS.update_lobby_options,
 													}),
 												},
 											},
@@ -175,7 +170,6 @@ function G.UIDEF.create_UIBox_lobby_options()
 														label = localize("b_opts_normal_bosses"),
 														ref_table = MP.LOBBY.config,
 														ref_value = "normal_bosses",
-														callback = MP.ACTIONS.update_lobby_options,
 													}),
 												},
 											},

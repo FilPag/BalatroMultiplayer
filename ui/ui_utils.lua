@@ -43,7 +43,7 @@ function MP.UI_UTILS.update_blind_HUD()
 			delay = 0,
 			blockable = false,
 			func = function()
-				local nemesis = MP.UTILS.get_nemesis()
+				local nemesis = MP.UTILS.get_nemesis().game_state
 				G.HUD_blind:get_UIE_by_ID("HUD_blind_count").config.ref_table = nemesis
 				G.HUD_blind:get_UIE_by_ID("HUD_blind_count").config.ref_value = "score_text"
 				G.HUD_blind:get_UIE_by_ID("HUD_blind_count").config.func = "multiplayer_blind_chip_UI_scale"
@@ -73,7 +73,7 @@ function MP.UI_UTILS.show_enemy_location()
 	if row_dollars_chips then
 		row_dollars_chips.children[1]:remove()
 		row_dollars_chips.children[1] = nil
-		G.HUD:add_child(MP.UIDEF.enemy_location_row(MP.UTILS.get_nemesis(), "location"), row_dollars_chips)
+		G.HUD:add_child(MP.UIDEF.enemy_location_row(MP.UTILS.get_nemesis().game_state, "location"), row_dollars_chips)
 	end
 end
 

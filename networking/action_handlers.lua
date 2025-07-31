@@ -125,6 +125,8 @@ local function action_joined_lobby(action_data)
       MP.LOBBY.local_player = player
       MP.LOBBY.is_host = player.lobby_state.is_host
     end
+		player.game_state.score = MP.INSANE_INT.from_string(player.game_state.score or "0")
+		player.game_state.highest_score = MP.INSANE_INT.from_string(player.game_state.highest_score or "0")
   end
 
 	MP.LOBBY.code = action_data.lobby_data.code
@@ -133,7 +135,9 @@ local function action_joined_lobby(action_data)
 	MP.UI.update_connection_status()
 end
 
-local function player_joined_lobby(player)
+local function new_player_joined_lobby(player)
+	player.game_state.score = MP.INSANE_INT.from_string(player.game_state.score or "0")
+	player.game_state.highest_score = MP.INSANE_INT.from_string(player.game_state.highest_score or "0")
 	MP.LOBBY.players[player.profile.id] = player
 
   if G.MAIN_MENU_UI then G.MAIN_MENU_UI:remove() end
@@ -192,6 +196,7 @@ local function action_game_started(seed, stake)
 		seed = generate_starting_seed()
 	end
 
+	MP.LOBBY.local_player.lives = MP.LOBBY.config.starting_lives
 	G.FUNCS.lobby_start_run(nil, { seed = seed, stake = stake })
 	G.E_MANAGER:add_event(Event({
     trigger = 'immediate',
@@ -221,30 +226,28 @@ local function action_start_blind()
 end
 
 local function action_game_state_update(player_id, game_state)
-	if not game_state then return end
-	local player = MP.LOBBY.players[player_id]
-
-	for key, value in pairs(game_state) do
-		if key == "score" then
-			sendTraceMessage(string.format("Updating score for player %s: %s", player_id, value), "MULTIPLAYER")
-			value = MP.INSANE_INT.from_string(value)
-		elseif key == "highest_score" then
-			value = MP.INSANE_INT.from_string(value)
-		elseif key == "location" then
-			value = MP.UI_UTILS.parse_enemy_location(value)
-		end
-
-		if player[key] ~= value then
-			player.game_state[key] = value
-			MP.UI_EVENT_HANDLER.dispatch(player_id, key)
-		end
-	end
+	MP.STATE_UPDATER.update_player_state(player_id, game_state)
 end
+---@param won boolean
+local function action_end_pvp(won)
+	if not MP.LOBBY.code then return end
 
-local function action_end_pvp()
+	sendDebugMessage("Ending PVP won: " .. tostring(won))
+
 	MP.GAME.end_pvp = true
 	MP.GAME.timer = MP.LOBBY.config.timer_base_seconds
 	MP.GAME.timer_started = false
+
+	if won then return end
+
+	if MP.LOBBY.config.gold_on_life_loss then
+		MP.LOBBY.local_player.comeback_bonus_given = false
+		MP.LOBBY.local_player.comeback_bonus = (MP.LOBBY.local_player.comeback_bonus or 0) + 1
+	end
+
+	if MP.LOBBY.config.no_gold_on_round_loss and G.GAME.blind and G.GAME.blind.dollars then
+		G.GAME.blind.dollars = 0
+	end
 end
 
 local function action_win_game()
@@ -397,7 +400,7 @@ local action_asteroid = action_asteroid
 
 local function action_sold_joker()
 	-- HACK: this action is being sent when any card is being sold, since Taxes is now reworked
-	local enemy = MP.UTILS.get_nemesis()
+	local enemy = MP.UTILS.get_nemesis().game_state
 	if not enemy then return end
 	enemy.sells = (enemy.sells or 0) + 1
 	if not enemy.sells_per_ante then
@@ -424,7 +427,7 @@ end
 
 local function action_spent_last_shop(player_id, amount)
 	-- TODO make support more than one player
-	local enemy = MP.UTILS.get_nemesis()
+	local enemy = MP.UTILS.get_nemesis().game_state
 	if not enemy then
 		sendWarnMessage("No enemy found for spent_last_shop action", "MULTIPLAYER")
 		return
@@ -445,14 +448,16 @@ local function action_lobby_ready_update(ready_states)
 
 
 	local ready_check = true
+	local count = 0
 	for _, player in pairs(MP.LOBBY.players) do
+		count = count + 1
 		if not player.lobby_state.is_ready then
 			ready_check = false
 			break
 		end
 	end
 
-	if ready_check ~= MP.LOBBY.ready_to_start then
+	if ready_check ~= MP.LOBBY.ready_to_start and count > 1 then
 		MP.LOBBY.ready_to_start = ready_check
 		set_main_menu_UI()
 	end
@@ -687,18 +692,18 @@ local action_table = {
 	disconnected = function() action_disconnected() end,
 	invalidLobby = function() action_invalidLobby() end,
 	joinedLobby = function(parsedAction) action_joined_lobby(parsedAction) end,
-	playerJoinedLobby = function(parsedAction) player_joined_lobby(parsedAction.player) end,
+	playerJoinedLobby = function(parsedAction) new_player_joined_lobby(parsedAction.player) end,
 	playerLeftLobby = function(parsedAction) player_left_lobby(parsedAction.player_id, parsedAction.host_id) end,
 	gameStarted = function(parsedAction) action_game_started(parsedAction.seed, parsedAction.stake) end,
 	startBlind = function() action_start_blind() end,
 	lobbyReady = function(parsedAction) action_lobby_ready_update(parsedAction.ready_states) end,
 	gameStateUpdate = function(parsedAction) action_game_state_update(parsedAction.player_id, parsedAction.game_state) end,
 	gameStopped = function() action_game_stopped() end,
-	endPvP = function() action_end_pvp() end,
+	endPvp = function(parsedAction) action_end_pvp(parsedAction.won) end,
 	winGame = function() action_win_game() end,
 	loseGame = function() action_lose_game() end,
 	updateLobbyOptions = function(parsedAction) update_lobby_options(parsedAction.options) end,
-	setBossBlind = function(parsedAction) action_set_boss_blind(parsedAction.bossKey) end,
+	setBossBlind = function(parsedAction) action_set_boss_blind(parsedAction.key) end,
 	sendPhantom = function(parsedAction) action_send_phantom(parsedAction.key) end,
 	removePhantom = function(parsedAction) action_remove_phantom(parsedAction.key) end,
 	speedrun = function() action_speedrun() end,
