@@ -8,25 +8,31 @@ MP.INSANE_INT = {}
 
 MP.INSANE_INT.empty = function()
     return {
-        coeffiocient = 0,
+        coefficient = 0,
         exponent = 0,
         e_count = 0
     }
 end
 
-MP.INSANE_INT.create = function(coeffiocient, exponent, e_count)
+MP.INSANE_INT.create = function(coefficient, exponent, e_count)
     return {
-        coeffiocient = tonumber(coeffiocient) or 0,
+        coefficient = tonumber(coefficient) or 0,
         exponent = tonumber(exponent) or 0,
         e_count = tonumber(e_count) or 0
     }
 end
 
 MP.INSANE_INT.to_number = function(insane_int)
-    local base = insane_int.coeffiocient or 0
+    local base = insane_int.coefficient or 0
     local exp = insane_int.exponent or 0
     local e_count = insane_int.e_count or 0
     return base * (10 ^ exp) * (10 ^ (e_count * 10000))
+end
+
+MP.INSANE_INT.equals = function(a, b)
+    return a.coefficient == b.coefficient and 
+           a.exponent == b.exponent and 
+           a.e_count == b.e_count
 end
 
 MP.INSANE_INT.from_string = function(str)
@@ -48,10 +54,10 @@ MP.INSANE_INT.to_string = function(insane_int_display)
     end
 
     if insane_int_display.exponent == 0 then
-        return e .. tostring(insane_int_display.coeffiocient)
+        return e .. tostring(insane_int_display.coefficient)
     end
 
-    return e .. tostring(insane_int_display.coeffiocient) .. "e" .. tostring(insane_int_display.exponent)
+    return e .. tostring(insane_int_display.coefficient) .. "e" .. tostring(insane_int_display.exponent)
 end
 
 -- This doesn't really fit with the comment at the top,
@@ -65,20 +71,20 @@ MP.INSANE_INT.greater_than = function(insane_int_display1, insane_int_display2)
         return tonumber(insane_int_display1.exponent) > tonumber(insane_int_display2.exponent)
     end
 
-    return tonumber(insane_int_display1.coeffiocient) > tonumber(insane_int_display2.coeffiocient)
+    return tonumber(insane_int_display1.coefficient) > tonumber(insane_int_display2.coefficient)
 end
 
 MP.INSANE_INT.add = function(insane_int_display1, insane_int_display2)
     local starting_e_count
-    local coeffiocient
+    local coefficient
     local exponent
 
     local myStartingECount = insane_int_display1.e_count
-    local myCoefficient = insane_int_display1.coeffiocient
+    local myCoefficient = insane_int_display1.coefficient
     local myExponent = insane_int_display1.exponent
 
     local otherStartingECount = insane_int_display2.e_count
-    local otherCoefficient = insane_int_display2.coeffiocient
+    local otherCoefficient = insane_int_display2.coefficient
     local otherExponent = insane_int_display2.exponent
 
     if myStartingECount > otherStartingECount then
@@ -92,15 +98,15 @@ MP.INSANE_INT.add = function(insane_int_display1, insane_int_display2)
     end
 
     if myExponent > otherExponent then
-        coeffiocient = (otherCoefficient / math.pow(10, (myExponent - otherExponent))) + myCoefficient
+        coefficient = (otherCoefficient / math.pow(10, (myExponent - otherExponent))) + myCoefficient
         exponent = myExponent
     elseif myExponent < otherExponent then
-        coeffiocient = (myCoefficient / math.pow(10, (otherExponent - myExponent))) + otherCoefficient
+        coefficient = (myCoefficient / math.pow(10, (otherExponent - myExponent))) + otherCoefficient
         exponent = otherExponent
     else
-        coeffiocient = myCoefficient + otherCoefficient
+        coefficient = myCoefficient + otherCoefficient
         exponent = myExponent
     end
 
-    return MP.INSANE_INT.create(coeffiocient, exponent, starting_e_count)
+    return MP.INSANE_INT.create(coefficient, exponent, starting_e_count)
 end

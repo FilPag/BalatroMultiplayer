@@ -22,7 +22,6 @@ end
 
 G.FUNCS.change_showdown_starting_antes = function(args)
   MP.LOBBY.config.showdown_starting_antes = args.to_val
-  MP.ACTIONS.update_lobby_options()
 end
 
 function G.FUNCS.toggle_different_seeds()
@@ -32,17 +31,14 @@ end
 
 G.FUNCS.change_starting_lives = function(args)
   MP.LOBBY.config.starting_lives = args.to_val
-  MP.ACTIONS.update_lobby_options()
 end
 
 G.FUNCS.change_starting_pvp_round = function(args)
   MP.LOBBY.config.pvp_start_round = args.to_val
-  MP.ACTIONS.update_lobby_options()
 end
 
 G.FUNCS.change_timer_base_seconds = function(args)
   MP.LOBBY.config.timer_base_seconds = tonumber(args.to_val:sub(1, -2))
-  MP.ACTIONS.update_lobby_options()
 end
 
 G.FUNCS.change_timer_increment_seconds = function(args)
@@ -94,7 +90,6 @@ end
 
 function G.FUNCS.custom_seed_reset(e)
   MP.LOBBY.config.custom_seed = generate_starting_seed()
-  MP.ACTIONS.update_lobby_options()
 end
 
 function G.FUNCS.display_custom_seed(e)
@@ -181,7 +176,7 @@ function G.FUNCS.lobby_leave(e)
   G.STATE = G.STATES.MENU
 end
 
-function G.FUNCS.set_lobby_options(e)
+function G.FUNCS.open_lobby_options(e)
 	G.FUNCS.overlay_menu({
 		definition = G.UIDEF.create_UIBox_lobby_options(),
 	})

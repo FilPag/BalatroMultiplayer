@@ -97,7 +97,7 @@ if SMODS.Mods["JokerDisplay"] and SMODS.Mods["JokerDisplay"].can_load then
 				{ text = ")" },
 			},
 			calc_function = function(card)
-				local enemy = MP.UTILS.get_nemesis()
+				local enemy = MP.UTILS.get_nemesis().game_state
 				if not enemy then
 					sendErrorMessage("Enemy player not found for skip calculation", "JokerDisplay")
 					return

@@ -16,7 +16,7 @@ end
 local function get_blind_loc_name(type, blind_choice)
 	local key = (G.GAME.round_resets.blind_choices or {})[type]
 	if key == "bl_mp_nemesis" then
-		local enemy = MP.UTILS.get_nemesis_lobby_data()
+		local enemy = MP.UTILS.get_nemesis().profile
 		if enemy and enemy.username and #enemy.username > 0 then
 			return { { string = enemy.username, colour = G.C.UI.TEXT} }
 		end
@@ -26,8 +26,8 @@ end
 
 
 local get_blind_amount_ref = get_blind_amount
-local function get_blind_amount_MP(type, blind_choice)
-	if type == "bl_mp_nemesis" or G.GAME.round_resets.blind_choices[type] == "bl_mp_nemesis" or G.GAME.round_resets.pvp_blind_choices[type] then
+function get_blind_amount_mp(type, blind_choice)
+	if type == "bl_mp_nemesis" or G.GAME.round_resets.blind_choices[type] == "bl_mp_nemesis" then
 		return "????"
 	end
 
@@ -99,7 +99,7 @@ function MP.UIDEF.blind_choice_box(config)
 	-- Blind color
 	local blind_col = get_blind_main_colour(config.type)
 	-- Blind amount
-	local blind_amt = get_blind_amount_MP(config.type, config.blind_choice)
+	local blind_amt = get_blind_amount_mp(config.type, config.blind_choice)
 
 	return {
 		n = G.UIT.R,
