@@ -1,6 +1,6 @@
 local NativeFS = require("nativefs")
 MP = SMODS.current_mod
-G.FPS_CAP = 60
+--G.FPS_CAP = 60
 MP.LOBBY = {
 	connected = false,
 	temp_code = "",
