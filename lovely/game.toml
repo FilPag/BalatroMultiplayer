@@ -153,3 +153,12 @@ payload = '''if MP.LOBBY.code and MP.is_online_boss() then
 end'''
 match_indent = true
 times = 1
+
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = '''self.chips = get_blind_amount(G.GAME.round_resets.ante)*self.mult*G.GAME.starting_params.ante_scaling'''
+position = 'after'
+payload = '''self.chips = MP.UI_UTILS.get_mp_blind_amount(blind, self.chips)'''
+match_indent = true
+times = 1
