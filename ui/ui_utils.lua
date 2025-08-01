@@ -214,3 +214,29 @@ function MP.UI_UTILS.juice_player_ui(uie_id)
 	if uie and uie.juice_up then uie:juice_up() end
 end
 
+function MP.UI_UTILS.get_mp_blind_amount(blind, chips, is_boss)
+	if not MP.LOBBY or not MP.LOBBY.code then
+		return to_big(chips)
+	end
+
+	if not blind then return chips end
+
+	if blind.key == "bl_small" or blind.key == "bl_big" then
+		return to_big(chips)
+	end
+
+	if blind.key == "bl_mp_nemesis" then
+		return to_big(0)
+	end
+
+	local amount = chips
+	if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" then
+    local num_players = 0
+    for _ in pairs(MP.LOBBY.players) do
+			num_players = num_players + 1
+		end
+		amount = amount * num_players
+	end
+
+	return to_big(amount)
+end

@@ -13,14 +13,10 @@ function Blind:change_colour(blind_col) -- ensures that small/big blinds have pr
   self.boss = boss
 end
 
-local blind_set_blindref = Blind.set_blind
+local blind_set_blind_ref = Blind.set_blind
 function Blind:set_blind(blind, reset, silent)
-  -- Adjust blind multiplier for coop survival mode
-  if blind and MP.LOBBY.code and MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" and blind.boss then
-    G.GAME.chips = 0
-  end
 
-  blind_set_blindref(self, blind, reset, silent)
+  blind_set_blind_ref(self, blind, reset, silent)
 
   -- Special handling for nemesis blind
   if blind and blind.key == 'bl_mp_nemesis' then
