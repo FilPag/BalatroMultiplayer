@@ -152,6 +152,15 @@ local function action_game_stopped()
 	end
 end
 
+local function action_reset_players(players)
+	for _, player in ipairs(players) do
+		local player_id = player.profile.id
+		if MP.LOBBY.players[player_id] then
+			MP.STATE_UPDATER.update_player_state(player_id, player.game_state)
+		end
+	end
+end
+
 local function player_left_lobby(player_id, host_id)
 	MP.LOBBY.players[host_id].lobby_state.is_host = true
 	MP.LOBBY.players[host_id].lobby_state.is_ready = true
@@ -190,17 +199,18 @@ local function action_game_started(seed, stake)
 		stake = tonumber(stake) or 0
 	end
 
-	if not MP.LOBBY.config.different_seeds and MP.LOBBY.config.custom_seed ~= "random" then
+	sendDebugMessage("Different seeds: " .. tostring(MP.LOBBY.config.different_seeds) .. "custom_seed: " .. tostring(MP.LOBBY.config.custom_seed))
+	if not MP.LOBBY.config.different_seeds and seed ~= "random" then
 		seed = MP.LOBBY.config.custom_seed
 	else
 		seed = generate_starting_seed()
 	end
 
+	sendDebugMessage("Starting game with seed: " .. seed .. " and stake: " .. tostring(stake))
 	MP.LOBBY.local_player.lives = MP.LOBBY.config.starting_lives
 	G.FUNCS.lobby_start_run(nil, { seed = seed, stake = stake })
 	G.E_MANAGER:add_event(Event({
     trigger = 'immediate',
-    no_delete = true,
     func = function()
 			MP.ACTIONS.UpdateHandsAndDiscards(G.GAME.starting_params.hands, G.GAME.starting_params.discards)
       return true
@@ -699,6 +709,7 @@ local action_table = {
 	lobbyReady = function(parsedAction) action_lobby_ready_update(parsedAction.ready_states) end,
 	gameStateUpdate = function(parsedAction) action_game_state_update(parsedAction.player_id, parsedAction.game_state) end,
 	gameStopped = function() action_game_stopped() end,
+	resetPlayers = function(parsedAction) action_reset_players(parsedAction.players) end,
 	endPvp = function(parsedAction) action_end_pvp(parsedAction.won) end,
 	winGame = function() action_win_game() end,
 	loseGame = function() action_lose_game() end,

@@ -22,9 +22,9 @@ handlers.score = function(player, is_local, is_nemesis)
 		G.E_MANAGER:add_event(Event({
 			blocking = true,
 			func = (function()
+
 				MP.coop_score = MP.INSANE_INT.empty()
 				for _, player in pairs(MP.LOBBY.players) do
-					sendDebugMessage("Adding score for player " .. tprint(player.game_state) .. " to coop score")
 					MP.coop_score = MP.INSANE_INT.add(MP.coop_score, player.game_state.score)
 				end
 				G.E_MANAGER:add_event(Event({
