@@ -24,27 +24,6 @@ local function get_blind_loc_name(type, blind_choice)
 	return { { string = localize({ type = "name_text", key = blind_choice and blind_choice.config and blind_choice.config.key or key, set = "Blind" }), colour = G.C.WHITE } }
 end
 
-
-local get_blind_amount_ref = get_blind_amount
-function get_blind_amount_mp(type, blind_choice)
-	if type == "bl_mp_nemesis" or G.GAME.round_resets.blind_choices[type] == "bl_mp_nemesis" then
-		return "????"
-	end
-
-	local amount = get_blind_amount_ref(G.GAME.round_resets.blind_ante) * blind_choice.config.mult *
-			G.GAME.starting_params.ante_scaling
-
-	if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" and type == "Boss" then
-    local num_players = 0
-    for _ in pairs(MP.LOBBY.players) do
-			num_players = num_players + 1
-		end
-		amount = amount * num_players
-	end
-
-	return amount
-end
-
 -- Helper: Get run info color
 function MP.UTILS.get_run_info_colour(blind_state)
 	if blind_state == "Defeated" then return G.C.GREY end
@@ -99,7 +78,11 @@ function MP.UIDEF.blind_choice_box(config)
 	-- Blind color
 	local blind_col = get_blind_main_colour(config.type)
 	-- Blind amount
-	local blind_amt = get_blind_amount_mp(config.type, config.blind_choice)
+	local blind_amt = get_blind_amount(G.GAME.round_resets.ante) * config.blind_choice.config.mult * G.GAME.starting_params.ante_scaling
+	blind_amt = MP.UI_UTILS.get_mp_blind_amount(config.blind_choice.config, blind_amt)
+	if blind_amt == 0 then
+		blind_amt = "????"
+	end
 
 	return {
 		n = G.UIT.R,
