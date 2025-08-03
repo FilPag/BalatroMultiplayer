@@ -100,11 +100,8 @@ G.FUNCS.multiplayer_blind_chip_UI_scale = function(e)
     return
   end
 
-  local new_score_text = MP.INSANE_INT.to_string(score_ref.score)
+  local new_score_text = number_format(score_ref.score)
   if G.GAME.blind and score_ref.score and score_ref.score_text ~= new_score_text then
-    if not MP.INSANE_INT.greater_than(score_ref.score, MP.INSANE_INT.create(0, G.E_SWITCH_POINT, 0)) then
-      e.config.scale = scale_number(score_ref.score.coefficient, 0.7, 100000)
-    end
     score_ref.score_text = new_score_text
   end
 end

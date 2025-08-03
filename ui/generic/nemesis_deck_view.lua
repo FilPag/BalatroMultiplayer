@@ -9,8 +9,8 @@ function G.UIDEF.create_UIBox_view_nemesis_deck()
     },
   }
 
-  for _, player in ipairs(players) do
-    if player.deck and player.profile.id ~= MP.LOBBY.local_id then
+  for _, player in pairs(players) do
+    if player.deck and player.profile.id ~= MP.LOBBY.local_player.profile.id then
       table.insert(tabs, {
         label = player.profile.username,
         tab_definition_function = G.UIDEF.view_player_deck,
