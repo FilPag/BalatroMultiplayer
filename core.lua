@@ -1,41 +1,5 @@
-local NativeFS = require("nativefs")
 MP = SMODS.current_mod
---G.FPS_CAP = 60
-MP.LOBBY = {
-	connected = false,
-	temp_code = "",
-	temp_seed = "",
-	code = nil,
-	type = "",
-	config = {}, -- Now set in MP.reset_lobby_config
-	deck = {
-		back = "Red Deck",
-		sleeve = "sleeve_casl_none",
-		stake = 1,
-		challenge = "",
-	},
-	username = "Guest",
-	ready_text = "Ready",
-	blind_col = 1,
-	players = {},
-	local_player = {},
-}
-MP.FLAGS = {
-	join_pressed = false,
-}
-MP.GAME = {}
-MP.NETWORKING = {}
-MP.UI = {}
-MP.UI_UTILS = {}
-MP.UIDEF = {}
-MP.ACTIONS = {}
-MP.INTEGRATIONS = {
-	TheOrder = SMODS.Mods["Multiplayer"].config.integrations.TheOrder,
-}
-MP.UI_EVENT_HANDLER = SMODS.load_file('networking/ui_event_handler.lua', 'Multiplayer')()
-MP.STATE_UPDATER = SMODS.load_file('networking/state_updater.lua', 'Multiplayer')()
-G.C.MULTIPLAYER = HEX("AC3232")
-
+local NativeFS = require("nativefs")
 function MP.load_mp_file(file)
 	local chunk, err = SMODS.load_file(file, "Multiplayer")
 	if chunk then
@@ -70,6 +34,44 @@ function MP.load_mp_dir(directory)
 		MP.load_mp_file(file_path)
 	end
 end
+
+MP.load_mp_dir("compatibility")
+
+G.FPS_CAP = 60
+MP.LOBBY = {
+	connected = false,
+	temp_code = "",
+	temp_seed = "",
+	code = nil,
+	type = "",
+	config = {}, -- Now set in MP.reset_lobby_config
+	deck = {
+		back = "Red Deck",
+		sleeve = "sleeve_casl_none",
+		stake = 1,
+		challenge = "",
+	},
+	username = "Guest",
+	ready_text = "Ready",
+	blind_col = 1,
+	players = {},
+	local_player = {},
+}
+MP.FLAGS = {
+	join_pressed = false,
+}
+MP.GAME = {}
+MP.NETWORKING = {}
+MP.UI = {}
+MP.UI_UTILS = {}
+MP.UIDEF = {}
+MP.ACTIONS = {}
+MP.INTEGRATIONS = {
+	TheOrder = SMODS.Mods["Multiplayer"].config.integrations.TheOrder,
+}
+MP.UI_EVENT_HANDLER = SMODS.load_file('networking/ui_event_handler.lua', 'Multiplayer')()
+MP.STATE_UPDATER = SMODS.load_file('networking/state_updater.lua', 'Multiplayer')()
+G.C.MULTIPLAYER = HEX("AC3232")
 
 MP.load_mp_file("misc/utils.lua")
 MP.load_mp_file("misc/insane_int.lua")
@@ -127,7 +129,7 @@ function MP.reset_game_states()
 		misprint_display = "",
 		spent_total = 0,
 		spent_before_shop = 0,
-		highest_score = MP.INSANE_INT.empty(),
+		highest_score = to_big(0),
 		timer = MP.LOBBY.config.timer_base_seconds,
 		timer_started = false,
 		pvp_countdown = 0,
@@ -157,6 +159,11 @@ MP.username = MP.UTILS.get_username()
 MP.blind_col = MP.UTILS.get_blind_col()
 
 MP.LOBBY.config.weekly = MP.UTILS.get_weekly()
+for _, player in pairs(MP.LOBBY.players) do
+	player.deck_str = nil
+	player.deck_received = false
+end
+
 if not SMODS.current_mod.lovely then
 	G.E_MANAGER:add_event(Event({
 		no_delete = true,
@@ -201,7 +208,6 @@ MP.load_mp_dir("objects/jokers")
 MP.load_mp_dir("objects/consumables")
 MP.load_mp_dir("objects/challenges")
 MP.load_mp_dir("gamemodes")
-MP.load_mp_dir("rulesets")
 MP.load_mp_dir("function_overrides")
 MP.apply_rulesets()
 

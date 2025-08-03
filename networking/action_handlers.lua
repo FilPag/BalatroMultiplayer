@@ -125,8 +125,8 @@ local function action_joined_lobby(action_data)
       MP.LOBBY.local_player = player
       MP.LOBBY.is_host = player.lobby_state.is_host
     end
-		player.game_state.score = MP.INSANE_INT.from_string(player.game_state.score or "0")
-		player.game_state.highest_score = MP.INSANE_INT.from_string(player.game_state.highest_score or "0")
+		player.game_state.score = (player.game_state.score or "0")
+		player.game_state.highest_score = to_big(player.game_state.highest_score or "0")
   end
 
 	MP.LOBBY.code = action_data.lobby_data.code
@@ -136,8 +136,8 @@ local function action_joined_lobby(action_data)
 end
 
 local function new_player_joined_lobby(player)
-	player.game_state.score = MP.INSANE_INT.from_string(player.game_state.score or "0")
-	player.game_state.highest_score = MP.INSANE_INT.from_string(player.game_state.highest_score or "0")
+	player.game_state.score = to_big(player.game_state.score or "0")
+	player.game_state.highest_score = to_big(player.game_state.highest_score or "0")
 	MP.LOBBY.players[player.profile.id] = player
 
   if G.MAIN_MENU_UI then G.MAIN_MENU_UI:remove() end
@@ -234,7 +234,7 @@ local function action_start_blind()
   MP.UI.start_pvp_countdown(begin_pvp_blind)
 
 	for _, player in pairs(MP.LOBBY.players) do
-		player.game_state.score = MP.INSANE_INT.empty()
+		player.game_state.score = to_big(0)
 	end
 
 	if MP.GAME.next_blind_context then
@@ -611,17 +611,11 @@ function G.FUNCS.load_player_deck(player)
 		return
 	end
 
-	if not player.cards then player.cards = {} end
-
-	if not player.deck then
-		player.deck = CardArea(-100, -100, G.CARD_W, G.CARD_H, { type = 'deck' })
-	end
+	player.cards = {}
+	player.deck = CardArea(-100, -100, G.CARD_W, G.CARD_H, { type = 'deck' })
+	player.deck.cards = {}
 
 	local card_strings = MP.UTILS.string_split(player.deck_str, ";")
-
-	for k, _ in pairs(player.cards) do
-		player.cards[k] = nil
-	end
 
 	for _, card_str in pairs(card_strings) do
 		if card_str == "" then
@@ -736,7 +730,7 @@ local action_table = {
 	magnetResponse = function(parsedAction) action_magnet_response(parsedAction.key) end,
 	getEndGameJokers = function() action_get_end_game_jokers() end,
 	receiveEndGameJokers = function(parsedAction) action_receive_end_game_jokers(parsedAction.keys) end,
-	receivePlayerDeck = function(parsedAction) action_receive_player_deck(parsedAction.playerId, parsedAction.cards) end,
+	receivePlayerDeck = function(parsedAction) action_receive_player_deck(parsedAction.player_id , parsedAction.deck) end,
 	startAnteTimer = function(parsedAction) MP.action_start_ante_timer(parsedAction.time) end,
 	pauseAnteTimer = function(parsedAction) MP.action_pause_ante_timer(parsedAction.time) end,
 	error = function(parsedAction) action_error(parsedAction.message) end,

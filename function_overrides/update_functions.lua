@@ -27,7 +27,7 @@ function Game:update_selecting_hand(dt)
 	end
 
 	if MP.UTILS.is_coop() then
-		if G.GAME.chips - G.GAME.blind.chips >= 0 then
+		if G.GAME.chips - G.GAME.blind.chips >= to_big(0) then
 			G.hand:unhighlight_all()
 			G.STATE_COMPLETE = false
 			G.STATE = G.STATES.NEW_ROUND
@@ -247,7 +247,7 @@ function Game:update_hand_played(dt)
 			trigger = "immediate",
 			func = function()
 				if MP.LOBBY.config.gamemode ~= "gamemode_mp_coopSurvival" then
-					G.GAME.blind.chip_text = MP.INSANE_INT.to_string(MP.UTILS.get_nemesis().game_state.score)
+					G.GAME.blind.chip_text = number_format(MP.UTILS.get_nemesis().game_state.score)
 				end
 				-- For now, never advance to next round
 				if G.GAME.current_round.hands_left < 1 then
@@ -279,7 +279,7 @@ function Game:update_hand_played(dt)
 	end
 
 	if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" and MP.is_online_boss() then
-		if G.GAME.chips - G.GAME.blind.chips >= 0 then
+		if G.GAME.chips - G.GAME.blind.chips >= to_big(0) then
 			G.STATE_COMPLETE = false
 			G.STATE = G.STATES.NEW_ROUND
 		end

@@ -12,7 +12,7 @@ handlers.lives = function(player, is_local, is_nemesis)
 end
 
 handlers.score = function(player, is_local, is_nemesis)
-	if is_nemesis and not is_local then	
+	if is_nemesis and not is_local then
 		local blind_count = G.HUD_blind and G.HUD_blind:get_UIE_by_ID("HUD_blind_count")
 		local dollars_earned = G.HUD_blind and G.HUD_blind:get_UIE_by_ID("dollars_to_be_earned")
 		if blind_count then blind_count:juice_up() end
@@ -21,19 +21,20 @@ handlers.score = function(player, is_local, is_nemesis)
 	if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" and MP.is_online_boss() then
 		G.E_MANAGER:add_event(Event({
 			blocking = true,
+			blockable = true,
 			func = (function()
-
-				MP.coop_score = MP.INSANE_INT.empty()
+				MP.coop_score = to_big(0)
 				for _, player in pairs(MP.LOBBY.players) do
-					MP.coop_score = MP.INSANE_INT.add(MP.coop_score, player.game_state.score)
+					MP.coop_score = MP.coop_score + player.game_state.score
+					sendDebugMessage("coop_score: " .. MP.coop_score .. " + " .. player.game_state.score, "MULTIPLAYER")
 				end
 				G.E_MANAGER:add_event(Event({
 					trigger = 'ease',
-					blocking = false,
+					blocking = true,
 					blockable = true,
 					ref_table = G.GAME,
 					ref_value = 'chips',
-					ease_to = MP.INSANE_INT.to_number(MP.coop_score),
+					ease_to = MP.coop_score,
 					delay = 0.5,
 					func = (function(t) return math.floor(t) end)
 				}))

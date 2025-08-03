@@ -2,7 +2,7 @@ local M = {}
 
 local function parse_value(key, raw_value)
     if key == "score" or key == "highest_score" then
-        return MP.INSANE_INT.from_string(raw_value)
+        return to_big(raw_value)
     elseif key == "location" then
         return MP.UI_UTILS.parse_enemy_location(raw_value)
     else
@@ -11,11 +11,7 @@ local function parse_value(key, raw_value)
 end
 
 local function values_equal(key, old_value, new_value)
-    if key == "score" or key == "highest_score" then
-        return old_value and MP.INSANE_INT.equals(old_value, new_value)
-    else
-        return old_value == new_value
-    end
+    return old_value == new_value
 end
 
 local function handle_nemesis_score(player_id, new_score)
@@ -25,7 +21,7 @@ local function handle_nemesis_score(player_id, new_score)
 
     local nemesis = MP.UTILS.get_nemesis()
     if nemesis and nemesis.profile.id == player_id then
-        MP.UTILS.ease_score(nemesis.game_state.score, new_score)
+        MP.UTILS.ease_score(nemesis.game_state , new_score)
         return true
     end
     return false

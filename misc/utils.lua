@@ -746,52 +746,19 @@ end
 function MP.UTILS.is_weekly(arg)
 	return MP.UTILS.get_weekly() == arg and MP.LOBBY.config.ruleset == 'ruleset_mp_weekly'
 end
--- Returns the enemy player for the current client (not self).
--- For now, returns the next player in the array who is not the local player.
--- If only 2 players, returns the other. For > 2, can be extended for turn order, etc.
--- @param players table: array of player tables
--- @param my_id string: the id of the local player
-function MP.UTILS.get_enemy_player(players, my_id)
-	if not players or #players < 2 then return nil end
-	for i, player in ipairs(players) do
-		if player.id and player.id ~= my_id then
-			return player
-		end
-	end
-end
 
 function MP.UTILS.ease_score(score_table, new_score, delay)
 	delay = delay or 0.3
-	for _, field in ipairs({ "e_count", "exponent", "coefficient" }) do
-		if new_score[field] ~= nil then
-			G.E_MANAGER:add_event(Event({
-				blockable = false,
-				blocking = false,
-				trigger = "ease",
-				delay = delay,
-				ref_table = score_table,
-				ref_value = field,
-				ease_to = new_score[field],
-				func = function(t) return math.floor(t) end
-			}))
-		end
-	end
-end
-
-function MP.UTILS.calc_coop_score(local_score)
-	if not MP.LOBBY.players then
-		return local_score
-	end
-
-	local total_score = MP.INSANE_INT.create(local_score, 0, 0)
-
-	for _, player in ipairs(MP.LOBBY.players) do
-		if player.score and player.id ~= MP.LOBBY.local_id then
-			total_score = MP.INSANE_INT.add(total_score, player.score)
-		end
-	end
-
-	return total_score
+	G.E_MANAGER:add_event(Event({
+		trigger = 'ease',
+		blocking = true,
+		blockable = true,
+		ref_table = score_table,
+		ref_value = 'score',
+		ease_to = new_score,
+		delay = 0.5,
+		func = (function(t) return math.floor(t) end)
+	}))
 end
 
 -- Save current run and return as table
@@ -839,7 +806,7 @@ end
 -- @param players table: array of player tables
 -- @param my_id string: the id of the local player
 function MP.UTILS.get_local_player()
-  return MP.LOBBY.local_player.game_state
+	return MP.LOBBY.local_player.game_state
 end
 
 function MP.UTILS.get_local_player_lobby_data()
@@ -880,4 +847,3 @@ function MP.UTILS.have_player_usernames_changed()
 
 	return false
 end
-
