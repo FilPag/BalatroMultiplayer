@@ -1,6 +1,43 @@
-local NativeFS = require("nativefs")
 MP = SMODS.current_mod
---G.FPS_CAP = 60
+local NativeFS = require("nativefs")
+function MP.load_mp_file(file)
+	local chunk, err = SMODS.load_file(file, "Multiplayer")
+	if chunk then
+		local ok, func = pcall(chunk)
+		if ok then
+			return func
+		else
+			sendWarnMessage("Failed to process file: " .. func, "MULTIPLAYER")
+		end
+	else
+		sendWarnMessage("Failed to find or compile file: " .. tostring(err), "MULTIPLAYER")
+	end
+	return nil
+end
+
+function MP.load_mp_dir(directory)
+	local files = NFS.getDirectoryItems(MP.path .. "/" .. directory)
+	local regular_files = {}
+
+	for _, filename in ipairs(files) do
+		local file_path = directory .. "/" .. filename
+		if file_path:match(".lua$") then
+			if filename:match("^_") then
+				MP.load_mp_file(file_path)
+			else
+				table.insert(regular_files, file_path)
+			end
+		end
+	end
+
+	for _, file_path in ipairs(regular_files) do
+		MP.load_mp_file(file_path)
+	end
+end
+
+MP.load_mp_dir("compatibility")
+
+G.FPS_CAP = 60
 MP.LOBBY = {
 	connected = false,
 	temp_code = "",
@@ -56,41 +93,6 @@ MP.UI_EVENT_HANDLER = SMODS.load_file('networking/ui_event_handler.lua', 'Multip
 MP.STATE_UPDATER = SMODS.load_file('networking/state_updater.lua', 'Multiplayer')()
 G.C.MULTIPLAYER = HEX("AC3232")
 
-function MP.load_mp_file(file)
-	local chunk, err = SMODS.load_file(file, "Multiplayer")
-	if chunk then
-		local ok, func = pcall(chunk)
-		if ok then
-			return func
-		else
-			sendWarnMessage("Failed to process file: " .. func, "MULTIPLAYER")
-		end
-	else
-		sendWarnMessage("Failed to find or compile file: " .. tostring(err), "MULTIPLAYER")
-	end
-	return nil
-end
-
-function MP.load_mp_dir(directory)
-	local files = NFS.getDirectoryItems(MP.path .. "/" .. directory)
-	local regular_files = {}
-
-	for _, filename in ipairs(files) do
-		local file_path = directory .. "/" .. filename
-		if file_path:match(".lua$") then
-			if filename:match("^_") then
-				MP.load_mp_file(file_path)
-			else
-				table.insert(regular_files, file_path)
-			end
-		end
-	end
-
-	for _, file_path in ipairs(regular_files) do
-		MP.load_mp_file(file_path)
-	end
-end
-
 MP.load_mp_file("misc/utils.lua")
 MP.load_mp_file("misc/insane_int.lua")
 
@@ -115,7 +117,7 @@ function MP.reset_game_states()
 		misprint_display = "",
 		spent_total = 0,
 		spent_before_shop = 0,
-		highest_score = MP.INSANE_INT.empty(),
+		highest_score = to_big(0),
 		timer = MP.LOBBY.config.timer_base_seconds,
 		timer_started = false,
 		real_money = 0,
@@ -142,6 +144,11 @@ MP.reset_game_states()
 
 MP.username = MP.UTILS.get_username()
 MP.blind_col = MP.UTILS.get_blind_col()
+
+for _, player in pairs(MP.LOBBY.players) do
+	player.deck_str = nil
+	player.deck_received = false
+end
 
 if not SMODS.current_mod.lovely then
 	G.E_MANAGER:add_event(Event({
@@ -171,7 +178,6 @@ SMODS.Atlas({
 	py = 34,
 })
 
-MP.load_mp_dir("compatibility")
 
 MP.load_mp_dir("objects/editions")
 MP.load_mp_dir("objects/enhancements")

@@ -112,12 +112,11 @@ function MP.ACTIONS.play_hand(score, hands_left)
   end
   fixed_score = string.gsub(fixed_score, ",", "") -- Remove commas
 
-  local insane_int_score = MP.INSANE_INT.from_string(fixed_score)
-  if MP.INSANE_INT.greater_than(insane_int_score, MP.LOBBY.local_player.game_state.highest_score) then
-    MP.LOBBY.local_player.game_state.highest_score = insane_int_score
+  if score > MP.LOBBY.local_player.game_state.highest_score then
+    MP.LOBBY.local_player.game_state.highest_score = score
   end
 
-  MP.LOBBY.local_player.game_state.score = MP.INSANE_INT.add(insane_int_score, MP.LOBBY.local_player.game_state.score)
+  MP.LOBBY.local_player.game_state.score = score + MP.LOBBY.local_player.game_state.score
 
   local target = nil
   if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" then
@@ -163,8 +162,8 @@ function MP.ACTIONS.set_furthest_blind(furthest_blind)
   Client.send(json.encode({ action = "setFurthestBlind", furthest_blind = furthest_blind }))
 end
 
-function MP.ACTIONS.skip(skips)
-  Client.send(json.encode({ action = "skip", skips = skips }))
+function MP.ACTIONS.skip()
+  Client.send(json.encode({ action = "skip"}))
 end
 
 --- @class GameStateData
@@ -237,7 +236,7 @@ function MP.ACTIONS.sendPlayerDeck()
   for _, card in ipairs(G.playing_cards) do
     deck_str = deck_str .. ";" .. MP.UTILS.card_to_string(card)
   end
-  Client.send(json.encode({ action = "sendPlayerDeck", cards = deck_str }))
+  Client.send(json.encode({ action = "sendPlayerDeck", deck = deck_str }))
 end
 
 function MP.ACTIONS.start_ante_timer()
