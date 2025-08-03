@@ -121,11 +121,11 @@ times = 1
 target = 'functions/state_events.lua'
 pattern = '''local dollars = 0
 
-if G.GAME.chips - G.GAME.blind.chips >= 0 then'''
+if G.GAME.chips - G.GAME.blind.chips >= to_big(0) then'''
 position = 'at'
 payload = '''local dollars = 0
 
-if G.GAME.chips - G.GAME.blind.chips >= 0 or MP.is_online_boss() then'''
+if G.GAME.chips - G.GAME.blind.chips >= to_big(0) or MP.is_online_boss() then'''
 match_indent = true
 times = 1
 
