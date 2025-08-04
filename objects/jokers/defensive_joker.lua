@@ -25,10 +25,12 @@ SMODS.Joker({
 	update = function(self, card, dt)
 		if MP.LOBBY.code then
 			if G.STAGE == G.STAGES.RUN then
-				local enemy = MP.UTILS.get_nemesis().game_state
-				if not enemy then return end
+				local nemesis = MP.UTILS.get_nemesis()
+				if not nemesis then return end
+				local nemesis_lives = nemesis.game_state.lives
+				local player_lives = MP.LOBBY.local_player.game_state.lives
 
-				card.ability.t_chips = math.max((enemy.lives - MP.UTILS.get_local_player().lives) * card.ability.extra.extra, 0)
+				card.ability.t_chips = math.max((nemesis_lives - player_lives) * card.ability.extra.extra, 0)
 			end
 		else
 			card.ability.t_chips = 0
