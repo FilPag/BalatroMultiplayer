@@ -331,7 +331,6 @@ local game_main_menu_ref = Game.main_menu
 ---@diagnostic disable-next-line: duplicate-set-field
 function Game:main_menu(change_context)
 	MP.UI.update_connection_status()
-	sendDebugMessage(tostring(change_context), "MULTIPLAYER")
 	local ret = game_main_menu_ref(self)
 
 	MP.UI_UTILS.add_custom_multiplayer_cards(change_context)
