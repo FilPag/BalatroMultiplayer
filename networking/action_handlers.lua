@@ -199,7 +199,6 @@ local function action_game_started(seed, stake)
 		stake = tonumber(stake) or 0
 	end
 
-	sendDebugMessage("Different seeds: " .. tostring(MP.LOBBY.config.different_seeds) .. "custom_seed: " .. tostring(MP.LOBBY.config.custom_seed))
 	if not MP.LOBBY.config.different_seeds and seed ~= "random" then
 		seed = MP.LOBBY.config.custom_seed
 		MP.LOBBY.config.custom_seed = seed
@@ -208,7 +207,6 @@ local function action_game_started(seed, stake)
 		MP.LOBBY.config.custom_seed = seed
 	end
 
-	sendDebugMessage("Starting game with seed: " .. seed .. " and stake: " .. tostring(stake))
 	MP.LOBBY.local_player.lives = MP.LOBBY.config.starting_lives
 	G.FUNCS.lobby_start_run(nil, { seed = seed, stake = stake })
 	G.E_MANAGER:add_event(Event({
