@@ -24,11 +24,6 @@ G.FUNCS.change_showdown_starting_antes = function(args)
   MP.LOBBY.config.showdown_starting_antes = args.to_val
 end
 
-function G.FUNCS.toggle_different_seeds()
-  G.FUNCS.lobby_options()
-  MP.ACTION.lobby_options()
-end
-
 G.FUNCS.change_starting_lives = function(args)
   MP.LOBBY.config.starting_lives = args.to_val
 end
@@ -39,11 +34,12 @@ end
 
 G.FUNCS.change_timer_base_seconds = function(args)
   MP.LOBBY.config.timer_base_seconds = tonumber(args.to_val:sub(1, -2))
+  MP.ACTIONS.update_lobby_options()
 end
 
 G.FUNCS.change_timer_increment_seconds = function(args)
   MP.LOBBY.config.timer_increment_seconds = tonumber(args.to_val:sub(1, -2))
-  MP.ACTION.lobby_options()
+  MP.ACTIONS.update_lobby_options()
 end
 
 function G.FUNCS.continue_in_singleplayer(e)

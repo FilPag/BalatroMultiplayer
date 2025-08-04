@@ -23,10 +23,6 @@ function MP.ACTIONS.join_lobby(code)
   Client.send(json.encode({ action = "joinLobby", code = code }))
 end
 
-function MP.ACTIONS.lobby_info()
-  Client.send(json.encode({ action = "lobbyInfo" }))
-end
-
 function MP.ACTIONS.leave_lobby()
   Client.send(json.encode({ action = "leaveLobby" }))
 end
@@ -239,13 +235,13 @@ function MP.ACTIONS.sendPlayerDeck()
 end
 
 function MP.ACTIONS.start_ante_timer()
-  Client.send(json.encode({ action = "startAnteTimer", time = tostring(MP.GAME.timer) }))
+  Client.send(json.encode({ action = "startAnteTimer", time = MP.GAME.timer }))
   MP.action_start_ante_timer(MP.GAME.timer)
 end
 
 function MP.ACTIONS.pause_ante_timer()
-  Client.send(json.encode({ action = "pauseAnteTimer", time = tostring(MP.GAME.timer) }))
-  MP.action_pause_ante_timer(MP.GAME.timer) -- TODO
+  Client.send(json.encode({ action = "pauseAnteTimer", time = MP.GAME.timer }))
+  MP.action_pause_ante_timer(MP.GAME.timer)
 end
 
 function MP.ACTIONS.fail_timer()
