@@ -202,8 +202,10 @@ local function action_game_started(seed, stake)
 	sendDebugMessage("Different seeds: " .. tostring(MP.LOBBY.config.different_seeds) .. "custom_seed: " .. tostring(MP.LOBBY.config.custom_seed))
 	if not MP.LOBBY.config.different_seeds and seed ~= "random" then
 		seed = MP.LOBBY.config.custom_seed
+		MP.LOBBY.config.custom_seed = seed
 	else
 		seed = generate_starting_seed()
+		MP.LOBBY.config.custom_seed = seed
 	end
 
 	sendDebugMessage("Starting game with seed: " .. seed .. " and stake: " .. tostring(stake))
@@ -716,7 +718,7 @@ local action_table = {
 	soldJoker = function() action_sold_joker() end,
 	letsGoGamblingNemesis = function() action_lets_go_gambling_nemesis() end,
 	eatPizza = function(parsedAction) action_eat_pizza(parsedAction.discards) end,
-	spentLastShop = function(parsedAction) action_spent_last_shop(parsedAction.playerId, parsedAction.amount) end,
+	spentLastShop = function(parsedAction) action_spent_last_shop(parsedAction.player_id, parsedAction.amount) end,
 	magnet = function() action_magnet() end,
 	magnetResponse = function(parsedAction) action_magnet_response(parsedAction.key) end,
 	getEndGameJokers = function() action_get_end_game_jokers() end,

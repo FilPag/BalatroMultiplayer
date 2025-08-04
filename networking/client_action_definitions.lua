@@ -146,7 +146,6 @@ end
 ---@param boss string
 ---@param chips number 
 function MP.ACTIONS.set_Boss(boss, chips)
-  -- TODO sync boss key with all clients
   Client.send(json.encode({ action = "setBossBlind", key = boss, chips = tostring(chips) }))
 end
 
@@ -159,11 +158,11 @@ function MP.ACTIONS.new_round()
 end
 
 function MP.ACTIONS.set_furthest_blind(furthest_blind)
-  Client.send(json.encode({ action = "setFurthestBlind", furthest_blind = furthest_blind }))
+  Client.send(json.encode({ action = "setFurthestBlind", blind = furthest_blind }))
 end
 
-function MP.ACTIONS.skip()
-  Client.send(json.encode({ action = "skip"}))
+function MP.ACTIONS.skip(furthest_blind)
+  Client.send(json.encode({ action = "skip", blind = furthest_blind}))
 end
 
 --- @class GameStateData
@@ -211,12 +210,12 @@ function MP.ACTIONS.lets_go_gambling_nemesis()
   Client.send(json.encode({ action = "letsGoGamblingNemesis" }))
 end
 
-function MP.ACTIONS.eat_pizza(whole)
-  Client.send(json.encode({ action = "eatPizza", whole = tostring(whole and true) }))
+function MP.ACTIONS.eat_pizza(discards)
+  Client.send(json.encode({ action = "eatPizza", discards = discards }))
 end
 
 function MP.ACTIONS.spent_last_shop(amount)
-  Client.send(json.encode({ action = "spentLastShop", amount = tostring(amount) }))
+  Client.send(json.encode({ action = "spentLastShop", amount = amount }))
 end
 
 function MP.ACTIONS.magnet()

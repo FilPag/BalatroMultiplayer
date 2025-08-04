@@ -342,7 +342,7 @@ function MP.UTILS.add_nemesis_info(info_queue)
 	local my_id = MP.LOBBY.local_id
 
 	-- Find the first player that is not the local user (by id)
-	for _, player in ipairs(MP.LOBBY.players or {}) do
+	for _, player in pairs(MP.LOBBY.players or {}) do
 		if player.profile.id ~= my_id then
 			enemy_name = player.profile.username
 			break

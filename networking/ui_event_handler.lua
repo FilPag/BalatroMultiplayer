@@ -26,7 +26,6 @@ handlers.score = function(player, is_local, is_nemesis)
 				MP.coop_score = to_big(0)
 				for _, player in pairs(MP.LOBBY.players) do
 					MP.coop_score = MP.coop_score + player.game_state.score
-					sendDebugMessage("coop_score: " .. MP.coop_score .. " + " .. player.game_state.score, "MULTIPLAYER")
 				end
 				G.E_MANAGER:add_event(Event({
 					trigger = 'ease',
