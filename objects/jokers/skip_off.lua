@@ -40,11 +40,12 @@ SMODS.Joker({
 		return MP.LOBBY.code and MP.LOBBY.config.multiplayer_jokers
 	end,
 	update = function(self, card, dt)
-		local nemesis = MP.UTILS.get_nemesis().game_state
+		local nemesis = MP.UTILS.get_nemesis()
 		if not nemesis then return end	
+		local nemesis_skips = nemesis.game_state.skips or 0
 
-		if G.STAGE == G.STAGES.RUN and G.GAME.skips ~= nil and nemesis.skips ~= nil then
-			local skip_diff = (math.max(G.GAME.skips - nemesis.skips, 0))
+		if G.STAGE == G.STAGES.RUN and G.GAME.skips ~= nil and nemesis_skips ~= nil then
+			local skip_diff = (math.max(G.GAME.skips - nemesis_skips, 0))
 			card.ability.extra.hands = skip_diff * card.ability.extra.extra_hands
 			card.ability.extra.discards = skip_diff * card.ability.extra.extra_discards
 		end
