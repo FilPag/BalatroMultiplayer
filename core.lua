@@ -1,32 +1,11 @@
 MP = SMODS.current_mod
-G.FPS_CAP = 60
 MP.LOBBY = {
 	connected = false,
 	temp_code = "",
 	temp_seed = "",
 	code = nil,
 	type = "",
-	config = {
-		gold_on_life_loss = true,
-		no_gold_on_round_loss = false,
-		death_on_round_loss = true,
-		different_seeds = false,
-		starting_lives = 4,
-		pvp_start_round = 2,
-		timer_base_seconds = 150,
-		timer_increment_seconds = 60,
-		showdown_starting_antes = 3,
-		ruleset = nil,
-		gamemode = "gamemode_mp_attrition",
-		custom_seed = "random",
-		different_decks = false,
-		back = "Red Deck",
-		sleeve = "sleeve_casl_none",
-		stake = 1,
-		challenge = "",
-		multiplayer_jokers = true,
-		timer = true,
-	},
+	config = {}, -- Now set in MP.reset_lobby_config
 	deck = {
 		back = "Red Deck",
 		sleeve = "sleeve_casl_none",
@@ -34,20 +13,14 @@ MP.LOBBY = {
 		challenge = "",
 	},
 	username = "Guest",
-	ready_text = "Ready",
-	id = "",
 	blind_col = 1,
-	players = {},
-	isHost = false,
-}
-MP.FLAGS = {
-	join_pressed = false,
+	host = {},
+	guest = {},
+	is_host = false,
+	ready_to_start = false,
 }
 MP.GAME = {}
-MP.NETWORKING = {}
 MP.UI = {}
-MP.UI_UTILS = {}
-MP.UIDEF = {}
 MP.ACTIONS = {}
 MP.INTEGRATIONS = {
 	TheOrder = SMODS.Mods["Multiplayer"].config.integrations.TheOrder,
@@ -93,6 +66,36 @@ end
 MP.load_mp_file("misc/utils.lua")
 MP.load_mp_file("misc/insane_int.lua")
 
+function MP.reset_lobby_config(persist_ruleset_and_gamemode)
+	sendDebugMessage("Resetting lobby options", "MULTIPLAYER")
+	MP.LOBBY.config = {
+		gold_on_life_loss = true,
+		no_gold_on_round_loss = false,
+		death_on_round_loss = true,
+		different_seeds = false,
+		starting_lives = 4,
+		pvp_start_round = 2,
+		timer_base_seconds = 150,
+		timer_increment_seconds = 60,
+		pvp_countdown_seconds = 3,
+		showdown_starting_antes = 3,
+		ruleset = persist_ruleset_and_gamemode and MP.LOBBY.config.ruleset or "ruleset_mp_blitz",
+		gamemode = persist_ruleset_and_gamemode and MP.LOBBY.config.gamemode or "gamemode_mp_attrition",
+		weekly = nil,
+		custom_seed = "random",
+		different_decks = false,
+		back = "Red Deck",
+		sleeve = "sleeve_casl_none",
+		stake = 1,
+		challenge = "",
+		multiplayer_jokers = true,
+		timer = true,
+		timer_forgiveness = 0,
+		forced_config = false,
+	}
+end
+MP.reset_lobby_config()
+
 function MP.reset_game_states()
 	sendDebugMessage("Resetting game states", "MULTIPLAYER")
 	MP.GAME = {
@@ -105,9 +108,7 @@ function MP.reset_game_states()
 		comeback_bonus_given = true,
 		comeback_bonus = 0,
 		end_pvp = false,
-		next_coop_boss = nil,
-		players = {}, --[[@type table<string, {score: any, score_text: string, hands: number, location: string, skips: number, lives: number, sells: number, spent_last_shop: number, highest_score: any}>]]
-		--[[enemy = {
+		enemy = {
 			score = MP.INSANE_INT.empty(),
 			score_text = "0",
 			hands = 4,
@@ -118,18 +119,21 @@ function MP.reset_game_states()
 			sells_per_ante = {},
 			spent_in_shop = {},
 			highest_score = MP.INSANE_INT.empty(),
-		}, --]]
+		},
 		location = "loc_selecting",
 		next_blind_context = nil,
 		ante_key = tostring(math.random()),
 		antes_keyed = {},
 		prevent_eval = false,
+		round_ended = false,
+		duplicate_end = false,
 		misprint_display = "",
 		spent_total = 0,
 		spent_before_shop = 0,
 		highest_score = MP.INSANE_INT.empty(),
 		timer = MP.LOBBY.config.timer_base_seconds,
 		timer_started = false,
+		pvp_countdown = 0,
 		real_money = 0,
 		ce_cache = false,
 		furthest_blind = 0,
@@ -139,21 +143,21 @@ function MP.reset_game_states()
 		pizza_discards = 0,
 		wait_for_enemys_furthest_blind = false,
 		disable_live_and_timer_hud = false,
+		timers_forgiven = 0,
 		stats = {
 			reroll_count = 0,
 			reroll_cost_total = 0,
 			-- Add more stats here in the future
 		},
 	}
-
-	MP.LOBBY.ready_text = localize("b_ready")
-	MP.LOBBY.ready_to_start = false
 end
 
 MP.reset_game_states()
 
 MP.LOBBY.username = MP.UTILS.get_username()
 MP.LOBBY.blind_col = MP.UTILS.get_blind_col()
+
+MP.LOBBY.config.weekly = MP.UTILS.get_weekly()
 
 if not SMODS.current_mod.lovely then
 	G.E_MANAGER:add_event(Event({
@@ -185,6 +189,16 @@ SMODS.Atlas({
 
 MP.load_mp_dir("compatibility")
 
+MP.load_mp_file("networking/action_handlers.lua")
+
+MP.load_mp_dir("ui/components") -- Gamemodes and rulesets need these
+
+MP.load_mp_dir("rulesets")
+if MP.LOBBY.config.weekly then -- this could be a function but why bother
+	MP.load_mp_file("rulesets/weeklies/"..MP.LOBBY.config.weekly..".lua")
+end
+MP.load_mp_dir("gamemodes")
+
 MP.load_mp_dir("objects/editions")
 MP.load_mp_dir("objects/enhancements")
 MP.load_mp_dir("objects/stickers")
@@ -193,17 +207,14 @@ MP.load_mp_dir("objects/decks")
 MP.load_mp_dir("objects/jokers")
 MP.load_mp_dir("objects/consumables")
 MP.load_mp_dir("objects/challenges")
-MP.load_mp_dir("networking")
-MP.load_mp_dir("gamemodes")
-MP.load_mp_dir("rulesets")
-MP.load_mp_dir("function_overrides")
-MP.apply_rulesets()
 
 MP.load_mp_dir("ui")
 MP.load_mp_dir("ui/generic")
 MP.load_mp_dir("ui/game")
 MP.load_mp_dir("ui/lobby")
 MP.load_mp_dir("ui/main_menu")
+
+MP.load_mp_dir("function_overrides")
 
 MP.load_mp_file("misc/disable_restart.lua")
 MP.load_mp_file("misc/mod_hash.lua")
