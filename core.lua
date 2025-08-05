@@ -1,11 +1,32 @@
 MP = SMODS.current_mod
+G.FPS_CAP = 60
 MP.LOBBY = {
 	connected = false,
 	temp_code = "",
 	temp_seed = "",
 	code = nil,
 	type = "",
-	config = {}, -- Now set in MP.reset_lobby_config
+	config = {
+		gold_on_life_loss = true,
+		no_gold_on_round_loss = false,
+		death_on_round_loss = true,
+		different_seeds = false,
+		starting_lives = 4,
+		pvp_start_round = 2,
+		timer_base_seconds = 150,
+		timer_increment_seconds = 60,
+		showdown_starting_antes = 3,
+		ruleset = nil,
+		gamemode = "gamemode_mp_attrition",
+		custom_seed = "random",
+		different_decks = false,
+		back = "Red Deck",
+		sleeve = "sleeve_casl_none",
+		stake = 1,
+		challenge = "",
+		multiplayer_jokers = true,
+		timer = true,
+	},
 	deck = {
 		back = "Red Deck",
 		sleeve = "sleeve_casl_none",
@@ -13,14 +34,20 @@ MP.LOBBY = {
 		challenge = "",
 	},
 	username = "Guest",
+	ready_text = "Ready",
+	id = "",
 	blind_col = 1,
-	host = {},
-	guest = {},
-	is_host = false,
-	ready_to_start = false,
+	players = {},
+	isHost = false,
+}
+MP.FLAGS = {
+	join_pressed = false,
 }
 MP.GAME = {}
+MP.NETWORKING = {}
 MP.UI = {}
+MP.UI_UTILS = {}
+MP.UIDEF = {}
 MP.ACTIONS = {}
 MP.INTEGRATIONS = {
 	TheOrder = SMODS.Mods["Multiplayer"].config.integrations.TheOrder,
@@ -66,36 +93,6 @@ end
 MP.load_mp_file("misc/utils.lua")
 MP.load_mp_file("misc/insane_int.lua")
 
-function MP.reset_lobby_config(persist_ruleset_and_gamemode)
-	sendDebugMessage("Resetting lobby options", "MULTIPLAYER")
-	MP.LOBBY.config = {
-		gold_on_life_loss = true,
-		no_gold_on_round_loss = false,
-		death_on_round_loss = true,
-		different_seeds = false,
-		starting_lives = 4,
-		pvp_start_round = 2,
-		timer_base_seconds = 150,
-		timer_increment_seconds = 60,
-		pvp_countdown_seconds = 3,
-		showdown_starting_antes = 3,
-		ruleset = persist_ruleset_and_gamemode and MP.LOBBY.config.ruleset or "ruleset_mp_blitz",
-		gamemode = persist_ruleset_and_gamemode and MP.LOBBY.config.gamemode or "gamemode_mp_attrition",
-		weekly = nil,
-		custom_seed = "random",
-		different_decks = false,
-		back = "Red Deck",
-		sleeve = "sleeve_casl_none",
-		stake = 1,
-		challenge = "",
-		multiplayer_jokers = true,
-		timer = true,
-		timer_forgiveness = 0,
-		forced_config = false,
-	}
-end
-MP.reset_lobby_config()
-
 function MP.reset_game_states()
 	sendDebugMessage("Resetting game states", "MULTIPLAYER")
 	MP.GAME = {
@@ -108,7 +105,9 @@ function MP.reset_game_states()
 		comeback_bonus_given = true,
 		comeback_bonus = 0,
 		end_pvp = false,
-		enemy = {
+		next_coop_boss = nil,
+		players = {}, --[[@type table<string, {score: any, score_text: string, hands: number, location: string, skips: number, lives: number, sells: number, spent_last_shop: number, highest_score: any}>]]
+		--[[enemy = {
 			score = MP.INSANE_INT.empty(),
 			score_text = "0",
 			hands = 4,
@@ -119,7 +118,7 @@ function MP.reset_game_states()
 			sells_per_ante = {},
 			spent_in_shop = {},
 			highest_score = MP.INSANE_INT.empty(),
-		},
+		}, --]]
 		location = "loc_selecting",
 		next_blind_context = nil,
 		ante_key = tostring(math.random()),
@@ -133,7 +132,6 @@ function MP.reset_game_states()
 		highest_score = MP.INSANE_INT.empty(),
 		timer = MP.LOBBY.config.timer_base_seconds,
 		timer_started = false,
-		pvp_countdown = 0,
 		real_money = 0,
 		ce_cache = false,
 		furthest_blind = 0,

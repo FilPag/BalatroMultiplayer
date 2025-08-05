@@ -4,8 +4,6 @@
 -- the necessary modules again
 return [[
 local CONFIG_URL, CONFIG_PORT = ...
--- UPSTREAM CHANGE: Removed json requirement
-local json = require("json")
 
 require("love.filesystem")
 local socket = require("socket")
@@ -38,11 +36,6 @@ local uiToNetworkChannel = love.thread.getChannel("uiToNetwork")
 function Networking.connect()
 	-- TODO: Check first if Networking.Client is not null
 	-- and if it is, skip this function
-	-- UPSTREAM CHANGE: Removed socket connection management logic
-	if Networking.Client and not isSocketClosed then
-		Networking.Client:close()
-		isSocketClosed = true
-	end
 
 	SEND_THREAD_DEBUG_MESSAGE(
 		string.format("Attempting to connect to multiplayer server... URL: %s, PORT: %d", CONFIG_URL, CONFIG_PORT)
@@ -57,15 +50,7 @@ function Networking.connect()
 
 	if connectionResult ~= 1 then
 		SEND_THREAD_DEBUG_MESSAGE(string.format("%s", errorMessage))
-
-		-- UPSTREAM CHANGE: Changed to string format instead of JSON
-		local errorMsg = {
-			action = "error",
-			message = "Failed to connect to multiplayer server"
-		}
-
-		networkToUiChannel:push(json.encode(errorMsg))
-		-- UPSTREAM FORMAT: networkToUiChannel:push("action:error,message:Failed to connect to multiplayer server")
+		networkToUiChannel:push("action:error,message:Failed to connect to multiplayer server")
 	else
 		isSocketClosed = false
 	end
@@ -82,19 +67,11 @@ local mainThreadMessageQueue = function()
 		for _ = 1, requestsPerCycle do
 			local msg = uiToNetworkChannel:pop()
 			if msg then
-				-- UPSTREAM CHANGE: Changed message protocol logic
-				if msg == "connect" then
-					Networking.connect()
-				else
-					-- Send any non-empty message (JSON or otherwise) to the server
+				if msg:find("^action") ~= nil then
 					Networking.Client:send(msg .. "\n")
+				elseif msg == "connect" then
+					Networking.connect()
 				end
-				-- UPSTREAM FORMAT: 
-				-- if msg:find("^action") ~= nil then
-				--     Networking.Client:send(msg .. "\n")
-				-- elseif msg == "connect" then
-				--     Networking.connect()
-				-- end
 			else
 				-- If there are no more messages, yield
 				coroutine.yield()
@@ -149,12 +126,7 @@ local networkPacketQueue = function()
 					isRetry = false
 
 					timerCoroutine = coroutine.create(timer)
-
-					local disconnectedAction = {
-						action = "disconnected",
-						message = "Connection closed by server",
-					}
-					networkToUiChannel:push(json.encode(disconnectedAction))
+					networkToUiChannel:push("action:disconnected")
 				else
 					-- If there are no more packets, yield
 					coroutine.yield()
@@ -194,17 +166,13 @@ while true do
 
 			timerCoroutine = coroutine.create(timer)
 
-			local disconnectedAction = {
-				action = "disconnected",
-				message = "Connection closed due to inactivity",
-			}
-			networkToUiChannel:push(json.encode(disconnectedAction))
+			networkToUiChannel:push("action:disconnected")
 		end
 
 		if isRetry then
 			retryCount = retryCount + 1
 			-- Send keepAlive without cutting the line
-			uiToNetworkChannel:push(json.encode({ action = "keepAlive" }))
+			uiToNetworkChannel:push("action:keepAlive")
 
 			-- Restart the timer
 			timerCoroutine = coroutine.create(timer)
