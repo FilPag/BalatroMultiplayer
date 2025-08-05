@@ -1,207 +1,163 @@
--- Code for networking stuff that runs in a separate thread
-
--- Since threads run on a separate lua environment, we need to require
--- the necessary modules again
-return [[
+-- Multiplayer networking thread
 local CONFIG_URL, CONFIG_PORT = ...
 local json = require("json")
-
-require("love.filesystem")
 local socket = require("socket")
 
-local DEBUGGING = false
+-- State
+local client = nil
+local isConnected = false
+local shouldExit = false
+local lastKeepAlive = 0
 
--- Defining this again, for debugging this thread
-local function initializeThreadDebugSocketConnection()
-	CLIENT = socket.connect("localhost", 12346)
-	if not CLIENT then
-		sendWarnMessage("Failed to connect to the debug server", "MULTIPLAYER")
-	end
+-- Constants
+local KEEP_ALIVE_INTERVAL = 7
+local CONNECTION_TIMEOUT_INTERVAL = 30  -- Simplified: just disconnect after 30s of no activity
+local SLEEP_TIME = 0.2
+local CONNECTION_TIMEOUT = 10
+
+-- Channels
+local networkToUi = love.thread.getChannel("networkToUi")
+local uiToNetwork = love.thread.getChannel("uiToNetwork")
+
+-- Helper functions
+local function sendError(message)
+	local errorMsg = { action = "error", message = message }
+	networkToUi:push(json.encode(errorMsg))
 end
 
-function SEND_THREAD_DEBUG_MESSAGE(message)
-	if DEBUGGING and CLIENT and message then
-		CLIENT:send(message .. "\n")
-	end
+local function sendDisconnected(reason)
+	local disconnectedMsg = { action = "disconnected", message = reason }
+	networkToUi:push(json.encode(disconnectedMsg))
 end
 
-if DEBUGGING then
-	initializeThreadDebugSocketConnection()
+local function closeConnection()
+	if client then
+		client:close()
+		client = nil
+	end
+	isConnected = false
 end
 
-Networking = {}
-local isSocketClosed = true
-local networkToUiChannel = love.thread.getChannel("networkToUi")
-local uiToNetworkChannel = love.thread.getChannel("uiToNetwork")
-
-function Networking.connect()
-	-- TODO: Check first if Networking.Client is not null
-	-- and if it is, skip this function
-	if Networking.Client and not isSocketClosed then
-		Networking.Client:close()
-		isSocketClosed = true
+local function connect()
+	closeConnection()
+	
+	client = socket.tcp()
+	if not client then
+		sendError("Failed to create TCP socket")
+		return false
 	end
 
-	SEND_THREAD_DEBUG_MESSAGE(
-		string.format("Attempting to connect to multiplayer server... URL: %s, PORT: %d", CONFIG_URL, CONFIG_PORT)
-	)
-
-	Networking.Client = socket.tcp()
-	-- Allow for 10 seconds to reconnect
-	Networking.Client:settimeout(10)
-
-	Networking.Client:setoption("tcp-nodelay", true)
-	local connectionResult, errorMessage = Networking.Client:connect(CONFIG_URL, CONFIG_PORT) -- Not sure if I want to make these values public yet
-
-	if connectionResult ~= 1 then
-		SEND_THREAD_DEBUG_MESSAGE(string.format("%s", errorMessage))
-
-		local errorMsg = {
-			action = "error",
-			message = "Failed to connect to multiplayer server"
-		}
-
-		networkToUiChannel:push(json.encode(errorMsg))
-	else
-		isSocketClosed = false
+	-- Set short timeout for connection attempt to avoid blocking
+	client:settimeout(CONNECTION_TIMEOUT)
+	client:setoption("tcp-nodelay", true)
+	
+	local result, err = client:connect(CONFIG_URL, CONFIG_PORT)
+	if result ~= 1 then
+		sendError("Failed to connect to multiplayer server: " .. (err or "unknown error"))
+		closeConnection()
+		return false
 	end
-
-	Networking.Client:settimeout(0)
+	
+	client:settimeout(0) -- Non-blocking mode
+	isConnected = true
+	lastKeepAlive = os.time()
+	return true
 end
 
--- Check for messages from the main thread
-local mainThreadMessageQueue = function()
-	-- Executes a max of requestsPerCycle action requests
-	-- from the main thread and then yields
-	local requestsPerCycle = 25
-	while true do
-		for _ = 1, requestsPerCycle do
-			local msg = uiToNetworkChannel:pop()
-			if msg then
-				if msg == "connect" then
-					Networking.connect()
-				else
-					-- Send any non-empty message (JSON or otherwise) to the server
-					Networking.Client:send(msg .. "\n")
-				end
-			else
-				-- If there are no more messages, yield
-				coroutine.yield()
-			end
+local function sendMessage(message)
+	if not client or not isConnected then
+		return false
+	end
+	
+	local success, err = client:send(message .. "\n")
+	if not success then
+		if err == "closed" then
+			isConnected = false
 		end
-
-		coroutine.yield()
+		return false
 	end
+	return true
 end
-local mainThreadCoroutine = coroutine.create(mainThreadMessageQueue)
 
-local timer = function(time)
-	local init = os.time()
-	local diff = os.difftime(os.time(), init)
-	while diff < time do
-		coroutine.yield(diff)
-		diff = os.difftime(os.time(), init)
-	end
-end
-local timerCoroutine = coroutine.create(timer)
-
--- All values are in seconds
-local keepAliveInitialTimeout = 7
-local keepAliveRetryTimeout = 3
-local keepAliveRetryCount = 3
-
-local isRetry = false
-local retryCount = 0
-
--- Check for network packets
-local networkPacketQueue = function()
-	local packetsPerCycle = 25
-	while true do
-		if Networking.Client then
-			-- Tries to fetch a packet a max of packetsPerCycle times
-			-- and then yields
-			for _ = 1, packetsPerCycle do
-				local data, error, partial = Networking.Client:receive()
-				if data then
-					-- Packet arrived, reset retries
-					isRetry = false
-					retryCount = 0
-					-- Also reset timer
-					timerCoroutine = coroutine.create(timer)
-
-					-- For now, we just send the string as is to the main thread
-					networkToUiChannel:push(data)
-				elseif error == "close" then
-					-- Handle connection closed gracefully
-					isSocketClosed = true
-					retryCount = 0
-					isRetry = false
-
-					timerCoroutine = coroutine.create(timer)
-
-					local disconnectedAction = {
-						action = "disconnected",
-						message = "Connection closed by server",
-					}
-					networkToUiChannel:push(json.encode(disconnectedAction))
-				else
-					-- If there are no more packets, yield
-					coroutine.yield()
-				end
-			end
-
-			coroutine.yield()
-		end
-
-		coroutine.yield()
-	end
-end
-local networkCoroutine = coroutine.create(networkPacketQueue)
-
--- Checks for network packets,
--- then sends them to the main thread
--- then advances timers
--- and then sleeps
-while true do
-	coroutine.resume(mainThreadCoroutine)
-	coroutine.resume(networkCoroutine)
-
-	-- Run Timer
-	if not isSocketClosed and coroutine.status(timerCoroutine) ~= "dead" then
-		coroutine.resume(timerCoroutine, keepAliveInitialTimeout)
-	elseif not isSocketClosed then
-		-- Timer triggered
-		isRetry = true
-
-		if retryCount > keepAliveRetryCount then
-			Networking.Client:close()
-
-			-- Connection closed, restart everything
-			isSocketClosed = true
-			retryCount = 0
-			isRetry = false
-
-			timerCoroutine = coroutine.create(timer)
-
-			local disconnectedAction = {
-				action = "disconnected",
-				message = "Connection closed due to inactivity",
-			}
-			networkToUiChannel:push(json.encode(disconnectedAction))
-		end
-
-		if isRetry then
-			retryCount = retryCount + 1
-			-- Send keepAlive without cutting the line
-			uiToNetworkChannel:push(json.encode({ action = "keepAlive" }))
-
-			-- Restart the timer
-			timerCoroutine = coroutine.create(timer)
-			coroutine.resume(timerCoroutine, keepAliveRetryTimeout)
+local function processMainThreadMessages()
+	-- Process multiple messages per cycle to prevent queue buildup
+	local maxMessages = 10
+	local processed = 0
+	
+	while processed < maxMessages do
+		local msg = uiToNetwork:pop()
+		if not msg then break end
+		
+		processed = processed + 1
+		
+		if msg == "connect" then
+			connect()
+		elseif msg == "disconnect" then
+			closeConnection()
+		elseif msg == "exit" then
+			closeConnection()
+			shouldExit = true
+			break -- Exit immediately on exit command
+		else
+			sendMessage(msg)
 		end
 	end
-
-	-- Sleeps for 200 milliseconds
-	socket.sleep(0.2)
 end
-]]
+
+local function processNetworkMessages()
+	if not client or not isConnected then return end
+	
+	-- Process multiple packets per cycle to prevent message buildup
+	local maxPackets = 25
+	local processed = 0
+	
+	while processed < maxPackets do
+		local data, err = client:receive()
+		if data then
+			lastKeepAlive = os.time()
+			networkToUi:push(data)
+			processed = processed + 1
+		elseif err == "closed" then
+			isConnected = false
+			sendDisconnected("Connection closed by server")
+			break
+		else
+			-- No more data available (would block), exit loop
+			break
+		end
+	end
+end
+
+local function handleKeepAlive()
+	if not isConnected then return end
+	
+	local currentTime = os.time()
+	local timeSinceLastMessage = currentTime - lastKeepAlive
+	
+	-- Send keep-alive every KEEP_ALIVE_INTERVAL seconds
+	if timeSinceLastMessage >= KEEP_ALIVE_INTERVAL then
+		local keepAliveMsg = json.encode({ action = "k" })
+		
+		if sendMessage(keepAliveMsg) then
+			lastKeepAlive = currentTime
+		else
+			-- Failed to send, connection is probably dead
+			closeConnection()
+			sendDisconnected("Failed to send keep-alive")
+		end
+	end
+	
+	-- Disconnect if no activity for too long
+	if timeSinceLastMessage >= CONNECTION_TIMEOUT_INTERVAL then
+		closeConnection()
+		sendDisconnected("Connection closed due to inactivity")
+	end
+end
+
+-- Main loop
+while not shouldExit do
+	processMainThreadMessages()
+	processNetworkMessages()
+	handleKeepAlive()
+	socket.sleep(SLEEP_TIME)
+end

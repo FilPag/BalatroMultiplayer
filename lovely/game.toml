@@ -121,11 +121,11 @@ times = 1
 target = 'functions/state_events.lua'
 pattern = '''local dollars = 0
 
-if G.GAME.chips - G.GAME.blind.chips >= 0 then'''
+if G.GAME.chips - G.GAME.blind.chips >= to_big(0) then'''
 position = 'at'
 payload = '''local dollars = 0
 
-if G.GAME.chips - G.GAME.blind.chips >= 0 or MP.is_online_boss() then'''
+if G.GAME.chips - G.GAME.blind.chips >= to_big(0) or MP.is_online_boss() then'''
 match_indent = true
 times = 1
 
@@ -151,5 +151,14 @@ payload = '''if MP.LOBBY.code and MP.is_online_boss() then
     end
   }))
 end'''
+match_indent = true
+times = 1
+
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = '''self.chips = get_blind_amount(G.GAME.round_resets.ante)*self.mult*G.GAME.starting_params.ante_scaling'''
+position = 'after'
+payload = '''self.chips = MP.UI_UTILS.get_mp_blind_amount(blind, self.chips)'''
 match_indent = true
 times = 1

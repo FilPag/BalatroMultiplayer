@@ -3,9 +3,9 @@ local unpack = table.unpack or unpack -- this is to support both Lua 5.1 and 5.2
 
 local function all_players_same_order_config(players)
   if not players or #players == 0 then return true end
-  local first_order = MP.UTILS.parse_Hash(players[1].modHash).theOrder
+  local first_order = MP.UTILS.parse_Hash(players[1].profile.mod_Hash).theOrder
   for i = 2, #players do
-    local p_order = MP.UTILS.parse_Hash(players[i].modHash).theOrder
+    local p_order = MP.UTILS.parse_Hash(players[i].profile.mod_hash).theOrder
     if p_order ~= first_order then
       return false
     end
@@ -37,8 +37,8 @@ local function get_lobby_text()
   end
 
   for i, player in ipairs(players) do
-    if player.id ~= MP.LOBBY.id then
-      local msg, col = check_player_configs(player)
+    if player.profile.id ~= MP.LOBBY.id then
+      local msg, col = check_player_configs(player.lobby_state)
       if msg then return msg, col end
     end
   end
@@ -47,26 +47,8 @@ local function get_lobby_text()
     return localize("k_warning_unlock_profile"), SMODS.Gradients.warning_text
   end
 
-  -- Remove the mod hash warning from main warning display area since it's shown
-  -- alongside critical warnings (cheating, compatibility issues). This makes users
-  -- learn to ignore all warnings. Instead, we should indicate hash differences
-  -- through other UI elements like colored usernames or separate indicators.
-  -- The hash check itself remains useful for debugging but shouldn't be presented
-  -- as a blocking warning alongside serious compatibility issues.
-  -- steph
-
-  -- TODO : Revisit this logic if we want to reintroduce mod hash warnings as colour or something
-  --[[if players and #players > 1 then
-		local modHash = players[1].modHash
-		for i = 2, #players do
-			if players[i].modHash ~= modHash then
-				return localize("k_mod_hash_warning"), G.C.UI.TEXT_LIGHT
-			end
-		end
-	end --]]
-
   -- ???: What is this supposed to accomplish?
-  if MP.LOBBY.username == "Guest" then
+  if MP.username == "Guest" then
     return localize("k_set_name"), G.C.UI.TEXT_LIGHT
   end
 
@@ -75,8 +57,7 @@ end
 
 local function create_player_nodes(players, text_scale)
   local player_nodes = {}
-  if #players == 0 then return player_nodes end
-  for i, player in ipairs(players or {}) do
+  for i, player in pairs(players) do
     local player_row = {
       n = G.UIT.R,
       config = {
@@ -87,7 +68,7 @@ local function create_player_nodes(players, text_scale)
         {
           n = G.UIT.T,
           config = {
-            ref_table = player,
+            ref_table = player.profile,
             ref_value = "username",
             shadow = true,
             scale = text_scale * 0.8,
@@ -104,11 +85,11 @@ local function create_player_nodes(players, text_scale)
         },
       },
     }
-    if player.modHash then
+    if player.profile.mod_hash then
       table.insert(player_row.nodes, UIBox_button({
         id = "player_hash_" .. tostring(i),
         button = "view_player_hash",
-        label = { hash(player.modHash) },
+        label = { hash(player.profile.mod_hash) },
         minw = 0.75,
         minh = 0.3,
         scale = 0.25,
@@ -180,7 +161,7 @@ function G.UIDEF.create_UIBox_lobby_menu()
                 },
                 nodes = {
                   UIBox_button({
-                    button = "lobby_options",
+                    button = "open_lobby_options",
                     colour = G.C.ORANGE,
                     minw = 3.15,
                     minh = 1.35,
@@ -198,7 +179,7 @@ function G.UIDEF.create_UIBox_lobby_menu()
                     },
                     nodes = {},
                   },
-                  MP.LOBBY.isHost and MP.UI.Disableable_Button({
+                  MP.LOBBY.is_host and MP.UI.Disableable_Button({
                     id = "lobby_choose_deck",
                     button = "lobby_choose_deck",
                     colour = G.C.PURPLE,
@@ -221,7 +202,7 @@ function G.UIDEF.create_UIBox_lobby_menu()
                     scale = text_scale * 1.2,
                     col = true,
                     enabled_ref_table = MP.LOBBY,
-                    enabled_ref_value = "isHost",
+                    enabled_ref_value = "is_host",
                   }) or MP.UI.Disableable_Button({
                     id = "lobby_choose_deck",
                     button = "lobby_choose_deck",

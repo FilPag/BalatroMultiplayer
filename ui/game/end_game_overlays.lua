@@ -11,6 +11,7 @@ function create_UIBox_game_over()
     { card_limit = G.GAME.starting_params.joker_slots, type = "joker", highlight_limit = 1 }
   )
 
+  G.GAME.seeded = false
   local eased_red = copy_table(G.GAME.round_resets.ante <= G.GAME.win_ante and G.C.RED or G.C.BLUE)
   eased_red[4] = 0
   ease_value(eased_red, 4, 0.8, nil, nil, true)
@@ -234,7 +235,7 @@ function create_UIBox_game_over()
                     nodes = {
                       create_UIBox_round_scores_row("furthest_ante", G.C.FILTER),
                       create_UIBox_round_scores_row("furthest_round", G.C.FILTER),
-                      create_UIBox_round_scores_row("seed", G.C.WHITE),
+                      create_UIBox_round_scores_row("seed"),
                       UIBox_button({
                         button = "copy_seed",
                         label = { localize("b_copy") },
@@ -321,6 +322,7 @@ function create_UIBox_win()
     G.FUNCS.load_end_game_jokers()
   end
 
+  G.GAME.seeded = false
   local eased_green = copy_table(G.C.GREEN)
   eased_green[4] = 0
   ease_value(eased_green, 4, 0.5, nil, nil, true)

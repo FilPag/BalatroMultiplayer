@@ -38,8 +38,9 @@ SMODS.Joker({
 			if G.STAGE == G.STAGES.RUN then
 				local enemy = MP.UTILS.get_nemesis()
 				if not enemy then return end
+				local game_state = enemy.game_state
 				card.ability.extra.x_mult = math.max(
-					math.min(1 + (enemy.hands_left * card.ability.extra.x_mult_gain), card.ability.extra.max_x_mult),
+					math.min(1 + (game_state.hands_left * card.ability.extra.x_mult_gain), card.ability.extra.max_x_mult),
 					1
 				)
 			end

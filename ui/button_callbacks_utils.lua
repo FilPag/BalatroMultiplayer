@@ -8,7 +8,7 @@ local exit_overlay_menu_ref = G.FUNCS.exit_overlay_menu
 function G.FUNCS.exit_overlay_menu(self)
   -- Saves username if user presses ESC instead of Enter
   if G.OVERLAY_MENU and G.OVERLAY_MENU:get_UIE_by_ID("username_input_box") ~= nil then
-    MP.UTILS.save_username(MP.LOBBY.username)
+    MP.UTILS.save_username(MP.username)
   end
 
   exit_overlay_menu_ref(self)
@@ -17,7 +17,7 @@ end
 local mods_button_ref = G.FUNCS.mods_button
 function G.FUNCS.mods_button(arg_736_0)
   if G.OVERLAY_MENU and G.OVERLAY_MENU:get_UIE_by_ID("username_input_box") ~= nil then
-    MP.UTILS.save_username(MP.LOBBY.username)
+    MP.UTILS.save_username(MP.username)
   end
 
   mods_button_ref(arg_736_0)
