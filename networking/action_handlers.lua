@@ -261,7 +261,8 @@ local function action_end_pvp(won)
 end
 
 local function action_win_game()
-	MP.ACTIONS.sendPlayerDeck()
+	MP.ACTIONS.send_player_deck()
+	MP.ACTIONS.send_player_jokers()
 	G.E_MANAGER:add_event(Event({
 		no_delete = true,
 		trigger = "immediate",
@@ -280,7 +281,8 @@ local function action_win_game()
 end
 
 local function action_lose_game()
-	MP.ACTIONS.sendPlayerDeck()
+	MP.ACTIONS.send_player_deck()
+	MP.ACTIONS.send_player_jokers()
 	G.E_MANAGER:add_event(Event({
 		no_delete = true,
 		trigger = "immediate",
@@ -572,29 +574,10 @@ function G.FUNCS.load_end_game_jokers()
 	end
 end
 
-local function action_receive_end_game_jokers(keys)
-	MP.end_game_jokers_payload = keys
+local function action_receive_player_jokers(player_id, jokers)
+	MP.end_game_jokers_payload = jokers
 	MP.end_game_jokers_received = true
 	G.FUNCS.load_end_game_jokers()
-end
-
-local function action_get_end_game_jokers()
-	if not G.jokers or not G.jokers.cards then
-		Client.send(json.encode({ action = "receiveEndGameJokers", keys = "" }))
-		return
-	end
-
-	-- Log the jokers
-	local jokers_str = ""
-	for _, card in pairs(G.jokers.cards) do
-		jokers_str = jokers_str .. ";" .. MP.UTILS.joker_to_string(card)
-	end
-	sendTraceMessage(string.format("Sending end game jokers: %s", jokers_str), "MULTIPLAYER")
-
-	local jokers_save = G.jokers:save()
-	local jokers_encoded = MP.UTILS.str_pack_and_encode(jokers_save)
-
-	Client.send(json.encode({ action = "receiveEndGameJokers", keys = jokers_encoded }))
 end
 
 function G.FUNCS.load_player_deck(player)
@@ -719,8 +702,7 @@ local action_table = {
 	spentLastShop = function(parsedAction) action_spent_last_shop(parsedAction.player_id, parsedAction.amount) end,
 	magnet = function() action_magnet() end,
 	magnetResponse = function(parsedAction) action_magnet_response(parsedAction.key) end,
-	getEndGameJokers = function() action_get_end_game_jokers() end,
-	receiveEndGameJokers = function(parsedAction) action_receive_end_game_jokers(parsedAction.keys) end,
+	receivePlayerJokers= function(parsedAction) action_receive_player_jokers(parsedAction.player_id, parsedAction.jokers) end,
 	receivePlayerDeck = function(parsedAction) action_receive_player_deck(parsedAction.player_id , parsedAction.deck) end,
 	startAnteTimer = function(parsedAction) MP.action_start_ante_timer(parsedAction.time) end,
 	pauseAnteTimer = function(parsedAction) MP.action_pause_ante_timer(parsedAction.time) end,

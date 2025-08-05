@@ -316,11 +316,7 @@ function create_UIBox_win()
     { card_limit = G.GAME.starting_params.joker_slots, type = "joker", highlight_limit = 1 }
   )
 
-  if not MP.end_game_jokers_received then
-    MP.ACTIONS.get_end_game_jokers()
-  else
-    G.FUNCS.load_end_game_jokers()
-  end
+  -- TODO Jokers are not being deisplayed correctly
 
   G.GAME.seeded = false
   local eased_green = copy_table(G.C.GREEN)
