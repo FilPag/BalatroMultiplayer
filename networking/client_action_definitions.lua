@@ -145,6 +145,25 @@ function MP.ACTIONS.set_Boss(boss, chips)
   Client.send(json.encode({ action = "setBossBlind", key = boss, chips = tostring(chips) }))
 end
 
+function MP.ACTIONS.send_player_jokers()
+	if not G.jokers or not G.jokers.cards then
+		Client.send(json.encode({ action = "sendPlayerJokers", jokers = "" }))
+		return
+	end
+
+	-- Log the jokers
+	local jokers_str = ""
+	for _, card in pairs(G.jokers.cards) do
+		jokers_str = jokers_str .. ";" .. MP.UTILS.joker_to_string(card)
+	end
+	sendTraceMessage(string.format("Sending end game jokers: %s", jokers_str), "MULTIPLAYER")
+
+	local jokers_save = G.jokers:save()
+	local jokers_encoded = MP.UTILS.str_pack_and_encode(jokers_save)
+
+	Client.send(json.encode({ action = "sendPlayerJokers", jokers= jokers_encoded }))
+end
+
 function MP.ACTIONS.set_ante(ante)
   Client.send(json.encode({ action = "setAnte", ante = ante }))
 end
@@ -222,11 +241,7 @@ function MP.ACTIONS.magnet_response(key)
   Client.send(json.encode({ action = "magnetResponse", key = key }))
 end
 
-function MP.ACTIONS.get_end_game_jokers()
-  Client.send(json.encode({ action = "getEndGameJokers" }))
-end
-
-function MP.ACTIONS.sendPlayerDeck()
+function MP.ACTIONS.send_player_deck()
   local deck_str = ""
   for _, card in ipairs(G.playing_cards) do
     deck_str = deck_str .. ";" .. MP.UTILS.card_to_string(card)
