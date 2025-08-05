@@ -22,32 +22,24 @@ end
 
 G.FUNCS.change_showdown_starting_antes = function(args)
   MP.LOBBY.config.showdown_starting_antes = args.to_val
-  MP.ACTIONS.lobby_options()
-end
-
-function G.FUNCS.toggle_different_seeds()
-  G.FUNCS.lobby_options()
-  MP.ACTION.lobby_options()
 end
 
 G.FUNCS.change_starting_lives = function(args)
   MP.LOBBY.config.starting_lives = args.to_val
-  MP.ACTIONS.lobby_options()
 end
 
 G.FUNCS.change_starting_pvp_round = function(args)
   MP.LOBBY.config.pvp_start_round = args.to_val
-  MP.ACTIONS.lobby_options()
 end
 
 G.FUNCS.change_timer_base_seconds = function(args)
   MP.LOBBY.config.timer_base_seconds = tonumber(args.to_val:sub(1, -2))
-  MP.ACTIONS.lobby_options()
+  MP.ACTIONS.update_lobby_options()
 end
 
 G.FUNCS.change_timer_increment_seconds = function(args)
   MP.LOBBY.config.timer_increment_seconds = tonumber(args.to_val:sub(1, -2))
-  MP.ACTION.lobby_options()
+  MP.ACTIONS.update_lobby_options()
 end
 
 function G.FUNCS.continue_in_singleplayer(e)
@@ -93,8 +85,7 @@ function G.FUNCS.custom_seed_overlay(e)
 end
 
 function G.FUNCS.custom_seed_reset(e)
-  MP.LOBBY.config.custom_seed = "random"
-  MP.ACTIONS.lobby_options()
+  MP.LOBBY.config.custom_seed = generate_starting_seed()
 end
 
 function G.FUNCS.display_custom_seed(e)
@@ -165,7 +156,9 @@ function G.FUNCS.join_lobby(e)
 end
 
 function G.FUNCS.lobby_choose_deck(e)
-  MP.ACTIONS.send_lobby_ready(false)
+  if not MP.LOBBY.is_host then
+    MP.ACTIONS.send_lobby_ready(false)
+  end
   G.FUNCS.setup_run(e)
   if G.OVERLAY_MENU then
     G.OVERLAY_MENU:get_UIE_by_ID("run_setup_seed"):remove()
@@ -179,11 +172,10 @@ function G.FUNCS.lobby_leave(e)
   G.STATE = G.STATES.MENU
 end
 
-function G.FUNCS.lobby_options(e)
-  MP.ACTIONS.send_lobby_ready(false)
-  G.FUNCS.overlay_menu({
-    definition = G.UIDEF.create_UIBox_lobby_options(),
-  })
+function G.FUNCS.open_lobby_options(e)
+	G.FUNCS.overlay_menu({
+		definition = G.UIDEF.create_UIBox_lobby_options(),
+	})
 end
 
 function G.FUNCS.lobby_ready_up(e)
@@ -234,11 +226,8 @@ function G.FUNCS.mp_toggle_ready(e)
   MP.GAME.ready_blind_text = MP.GAME.ready_blind and localize("b_unready") or localize("b_ready")
 
   if MP.GAME.ready_blind then
-    if MP.UTILS.is_coop() then
-      MP.ACTIONS.set_location("loc_ready_boss")
-    else
-      MP.ACTIONS.set_location("loc_ready_pvp")
-    end
+    local location = MP.UTILS.is_coop() and "loc_ready_boss" or "loc_ready_pvp"
+    MP.ACTIONS.set_location(location)
     MP.ACTIONS.ready_blind(e)
   else
     MP.ACTIONS.set_location("loc_selecting")
@@ -330,14 +319,14 @@ function G.FUNCS.start_run(e, args)
         )
         chosen_stake = MP.DECK.MAX_STAKE
       end
-      if MP.LOBBY.isHost then
+      if MP.LOBBY.is_host then
         MP.LOBBY.config.back = args.challenge and "Challenge Deck"
             or (args.deck and args.deck.name)
             or G.GAME.viewed_back.name
         MP.LOBBY.config.stake = chosen_stake
         MP.LOBBY.config.sleeve = G.viewed_sleeve
         MP.LOBBY.config.challenge = args.challenge and args.challenge.id or ""
-        MP.ACTIONS.lobby_options()
+        MP.ACTIONS.update_lobby_options()
       end
       MP.LOBBY.deck.back = args.challenge and "Challenge Deck"
           or (args.deck and args.deck.name)
@@ -359,8 +348,7 @@ function G.FUNCS.start_run(e, args)
 end
 
 function G.FUNCS.toggle_lobby_ready(e)
-  local player = MP.UTILS.get_local_player_lobby_data()
-  MP.ACTIONS.send_lobby_ready(not player.isReady)
+  MP.ACTIONS.send_lobby_ready(not MP.LOBBY.local_player.lobby_state.is_ready)
 end
 
 function G.FUNCS.view_code(e)

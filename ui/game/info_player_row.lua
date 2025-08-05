@@ -117,7 +117,7 @@ function MP.UI.create_UIBox_player_row(username, player_state, colour)
           {
             n = G.UIT.T,
             config = {
-              text = MP.INSANE_INT.to_string(player_state.highest_score),
+              text = number_format(player_state.highest_score),
               scale = 0.45,
               colour = G.C.FILTER,
               shadow = true,

@@ -1,4 +1,42 @@
 MP = SMODS.current_mod
+local NativeFS = require("nativefs")
+function MP.load_mp_file(file)
+	local chunk, err = SMODS.load_file(file, "Multiplayer")
+	if chunk then
+		local ok, func = pcall(chunk)
+		if ok then
+			return func
+		else
+			sendWarnMessage("Failed to process file: " .. func, "MULTIPLAYER")
+		end
+	else
+		sendWarnMessage("Failed to find or compile file: " .. tostring(err), "MULTIPLAYER")
+	end
+	return nil
+end
+
+function MP.load_mp_dir(directory)
+	local files = NFS.getDirectoryItems(MP.path .. "/" .. directory)
+	local regular_files = {}
+
+	for _, filename in ipairs(files) do
+		local file_path = directory .. "/" .. filename
+		if file_path:match(".lua$") then
+			if filename:match("^_") then
+				MP.load_mp_file(file_path)
+			else
+				table.insert(regular_files, file_path)
+			end
+		end
+	end
+
+	for _, file_path in ipairs(regular_files) do
+		MP.load_mp_file(file_path)
+	end
+end
+
+MP.load_mp_dir("compatibility")
+
 G.FPS_CAP = 60
 MP.LOBBY = {
 	connected = false,
@@ -35,10 +73,9 @@ MP.LOBBY = {
 	},
 	username = "Guest",
 	ready_text = "Ready",
-	id = "",
 	blind_col = 1,
 	players = {},
-	isHost = false,
+	local_player = {},
 }
 MP.FLAGS = {
 	join_pressed = false,
@@ -52,43 +89,9 @@ MP.ACTIONS = {}
 MP.INTEGRATIONS = {
 	TheOrder = SMODS.Mods["Multiplayer"].config.integrations.TheOrder,
 }
-MP.player_state_manager = SMODS.load_file('networking/player_state_manager.lua', 'Multiplayer')()
+MP.UI_EVENT_HANDLER = SMODS.load_file('networking/ui_event_handler.lua', 'Multiplayer')()
+MP.STATE_UPDATER = SMODS.load_file('networking/state_updater.lua', 'Multiplayer')()
 G.C.MULTIPLAYER = HEX("AC3232")
-
-function MP.load_mp_file(file)
-	local chunk, err = SMODS.load_file(file, "Multiplayer")
-	if chunk then
-		local ok, func = pcall(chunk)
-		if ok then
-			return func
-		else
-			sendWarnMessage("Failed to process file: " .. func, "MULTIPLAYER")
-		end
-	else
-		sendWarnMessage("Failed to find or compile file: " .. tostring(err), "MULTIPLAYER")
-	end
-	return nil
-end
-
-function MP.load_mp_dir(directory)
-	local files = NFS.getDirectoryItems(MP.path .. "/" .. directory)
-	local regular_files = {}
-
-	for _, filename in ipairs(files) do
-		local file_path = directory .. "/" .. filename
-		if file_path:match(".lua$") then
-			if filename:match("^_") then
-				MP.load_mp_file(file_path)
-			else
-				table.insert(regular_files, file_path)
-			end
-		end
-	end
-
-	for _, file_path in ipairs(regular_files) do
-		MP.load_mp_file(file_path)
-	end
-end
 
 MP.load_mp_file("misc/utils.lua")
 MP.load_mp_file("misc/insane_int.lua")
@@ -106,19 +109,6 @@ function MP.reset_game_states()
 		comeback_bonus = 0,
 		end_pvp = false,
 		next_coop_boss = nil,
-		players = {}, --[[@type table<string, {score: any, score_text: string, hands: number, location: string, skips: number, lives: number, sells: number, spent_last_shop: number, highest_score: any}>]]
-		--[[enemy = {
-			score = MP.INSANE_INT.empty(),
-			score_text = "0",
-			hands = 4,
-			location = localize("loc_selecting"),
-			skips = 0,
-			lives = MP.LOBBY.config.starting_lives,
-			sells = 0,
-			sells_per_ante = {},
-			spent_in_shop = {},
-			highest_score = MP.INSANE_INT.empty(),
-		}, --]]
 		location = "loc_selecting",
 		next_blind_context = nil,
 		ante_key = tostring(math.random()),
@@ -127,7 +117,7 @@ function MP.reset_game_states()
 		misprint_display = "",
 		spent_total = 0,
 		spent_before_shop = 0,
-		highest_score = MP.INSANE_INT.empty(),
+		highest_score = to_big(0),
 		timer = MP.LOBBY.config.timer_base_seconds,
 		timer_started = false,
 		real_money = 0,
@@ -152,8 +142,13 @@ end
 
 MP.reset_game_states()
 
-MP.LOBBY.username = MP.UTILS.get_username()
-MP.LOBBY.blind_col = MP.UTILS.get_blind_col()
+MP.username = MP.UTILS.get_username()
+MP.blind_col = MP.UTILS.get_blind_col()
+
+for _, player in pairs(MP.LOBBY.players) do
+	player.deck_str = nil
+	player.deck_received = false
+end
 
 if not SMODS.current_mod.lovely then
 	G.E_MANAGER:add_event(Event({
@@ -183,7 +178,6 @@ SMODS.Atlas({
 	py = 34,
 })
 
-MP.load_mp_dir("compatibility")
 
 MP.load_mp_dir("objects/editions")
 MP.load_mp_dir("objects/enhancements")
@@ -193,7 +187,6 @@ MP.load_mp_dir("objects/decks")
 MP.load_mp_dir("objects/jokers")
 MP.load_mp_dir("objects/consumables")
 MP.load_mp_dir("objects/challenges")
-MP.load_mp_dir("networking")
 MP.load_mp_dir("gamemodes")
 MP.load_mp_dir("rulesets")
 MP.load_mp_dir("function_overrides")
@@ -205,10 +198,69 @@ MP.load_mp_dir("ui/game")
 MP.load_mp_dir("ui/lobby")
 MP.load_mp_dir("ui/main_menu")
 
+MP.load_mp_file("networking/action_handlers.lua")
+MP.load_mp_file("networking/client_action_definitions.lua")
+
 MP.load_mp_file("misc/disable_restart.lua")
 MP.load_mp_file("misc/mod_hash.lua")
 
-local SOCKET = MP.load_mp_file("networking/socket.lua")
-MP.NETWORKING_THREAD = love.thread.newThread(SOCKET)
+local restart_game_ref = SMODS.restart_game
+function SMODS.restart_game()
+  sendDebugMessage("Restarting game from Multiplayer Mod", "MULTIPLAYER")
+  
+  -- Safely send disconnect/exit commands
+  if MP.NETWORKING_THREAD and MP.NETWORKING_THREAD:isRunning() then
+    local uiToNetworkChannel = love.thread.getChannel("uiToNetwork")
+    uiToNetworkChannel:push("disconnect")
+    uiToNetworkChannel:push("exit")
+    
+    -- Wait with timeout to prevent infinite hanging
+    local start_time = love.timer.getTime()
+    local timeout = 5 -- 5 seconds timeout
+    
+    while MP.NETWORKING_THREAD:isRunning() and (love.timer.getTime() - start_time) < timeout do
+      love.timer.sleep(0.1)
+    end
+    
+    -- Force kill if still running
+    if MP.NETWORKING_THREAD:isRunning() then
+      sendDebugMessage("Force killing networking thread after timeout", "MULTIPLAYER")
+      -- Note: Lua threads can't be force-killed, but we can proceed anyway
+    end
+  end
+  
+  restart_game_ref()
+end
+
+-- Detect OS and use appropriate path separator
+local path_separator = package.config:sub(1,1) -- Gets the first character which is the path separator
+local file_path = SMODS.current_mod.path .. 'networking' .. path_separator .. 'socket.lua'
+local thread_code = NativeFS.read(file_path)
+MP.NETWORKING_THREAD = love.thread.newThread(thread_code)
+
+love.errorhandler_ref = love.errorhandler
+function love.errorhandler(msg, traceback)
+    if MP.NETWORKING_THREAD then
+        local uiToNetworkChannel = love.thread.getChannel("uiToNetwork")
+        uiToNetworkChannel:push("exit")
+        
+        -- Wait with timeout to prevent infinite hanging
+        local start_time = love.timer.getTime()
+        local timeout = 3 -- 3 seconds timeout
+        
+        while MP.NETWORKING_THREAD:isRunning() and (love.timer.getTime() - start_time) < timeout do
+            love.timer.sleep(0.1)
+        end
+        
+        if MP.NETWORKING_THREAD:isRunning() then
+            print("Network thread did not exit gracefully within timeout")
+        else
+            print("Network thread safely stopped")
+        end
+    end
+    return love.errorhandler_ref(msg, traceback)
+end
+
+
 MP.NETWORKING_THREAD:start(SMODS.Mods["Multiplayer"].config.server_url, SMODS.Mods["Multiplayer"].config.server_port)
 MP.ACTIONS.connect()

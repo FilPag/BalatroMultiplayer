@@ -8,11 +8,12 @@ function G.UIDEF.create_UIBox_lobby_options()
 			{
 				n = G.UIT.R,
 				config = {
+					id = "lobby_options",
 					padding = 0,
 					align = "cm",
 				},
 				nodes = {
-					not MP.LOBBY.isHost and {
+					not MP.LOBBY.is_host and {
 						n = G.UIT.R,
 						config = {
 							padding = 0.3,
@@ -60,11 +61,10 @@ function G.UIDEF.create_UIBox_lobby_options()
 													Disableable_Toggle({
 														id = "gold_on_life_loss_toggle",
 														enabled_ref_table = MP.LOBBY,
-														enabled_ref_value = "isHost",
+														enabled_ref_value = "is_host",
 														label = localize("b_opts_cb_money"),
 														ref_table = MP.LOBBY.config,
 														ref_value = "gold_on_life_loss",
-														callback = MP.ACTIONS.lobby_options,
 													}),
 												},
 											},
@@ -78,11 +78,10 @@ function G.UIDEF.create_UIBox_lobby_options()
 													Disableable_Toggle({
 														id = "no_gold_on_round_loss_toggle",
 														enabled_ref_table = MP.LOBBY,
-														enabled_ref_value = "isHost",
+														enabled_ref_value = "is_host",
 														label = localize("b_opts_no_gold_on_loss"),
 														ref_table = MP.LOBBY.config,
 														ref_value = "no_gold_on_round_loss",
-														callback = MP.ACTIONS.lobby_options,
 													}),
 												},
 											},
@@ -96,11 +95,10 @@ function G.UIDEF.create_UIBox_lobby_options()
 													Disableable_Toggle({
 														id = "death_on_round_loss_toggle",
 														enabled_ref_table = MP.LOBBY,
-														enabled_ref_value = "isHost",
+														enabled_ref_value = "is_host",
 														label = localize("b_opts_death_on_loss"),
 														ref_table = MP.LOBBY.config,
 														ref_value = "death_on_round_loss",
-														callback = MP.ACTIONS.lobby_options,
 													}),
 												},
 											},
@@ -114,11 +112,13 @@ function G.UIDEF.create_UIBox_lobby_options()
 													Disableable_Toggle({
 														id = "different_seeds_toggle",
 														enabled_ref_table = MP.LOBBY,
-														enabled_ref_value = "isHost",
+														enabled_ref_value = "is_host",
 														label = localize("b_opts_diff_seeds"),
 														ref_table = MP.LOBBY.config,
 														ref_value = "different_seeds",
-														callback = toggle_different_seeds,
+														callback = function() 
+															G.FUNCS.open_lobby_options()
+														end,
 													}),
 												},
 											},
@@ -132,11 +132,10 @@ function G.UIDEF.create_UIBox_lobby_options()
 													Disableable_Toggle({
 														id = "different_decks_toggle",
 														enabled_ref_table = MP.LOBBY,
-														enabled_ref_value = "isHost",
+														enabled_ref_value = "is_host",
 														label = localize("b_opts_player_diff_deck"),
 														ref_table = MP.LOBBY.config,
 														ref_value = "different_decks",
-														callback = MP.ACTIONS.lobby_options,
 													}),
 												},
 											},
@@ -150,11 +149,10 @@ function G.UIDEF.create_UIBox_lobby_options()
 													Disableable_Toggle({
 														id = "multiplayer_jokers_toggle",
 														enabled_ref_table = MP.LOBBY,
-														enabled_ref_value = "isHost",
+														enabled_ref_value = "is_host",
 														label = localize("b_opts_multiplayer_jokers"),
 														ref_table = MP.LOBBY.config,
 														ref_value = "multiplayer_jokers",
-														callback = MP.ACTIONS.lobby_options,
 													}),
 												},
 											},
@@ -168,11 +166,10 @@ function G.UIDEF.create_UIBox_lobby_options()
 													Disableable_Toggle({
 														id = "normal_bosses_toggle",
 														enabled_ref_table = MP.LOBBY,
-														enabled_ref_value = "isHost",
+														enabled_ref_value = "is_host",
 														label = localize("b_opts_normal_bosses"),
 														ref_table = MP.LOBBY.config,
 														ref_value = "normal_bosses",
-														callback = MP.ACTIONS.lobby_options,
 													}),
 												},
 											},
@@ -238,7 +235,7 @@ function G.UIDEF.create_UIBox_lobby_options()
 																		scale = 0.45,
 																		col = true,
 																		enabled_ref_table = MP.LOBBY,
-																		enabled_ref_value = "isHost",
+																		enabled_ref_value = "is_host",
 																	}),
 																	{
 																		n = G.UIT.B,
@@ -262,7 +259,7 @@ function G.UIDEF.create_UIBox_lobby_options()
 																		scale = 0.45,
 																		col = true,
 																		enabled_ref_table = MP.LOBBY,
-																		enabled_ref_value = "isHost",
+																		enabled_ref_value = "is_host",
 																	}),
 																},
 															},
@@ -305,7 +302,7 @@ function G.UIDEF.create_UIBox_lobby_options()
 													Disableable_Option_Cycle({
 														id = "starting_lives_option",
 														enabled_ref_table = MP.LOBBY,
-														enabled_ref_value = "isHost",
+														enabled_ref_value = "is_host",
 														label = localize("b_opts_lives"),
 														options = {
 															1,
@@ -331,7 +328,7 @@ function G.UIDEF.create_UIBox_lobby_options()
 													Disableable_Option_Cycle({
 														id = "pvp_round_start_option",
 														enabled_ref_table = MP.LOBBY,
-														enabled_ref_value = "isHost",
+														enabled_ref_value = "is_host",
 														label = localize("k_opts_pvp_start_round"),
 														options = {
 															1,
@@ -361,7 +358,7 @@ function G.UIDEF.create_UIBox_lobby_options()
 													Disableable_Option_Cycle({
 														id = "pvp_timer_seconds_option",
 														enabled_ref_table = MP.LOBBY,
-														enabled_ref_value = "isHost",
+														enabled_ref_value = "is_host",
 														label = localize("k_opts_pvp_timer"),
 														options = {
 															"30s",
@@ -377,7 +374,7 @@ function G.UIDEF.create_UIBox_lobby_options()
 													Disableable_Option_Cycle({
 														id = "showdown_starting_antes_option",
 														enabled_ref_table = MP.LOBBY,
-														enabled_ref_value = "isHost",
+														enabled_ref_value = "is_host",
 														label = localize("k_opts_showdown_starting_antes"),
 														options = {
 															1,
@@ -407,7 +404,7 @@ function G.UIDEF.create_UIBox_lobby_options()
 													Disableable_Option_Cycle({
 														id = "pvp_timer_increment_seconds_option",
 														enabled_ref_table = MP.LOBBY,
-														enabled_ref_value = "isHost",
+														enabled_ref_value = "is_host",
 														label = localize("k_opts_pvp_timer_increment"),
 														options = {
 															"0s",

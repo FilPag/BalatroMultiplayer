@@ -1,5 +1,5 @@
 MP.UI.lobby_ready_button = function(text_scale)
-  if MP.LOBBY.isHost then
+  if MP.LOBBY.is_host then
     return MP.UI.Disableable_Button({
       id = "lobby_menu_start",
       button = "lobby_start_game",
@@ -18,7 +18,7 @@ MP.UI.lobby_ready_button = function(text_scale)
     return {
       n = G.UIT.C,
       config = {
-        id = "lobby_ready_button",
+        id = "ready_button",
         button = "toggle_lobby_ready",
         align = "cm",
         r = 0.1,

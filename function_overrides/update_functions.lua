@@ -27,7 +27,7 @@ function Game:update_selecting_hand(dt)
 	end
 
 	if MP.UTILS.is_coop() then
-		if G.GAME.chips - G.GAME.blind.chips >= 0 then
+		if G.GAME.chips - G.GAME.blind.chips >= to_big(0) then
 			G.hand:unhighlight_all()
 			G.STATE_COMPLETE = false
 			G.STATE = G.STATES.NEW_ROUND
@@ -101,7 +101,6 @@ function Game:update_draw_to_hand(dt)
 					blockable = false,
 					func = function()
 						G.HUD_blind:get_UIE_by_ID("HUD_blind_name").config.object:pop_out(0)
-						-- Use MP.UTILS.get_nemesis_lobby_data() for username ref_table
 						MP.UI_UTILS.update_blind_HUD()
 						G.E_MANAGER:add_event(Event({
 							trigger = "after",
@@ -110,7 +109,7 @@ function Game:update_draw_to_hand(dt)
 							func = function()
 								G.HUD_blind:get_UIE_by_ID("HUD_blind_name").config.object.config.string = {
 									{
-										ref_table = MP.UTILS.get_nemesis_lobby_data(),
+										ref_table = MP.UTILS.get_nemesis().profile,
 										ref_value = "username",
 									},
 								}
@@ -248,7 +247,7 @@ function Game:update_hand_played(dt)
 			trigger = "immediate",
 			func = function()
 				if MP.LOBBY.config.gamemode ~= "gamemode_mp_coopSurvival" then
-					G.GAME.blind.chip_text = MP.INSANE_INT.to_string(MP.UTILS.get_nemesis().score)
+					G.GAME.blind.chip_text = number_format(MP.UTILS.get_nemesis().game_state.score)
 				end
 				-- For now, never advance to next round
 				if G.GAME.current_round.hands_left < 1 then
@@ -280,7 +279,7 @@ function Game:update_hand_played(dt)
 	end
 
 	if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" and MP.is_online_boss() then
-		if G.GAME.chips - G.GAME.blind.chips >= 0 then
+		if G.GAME.chips - G.GAME.blind.chips >= to_big(0) then
 			G.STATE_COMPLETE = false
 			G.STATE = G.STATES.NEW_ROUND
 		end
@@ -332,7 +331,7 @@ local game_main_menu_ref = Game.main_menu
 ---@diagnostic disable-next-line: duplicate-set-field
 function Game:main_menu(change_context)
 	MP.UI.update_connection_status()
-	local ret = game_main_menu_ref(self, change_context)
+	local ret = game_main_menu_ref(self)
 
 	MP.UI_UTILS.add_custom_multiplayer_cards(change_context)
 

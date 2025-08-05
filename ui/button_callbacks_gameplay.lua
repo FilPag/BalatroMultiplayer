@@ -215,12 +215,9 @@ function G.FUNCS.select_blind(e)
   select_blind_ref(e)
   if MP.LOBBY.code then
     MP.GAME.ante_key = tostring(math.random())
-    MP.UTILS.get_local_player().score = MP.INSANE_INT.empty()
-    MP.ACTIONS.update_player_state({
-      score = "0",
-      hands_left = G.GAME.round_resets.hands,
-      location = "loc_playing-" .. (e.config.ref_table.key or e.config.ref_table.name),
-    })
+    MP.LOBBY.local_player.game_state.score = to_big(0)
+    MP.ACTIONS.set_location("loc_playing-" .. (e.config.ref_table.key or e.config.ref_table.name))
+	  MP.ACTIONS.UpdateHandsAndDiscards(G.GAME.current_round.hands_left, G.GAME.current_round.discards_left)
     MP.UI_UTILS.hide_enemy_location()
   end
 end
@@ -244,10 +241,7 @@ G.FUNCS.skip_blind = function(e)
     MP.GAME.furthest_blind = (temp_furthest_blind > MP.GAME.furthest_blind) and temp_furthest_blind or
         MP.GAME.furthest_blind
 
-    MP.ACTIONS.update_player_state({
-      furthest_blind = MP.GAME.furthest_blind,
-      skips = G.GAME.skips
-    })
+  MP.ACTIONS.skip(temp_furthest_blind)
   end
 end
 

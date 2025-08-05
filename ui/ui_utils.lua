@@ -43,7 +43,7 @@ function MP.UI_UTILS.update_blind_HUD()
 			delay = 0,
 			blockable = false,
 			func = function()
-				local nemesis = MP.UTILS.get_nemesis()
+				local nemesis = MP.UTILS.get_nemesis().game_state
 				G.HUD_blind:get_UIE_by_ID("HUD_blind_count").config.ref_table = nemesis
 				G.HUD_blind:get_UIE_by_ID("HUD_blind_count").config.ref_value = "score_text"
 				G.HUD_blind:get_UIE_by_ID("HUD_blind_count").config.func = "multiplayer_blind_chip_UI_scale"
@@ -73,7 +73,7 @@ function MP.UI_UTILS.show_enemy_location()
 	if row_dollars_chips then
 		row_dollars_chips.children[1]:remove()
 		row_dollars_chips.children[1] = nil
-		G.HUD:add_child(MP.UIDEF.enemy_location_row(MP.UTILS.get_nemesis(), "location"), row_dollars_chips)
+		G.HUD:add_child(MP.UIDEF.enemy_location_row(MP.UTILS.get_nemesis().game_state, "location"), row_dollars_chips)
 	end
 end
 
@@ -185,4 +185,58 @@ function MP.UI_UTILS.add_custom_multiplayer_cards(change_context)
 		blocking = false,
 		func = make_wheel_of_fortune_a_card_func(MP.title_card),
 	}))
+end
+
+local function localize_blind(val)
+	if not val or val == "" then return "" end
+	local loc = localize({ type = "name_text", key = val, set = "Blind" })
+	if loc ~= "ERROR" then return loc end
+	return (G.P_BLINDS[val] and G.P_BLINDS[val].name) or val
+end
+
+local function localize_player_location(val)
+	if not val or val == "" then return "Unknown" end
+	local loc = G.localization.misc.dictionary[val]
+	if loc then return loc end
+	return val
+end
+
+function MP.UI_UTILS.parse_enemy_location(location)
+	if type(location) ~= "string" or location == "" then return "Unknown" end
+	local main, sub = location:match("([^%-]+)%-(.+)")
+	main = main or location
+	sub = sub or ""
+	return localize_player_location(main) .. localize_blind(sub)
+end
+
+function MP.UI_UTILS.juice_player_ui(uie_id)
+	local uie = G.HUD and G.HUD.get_UIE_by_ID and G.HUD:get_UIE_by_ID(uie_id)
+	if uie and uie.juice_up then uie:juice_up() end
+end
+
+function MP.UI_UTILS.get_mp_blind_amount(blind, chips, is_boss)
+	if not MP.LOBBY or not MP.LOBBY.code then
+		return to_big(chips)
+	end
+
+	if not blind then return chips end
+
+	if blind.key == "bl_small" or blind.key == "bl_big" then
+		return to_big(chips)
+	end
+
+	if blind.key == "bl_mp_nemesis" then
+		return to_big(0)
+	end
+
+	local amount = chips
+	if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" then
+    local num_players = 0
+    for _ in pairs(MP.LOBBY.players) do
+			num_players = num_players + 1
+		end
+		amount = amount * num_players
+	end
+
+	return to_big(amount)
 end

@@ -19,7 +19,8 @@ function MP.UTILS.wrapText(text, maxChars)
 end
 
 function MP.UTILS.save_username(text)
-	MP.ACTIONS.set_username(text)
+  MP.username = text or "Guest"
+	MP.ACTIONS.set_client_data()
 	SMODS.Mods["Multiplayer"].config.username = text
 end
 
@@ -70,7 +71,7 @@ end
 function MP.UTILS.get_nemesis_key() -- calling this function assumes the user is currently in a multiplayer game
 	-- Update to support n > 2 players
 	local enemy = MP.UTILS.get_nemesis()
-	local enemy_colour = MP.UTILS.get_nemesis_lobby_data().colour
+	local enemy_colour = enemy.profile.colour
 	local ret = MP.UTILS.blind_col_numtokey(enemy_colour)
 
 	if not enemy or not enemy.lives then
@@ -341,9 +342,9 @@ function MP.UTILS.add_nemesis_info(info_queue)
 	local my_id = MP.LOBBY.local_id
 
 	-- Find the first player that is not the local user (by id)
-	for _, player in ipairs(MP.LOBBY.players or {}) do
-		if player.id ~= my_id then
-			enemy_name = player.username
+	for _, player in pairs(MP.LOBBY.players or {}) do
+		if player.profile.id ~= my_id then
+			enemy_name = player.profile.username
 			break
 		end
 	end
@@ -711,23 +712,18 @@ function MP.UTILS.is_standard_ruleset()
 	end
 	return false
 end
-
 function MP.UTILS.ease_score(score_table, new_score, delay)
 	delay = delay or 0.3
-	for _, field in ipairs({ "e_count", "exponent", "coeffiocient" }) do
-		if new_score[field] ~= nil then
-			G.E_MANAGER:add_event(Event({
-				blockable = false,
-				blocking = false,
-				trigger = "ease",
-				delay = delay,
-				ref_table = score_table,
-				ref_value = field,
-				ease_to = new_score[field],
-				func = function(t) return math.floor(t) end
-			}))
-		end
-	end
+	G.E_MANAGER:add_event(Event({
+		trigger = 'ease',
+		blocking = true,
+		blockable = true,
+		ref_table = score_table,
+		ref_value = 'score',
+		ease_to = new_score,
+		delay = 0.5,
+		func = (function(t) return math.floor(t) end)
+	}))
 end
 
 -- Save current run and return as table
@@ -775,68 +771,27 @@ end
 -- @param players table: array of player tables
 -- @param my_id string: the id of the local player
 function MP.UTILS.get_local_player()
-	local players = MP.GAME.players
-	local my_id = MP.LOBBY.local_id
-
-	if not players then return nil end
-	for i, player in ipairs(players) do
-		if player.id and player.id == my_id then
-			return player
-		end
-	end
-	return nil
-end
-
-function MP.UTILS.get_player_by_id(player_id)
-	local players = MP.LOBBY.players
-	if not players then error("MP.GAME.players is nil") end
-
-	for i, player in ipairs(players) do
-		if player.id and player.id == player_id then
-			return player
-		end
-	end
-	return nil
+	return MP.LOBBY.local_player.game_state
 end
 
 function MP.UTILS.get_local_player_lobby_data()
-	local players = MP.LOBBY.players
-	local my_id = MP.LOBBY.local_id
-	if not players then error("MP.LOBBY.players is nil") end
-
-	for i, player in ipairs(players) do
-		if player.id and player.id == my_id then
-			return player
-		end
-	end
+	return MP.LOBBY.local_player.profile
 end
 
 -- Returns the enemy player for the current client.
 -- @param players table: array of player tables
 -- @param my_id string: the id of the local player
 function MP.UTILS.get_nemesis()
-	local players = MP.GAME.players
-	local my_id = MP.LOBBY.local_id
+	local players = MP.LOBBY.players
+	local my_id = MP.LOBBY.local_player.profile.id
 
 	if not players then error("MP.LOBBY.players is nil") end
-	for i, player in ipairs(players) do
-		if player.id and player.id ~= my_id then
+	for i, player in pairs(players) do
+		if player.profile.id and player.profile.id ~= my_id then
 			return player
 		end
 	end
 	return nil
-end
-
-function MP.UTILS.get_nemesis_lobby_data()
-	local players = MP.LOBBY.players
-	local my_id = MP.LOBBY.local_id
-	if not players then error("MP.LOBBY.players is nil") end
-
-	for i, player in ipairs(players) do
-		if player.id and player.id ~= my_id then
-			return player
-		end
-	end
 end
 
 function MP.UTILS.have_player_usernames_changed()
@@ -849,7 +804,7 @@ function MP.UTILS.have_player_usernames_changed()
 		return true
 	end
 
-	for i, player in ipairs(players) do
+	for i, player in pairs(players) do
 		if prev_usernames[i] ~= player.username then
 			return true
 		end
@@ -857,4 +812,3 @@ function MP.UTILS.have_player_usernames_changed()
 
 	return false
 end
-
