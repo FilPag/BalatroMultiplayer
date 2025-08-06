@@ -19,6 +19,7 @@ function create_UIBox_blind_choice(type, run_info)
 		config = G.P_BLINDS[G.GAME.round_resets.blind_choices[type]],
 	}
 
+
 	-- Orbital choices setup
 	MP.UTILS.setup_orbital_choices(type)
 	G.GAME.round_resets.blind_ante = G.GAME.round_resets.blind_ante or G.GAME.round_resets.ante
@@ -35,6 +36,17 @@ function create_UIBox_blind_choice(type, run_info)
 end
 
 function MP.end_round()
+	-- This prevents duplicate execution during certain cases. e.g. Full deck discard before playing any hands.
+	if MP.GAME.round_ended then 
+		if not MP.GAME.duplicate_end then
+			MP.GAME.duplicate_end = true
+			sendDebugMessage('Duplicate end_round calls prevented.', 'MULTIPLAYER'); 
+		end
+		return true 
+	end 
+
+	MP.GAME.round_ended  = true	
+	
 	G.GAME.blind.in_blind = false
 	local game_over = false
 	local game_won = false
@@ -100,6 +112,19 @@ function MP.end_round()
 		check_for_unlock({ type = "ante_up", ante = G.GAME.round_resets.ante + 1 })
 	end
 	G.FUNCS.draw_from_discard_to_deck()
+	
+	-- This handles an edge case where a player plays no hands, and discards the only cards in their deck.
+	-- Allows opponent to advance after playing anything, and eases a life from the person who discarded their deck.
+	if G.GAME.current_round.hands_played == 0 
+	   and G.GAME.current_round.discards_used > 0
+	   and MP.LOBBY.config.gamemode ~= "gamemode_mp_survival" then
+			if MP.is_pvp_boss() then
+				MP.ACTIONS.play_hand(0, 0)
+			end
+			
+			MP.ACTIONS.fail_round(1)
+	end	
+
 	G.E_MANAGER:add_event(Event({
 		trigger = "after",
 		delay = 0.3,

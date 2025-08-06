@@ -1,25 +1,4 @@
 -- Lobby/Menu-related button callbacks
-
-G.FUNCS.change_gamemode_selection = function(e)
-  -- Use the id of the first gamemode button as the default
-  local gamemode_buttons_data
-  if MP.LOBBY.config.ruleset == "ruleset_mp_coop" then
-    gamemode_buttons_data = {
-      { button_id = "coopSurvival_gamemode_button", button_localize_key = "k_coopSurvival" },
-    }
-  else
-    gamemode_buttons_data = {
-      { button_id = "attrition_gamemode_button", button_localize_key = "k_attrition" },
-      { button_id = "showdown_gamemode_button",  button_localize_key = "k_showdown" },
-      { button_id = "survival_gamemode_button",  button_localize_key = "k_survival" },
-    }
-  end
-  local default_gamemode_id = gamemode_buttons_data[1].button_id
-
-  MP.UI.Change_Main_Lobby_Options(e, "gamemode_area", G.UIDEF.gamemode_info, default_gamemode_id,
-    function(gamemode_name) MP.LOBBY.config.gamemode = "gamemode_mp_" .. gamemode_name end)
-end
-
 G.FUNCS.change_showdown_starting_antes = function(args)
   MP.LOBBY.config.showdown_starting_antes = args.to_val
 end
@@ -84,6 +63,11 @@ function G.FUNCS.custom_seed_overlay(e)
   })
 end
 
+G.FUNCS.change_pvp_countdown_seconds = function(args)
+	MP.LOBBY.config.pvp_countdown_seconds = args.to_val
+  MP.ACTIONS.update_lobby_options()
+end
+
 function G.FUNCS.custom_seed_reset(e)
   MP.LOBBY.config.custom_seed = generate_starting_seed()
 end
@@ -144,15 +128,17 @@ function G.FUNCS.join_game_submit(e)
   MP.ACTIONS.join_lobby(MP.LOBBY.temp_code)
 end
 
-function G.FUNCS.join_lobby(e)
+function G.FUNCS.join_lobby()
   G.SETTINGS.paused = true
 
-  local definition = G.UIDEF.create_UIBox_join_lobby_button()
+  local definition = G.UIDEF.create_UIBox_join_lobby_overlay()
   G.FUNCS.overlay_menu({
     definition = definition,
   })
   local ref = G.OVERLAY_MENU:get_UIE_by_ID("join_lobby_code_input")
-  G.FUNCS.select_text_input(ref)
+  if ref then
+    G.FUNCS.select_text_input(ref)
+  end
 end
 
 function G.FUNCS.lobby_choose_deck(e)
@@ -362,6 +348,15 @@ G.FUNCS.view_player_hash = function(e)
     definition = MP.UIDEF.create_UIBox_view_hash(e.config.ref_table.index),
   })
 end
+
+for gamemode, _ in pairs(MP.Gamemodes) do
+	G.FUNCS["force_" .. gamemode] = function(e)
+    sendDebugMessage("Forcing gamemode: " .. gamemode, "MULTIPLAYER")
+		MP.LOBBY.config.gamemode = gamemode
+    G.FUNCS.start_lobby()
+  end
+end
+
 -- Lobby/Menu-related button callbacks
 
 -- Functions will be copied here in alphabetical order as per instructions.

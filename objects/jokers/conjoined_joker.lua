@@ -21,7 +21,7 @@ SMODS.Joker({
 		return { vars = { card.ability.extra.x_mult_gain, card.ability.extra.max_x_mult, card.ability.extra.x_mult } }
 	end,
 	in_pool = function(self)
-		return MP.LOBBY.code and MP.LOBBY.config.multiplayer_jokers
+		return MP.LOBBY.code and MP.LOBBY.config.multiplayer_jokers and MP.LOBBY.config.ruleset ~= "ruleset_mp_sandbox"
 	end,
 	add_to_deck = function(self, card, from_debuffed)
 		if not from_debuffed and (not card.edition or card.edition.type ~= "mp_phantom") then
@@ -36,11 +36,8 @@ SMODS.Joker({
 	update = function(self, card, dt)
 		if MP.LOBBY.code then
 			if G.STAGE == G.STAGES.RUN then
-				local enemy = MP.UTILS.get_nemesis()
-				if not enemy then return end
-				local game_state = enemy.game_state
 				card.ability.extra.x_mult = math.max(
-					math.min(1 + (game_state.hands_left * card.ability.extra.x_mult_gain), card.ability.extra.max_x_mult),
+					math.min(1 + (MP.GAME.enemy.hands * card.ability.extra.x_mult_gain), card.ability.extra.max_x_mult),
 					1
 				)
 			end
@@ -49,7 +46,8 @@ SMODS.Joker({
 		end
 	end,
 	calculate = function(self, card, context)
-		if context.cardarea == G.jokers
+		if
+			context.cardarea == G.jokers
 			and context.joker_main
 			and MP.is_online_boss()
 			and (not card.edition or card.edition.type ~= "mp_phantom")

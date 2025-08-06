@@ -34,7 +34,7 @@ function MP.UI.create_UIBox_settings() -- optimize this please
 	local seed = MP.LOBBY.config.custom_seed == "random" and localize("k_random") or MP.LOBBY.config.custom_seed
 	return {
 		n = G.UIT.ROOT,
-			config = {
+		config = {
 			emboss = 0.05,
 			minh = 6,
 			r = 0.1,
@@ -44,15 +44,24 @@ function MP.UI.create_UIBox_settings() -- optimize this please
 			colour = G.C.BLACK,
 		},
 		nodes = {
-			{n=G.UIT.R, config={align = "tm", padding = 0.05}, nodes={
-				{n=G.UIT.T, config={text = (localize("k_" .. ruleset) .. " " .. localize("k_" .. gamemode)), colour = G.C.UI.TEXT_LIGHT, scale = 0.6}}}},
-			{n=G.UIT.R, config={align = "tm", padding = 0.05}, nodes={
-				{n=G.UIT.T, config={text = (localize("k_current_seed") .. seed), colour = G.C.UI.TEXT_LIGHT, scale = 0.6}}}},
-			{n = G.UIT.R,
+			{
+				n = G.UIT.R,
+				config = { align = "tm", padding = 0.05 },
+				nodes = {
+					{ n = G.UIT.T, config = { text = (localize("k_" .. ruleset) .. " " .. localize("k_" .. gamemode)), colour = G.C.UI.TEXT_LIGHT, scale = 0.6 } } }
+			},
+			{
+				n = G.UIT.R,
+				config = { align = "tm", padding = 0.05 },
+				nodes = {
+					{ n = G.UIT.T, config = { text = (localize("k_current_seed") .. seed), colour = G.C.UI.TEXT_LIGHT, scale = 0.6 } } }
+			},
+			{
+				n = G.UIT.R,
 				config = {
 					padding = 0,
 					align = "cr",
-					},
+				},
 				nodes = {
 				MP.UI.Disableable_Toggle({
 					enabled_ref_table = MP.LOBBY,
@@ -63,7 +72,7 @@ function MP.UI.create_UIBox_settings() -- optimize this please
 				config = {
 					padding = 0,
 					align = "cr",
-					},
+				},
 				nodes = {
 				MP.UI.Disableable_Toggle({
 					enabled_ref_table = MP.LOBBY,
@@ -74,7 +83,7 @@ function MP.UI.create_UIBox_settings() -- optimize this please
 				config = {
 					padding = 0,
 					align = "cr",
-					},
+				},
 				nodes = {
 				MP.UI.Disableable_Toggle({
 					enabled_ref_table = MP.LOBBY,
@@ -85,7 +94,7 @@ function MP.UI.create_UIBox_settings() -- optimize this please
 				config = {
 					padding = 0,
 					align = "cr",
-					},
+				},
 				nodes = {
 				MP.UI.Disableable_Toggle({
 					enabled_ref_table = MP.LOBBY,
@@ -96,7 +105,7 @@ function MP.UI.create_UIBox_settings() -- optimize this please
 				config = {
 					padding = 0,
 					align = "cr",
-					},
+				},
 				nodes = {
 				MP.UI.Disableable_Toggle({
 					enabled_ref_table = MP.LOBBY,
@@ -107,7 +116,7 @@ function MP.UI.create_UIBox_settings() -- optimize this please
 				config = {
 					padding = 0,
 					align = "cr",
-					},
+				},
 				nodes = {
 				MP.UI.Disableable_Toggle({
 					enabled_ref_table = MP.LOBBY,
@@ -118,7 +127,7 @@ function MP.UI.create_UIBox_settings() -- optimize this please
 				config = {
 					padding = 0,
 					align = "cr",
-					},
+				},
 				nodes = {
 				MP.UI.Disableable_Toggle({
 					enabled_ref_table = MP.LOBBY,
@@ -191,6 +200,113 @@ function G.FUNCS.mp_timer_button(e)
 	end
 end
 
+function MP.UI.timer_hud()
+	if MP.LOBBY.config.timer then
+		return {
+			n = G.UIT.C,
+			config = {
+				align = "cm",
+				padding = 0.05,
+				minw = 1.45,
+				minh = 1,
+				colour = G.C.DYN_UI.BOSS_MAIN,
+				emboss = 0.05,
+				r = 0.1,
+			},
+			nodes = {
+				{
+					n = G.UIT.R,
+					config = { align = "cm", maxw = 1.35 },
+					nodes = {
+						{
+							n = G.UIT.T,
+							config = {
+								text = localize("k_timer"),
+								minh = 0.33,
+								scale = 0.34,
+								colour = G.C.UI.TEXT_LIGHT,
+								shadow = true,
+							},
+						},
+					},
+				},
+				{
+					n = G.UIT.R,
+					config = {
+						align = "cm",
+						r = 0.1,
+						minw = 1.2,
+						colour = G.C.DYN_UI.BOSS_DARK,
+						id = "row_round_text",
+						func = "set_timer_box",
+						button = "mp_timer_button",
+					},
+					nodes = {
+						{
+							n = G.UIT.O,
+							config = {
+								object = DynaText({
+									string = { { ref_table = MP.GAME, ref_value = "timer" } },
+									colours = { G.C.UI.TEXT_DARK },
+									shadow = true,
+									scale = 0.8,
+								}),
+								id = "timer_UI_count",
+							},
+						},
+					},
+				},
+			},
+		}
+	end
+end
+
+function MP.UI.start_pvp_countdown(callback)
+	local seconds = countdown_seconds
+	local tick_delay = 1
+	if MP.LOBBY and MP.LOBBY.config and MP.LOBBY.config.pvp_countdown_seconds then
+		seconds = MP.LOBBY.config.pvp_countdown_seconds
+	end
+	MP.GAME.pvp_countdown = seconds
+
+	local function show_next()
+		if MP.GAME.pvp_countdown <= 0 then
+			if callback then callback() end
+			return true
+		end
+
+		G.FUNCS.attention_text_realtime({
+			text = tostring(MP.GAME.pvp_countdown),
+			scale = 5,
+			hold = 0.85,
+			align = "cm",
+			major = G.play,
+			backdrop_colour = G.C.MULT,
+		})
+
+		play_sound("tarot2", 1, 0.4)
+
+		MP.GAME.pvp_countdown = MP.GAME.pvp_countdown - 1
+
+		G.E_MANAGER:add_event(Event({
+			trigger = "after",
+			timer = "REAL",
+			delay = tick_delay,
+			blockable = false,
+			func = show_next,
+		}))
+		return true
+	end
+
+	G.E_MANAGER:add_event(Event({
+		trigger = "after",
+		timer = "REAL",
+		delay = 0,
+		blockable = false,
+		func = show_next,
+	}))
+end
+
 function G.FUNCS.set_timer_box(e)
 	if MP.LOBBY.config.timer then
 		if MP.GAME.timer_started then
@@ -224,6 +340,10 @@ MP.timer_event = Event({
 		if MP.GAME.timer <= 0 then
 			MP.GAME.timer = 0
 			if not MP.GAME.ready_blind and not MP.is_online_boss() then
+				if MP.GAME.timers_forgiven < MP.LOBBY.config.timer_forgiveness then
+					MP.GAME.timers_forgiven = MP.GAME.timers_forgiven + 1
+					return true
+				end
 				MP.ACTIONS.fail_timer()
 			end
 			return true

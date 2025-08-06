@@ -1,4 +1,4 @@
-function G.UIDEF.create_UIBox_join_lobby_button()
+function G.UIDEF.create_UIBox_join_lobby_overlay()
 	return (
 		create_UIBox_generic_options({
 			back_func = "play_options",
