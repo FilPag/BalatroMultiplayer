@@ -18,6 +18,15 @@ function MP.UTILS.wrapText(text, maxChars)
 	return wrappedText
 end
 
+function MP.UTILS.get_array_index_by_value(options, value)
+    for i, v in ipairs(options) do
+        if v == value then
+            return i
+        end
+    end
+    return nil
+end
+
 function MP.UTILS.save_username(text)
   MP.username = text or "Guest"
 	MP.ACTIONS.set_client_data()
@@ -545,6 +554,17 @@ function MP.UTILS.sum_numbers_in_table(t)
 	return sum
 end
 
+function MP.UTILS.get_culled_pool(_type, _rarity, _legendary, _append)
+	local pool = get_current_pool(_type, _rarity, _legendary, _append)
+	local ret = {}
+	for i, v in ipairs(pool) do
+		if v ~= 'UNAVAILABLE' then
+			ret[#ret+1] = v
+		end
+	end
+	return ret
+end
+
 function MP.UTILS.bxor(a, b)
 	local res = 0
 	local bitval = 1
@@ -698,7 +718,13 @@ function MP.UTILS.str_decode_and_unpack(str)
 end
 
 function MP.UTILS.get_standard_rulesets()
-	return {"ranked", "blitz", "traditional"}
+	local ret = {}
+	for k, v in pairs(MP.Rulesets) do
+		if v.standard then
+			ret[#ret+1] = string.sub(v.key, 12, #v.key)
+		end
+	end
+	return ret
 end
 
 function MP.UTILS.is_standard_ruleset()
@@ -712,6 +738,7 @@ function MP.UTILS.is_standard_ruleset()
 	end
 	return false
 end
+
 function MP.UTILS.ease_score(score_table, new_score, delay)
 	delay = delay or 0.3
 	G.E_MANAGER:add_event(Event({
@@ -811,4 +838,12 @@ function MP.UTILS.have_player_usernames_changed()
 	end
 
 	return false
+end
+
+function MP.UTILS.get_weekly()
+	return SMODS.Mods["Multiplayer"].config.weekly
+end
+
+function MP.UTILS.is_weekly(arg)
+	return MP.UTILS.get_weekly() == arg and MP.LOBBY.config.ruleset == 'ruleset_mp_weekly'
 end

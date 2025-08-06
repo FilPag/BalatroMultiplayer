@@ -219,11 +219,19 @@ local function action_game_started(seed, stake)
 	MP.LOBBY.ready_to_start = false
 end
 
+local function begin_pvp_blind()
+        if MP.GAME.next_blind_context then
+                G.FUNCS.select_blind(MP.GAME.next_blind_context)
+        else
+                sendErrorMessage("No next blind context", "MULTIPLAYER")
+        end
+end
+
 local function action_start_blind()
 	MP.GAME.ready_blind = false
 	MP.GAME.timer_started = false
 	MP.GAME.timer = MP.LOBBY.config.timer_base_seconds
-
+  MP.UI.start_pvp_countdown(begin_pvp_blind)
 	for _, player in pairs(MP.LOBBY.players) do
 		player.game_state.score = to_big(0)
 	end
@@ -709,10 +717,11 @@ local action_table = {
 	error = function(parsedAction) action_error(parsedAction.message) end,
 }
 
+local last_game_seed = ""
+
 function MP.NETWORKING.update(dt)
 	repeat
 		local msg = love.thread.getChannel("networkToUi"):pop()
-		-- if message not starting with { wrap msg string with {}
 
 		if msg then
 			local ok, parsedAction = pcall(json.decode, msg)

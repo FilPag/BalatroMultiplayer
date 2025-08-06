@@ -67,7 +67,7 @@ SMODS.Mods.Multiplayer.credits_tab = function()
 					{
 						n = G.UIT.T,
 						config = {
-							text = "TGMM, Senfinbrare, CUexter, Brawmario, Divvy, Andy, and many more!",
+							text = localize({ type = "variable", key = "k_credits_list", vars = { "TGMM, Senfinbrare, CUexter, Brawmario, Divvy, Andy, Steph,"}}),
 							shadow = true,
 							scale = scale * 0.8,
 							colour = G.C.RED
@@ -145,7 +145,7 @@ SMODS.Mods.Multiplayer.config_tab = function()
 					align = "cm",
 					on_demand_tooltip = {
 						text = {
-							localize('k_the_order_integration_desc'), 
+							localize('k_the_order_integration_desc'),
 							localize("k_the_order_credit")
 						}
 					},
@@ -216,7 +216,7 @@ SMODS.Mods.Multiplayer.config_tab = function()
 						ref_table = MP.LOBBY,
 						ref_value = "username",
 						extended_corpus = true,
-						keyboard_offset = 1,
+						keyboard_offset = -3,
 						callback = function(val)
 							MP.UTILS.save_username(MP.username)
 						end,
