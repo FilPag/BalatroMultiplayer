@@ -34,7 +34,7 @@ function MP.is_online_boss()
 		return false
 	end
 	-- Special case for coop boss blinds
-	if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" and G.GAME.blind.boss then
+	if MP.LOBBY.is_coop() and G.GAME.blind.boss then
 		return true
 	end
 

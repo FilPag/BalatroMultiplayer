@@ -33,7 +33,7 @@ function reset_blinds()
 			G.GAME.round_resets.ante, G.GAME.round_resets.blind_choices)
 		G.GAME.round_resets.blind_choices.Small = mp_small_choice
 		G.GAME.round_resets.blind_choices.Big = mp_big_choice
-		if MP.LOBBY.config.gamemode ~= "gamemode_mp_coopSurvival" then
+		if not MP.UTILS.is_coop() then
 			G.GAME.round_resets.blind_choices.Boss = mp_boss_choice
 		end
 	end

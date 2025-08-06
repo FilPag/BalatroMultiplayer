@@ -18,7 +18,7 @@ handlers.score = function(player, is_local, is_nemesis)
 		if blind_count then blind_count:juice_up() end
 		if dollars_earned then dollars_earned:juice_up() end
 	end
-	if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" and MP.is_online_boss() then
+  if MP.UTILS.is_coop() and MP.is_online_boss() then
 		G.E_MANAGER:add_event(Event({
 			blocking = true,
 			blockable = true,
