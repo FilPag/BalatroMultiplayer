@@ -1,5 +1,6 @@
 MP = SMODS.current_mod
 local NativeFS = require("nativefs")
+
 function MP.load_mp_file(file)
 	local chunk, err = SMODS.load_file(file, "Multiplayer")
 	if chunk then
@@ -35,9 +36,9 @@ function MP.load_mp_dir(directory)
 	end
 end
 
+MP.load_mp_file("dev.lua")
 MP.load_mp_dir("compatibility")
 
-G.FPS_CAP = 60
 MP.LOBBY = {
 	connected = false,
 	temp_code = "",

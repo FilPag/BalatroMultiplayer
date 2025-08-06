@@ -199,14 +199,15 @@ local function action_game_started(seed, stake)
 		stake = tonumber(stake) or 0
 	end
 
-	if not MP.LOBBY.config.different_seeds and seed ~= "random" then
-		seed = MP.LOBBY.config.custom_seed
-		MP.LOBBY.config.custom_seed = seed
-	else
+	sendDebugMessage(tostring(seed), "\27[32mMULTIPLAYER\27[0m")
+	sendDebugMessage(tostring(seed == "random"), "\27[32mMULTIPLAYER\27[0m")
+	if MP.LOBBY.config.different_seeds or seed == "random" then
+		sendDebugMessage("\27[31mStarting game with random seed\27[0m", "MULTIPLAYER")
 		seed = generate_starting_seed()
 		MP.LOBBY.config.custom_seed = seed
 	end
 
+	sendDebugMessage("\27[31mStarting game with seed \27[0m" .. tostring(seed), "MULTIPLAYER")
 	MP.LOBBY.local_player.lives = MP.LOBBY.config.starting_lives
 	G.FUNCS.lobby_start_run(nil, { seed = seed, stake = stake })
 	G.E_MANAGER:add_event(Event({
@@ -215,23 +216,23 @@ local function action_game_started(seed, stake)
 			MP.ACTIONS.UpdateHandsAndDiscards(G.GAME.starting_params.hands, G.GAME.starting_params.discards)
       return true
     end
-  }))
+	}))
 	MP.LOBBY.ready_to_start = false
 end
 
 local function begin_pvp_blind()
-        if MP.GAME.next_blind_context then
-                G.FUNCS.select_blind(MP.GAME.next_blind_context)
-        else
-                sendErrorMessage("No next blind context", "MULTIPLAYER")
-        end
+	if MP.GAME.next_blind_context then
+		G.FUNCS.select_blind(MP.GAME.next_blind_context)
+	else
+		sendErrorMessage("No next blind context", "MULTIPLAYER")
+	end
 end
 
 local function action_start_blind()
 	MP.GAME.ready_blind = false
 	MP.GAME.timer_started = false
 	MP.GAME.timer = MP.LOBBY.config.timer_base_seconds
-  MP.UI.start_pvp_countdown(begin_pvp_blind)
+	MP.UI.start_pvp_countdown(begin_pvp_blind)
 	for _, player in pairs(MP.LOBBY.players) do
 		player.game_state.score = to_big(0)
 	end
@@ -710,8 +711,8 @@ local action_table = {
 	spentLastShop = function(parsedAction) action_spent_last_shop(parsedAction.player_id, parsedAction.amount) end,
 	magnet = function() action_magnet() end,
 	magnetResponse = function(parsedAction) action_magnet_response(parsedAction.key) end,
-	receivePlayerJokers= function(parsedAction) action_receive_player_jokers(parsedAction.player_id, parsedAction.jokers) end,
-	receivePlayerDeck = function(parsedAction) action_receive_player_deck(parsedAction.player_id , parsedAction.deck) end,
+	receivePlayerJokers = function(parsedAction) action_receive_player_jokers(parsedAction.player_id, parsedAction.jokers) end,
+	receivePlayerDeck = function(parsedAction) action_receive_player_deck(parsedAction.player_id, parsedAction.deck) end,
 	startAnteTimer = function(parsedAction) MP.action_start_ante_timer(parsedAction.time) end,
 	pauseAnteTimer = function(parsedAction) MP.action_pause_ante_timer(parsedAction.time) end,
 	error = function(parsedAction) action_error(parsedAction.message) end,
