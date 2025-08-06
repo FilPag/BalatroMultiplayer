@@ -15,7 +15,7 @@ local function values_equal(key, old_value, new_value)
 end
 
 local function handle_nemesis_score(player_id, new_score)
-    if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" and MP.is_online_boss() then
+    if MP.UTILS.is_coop() and MP.is_online_boss() then
         return false
     end
 

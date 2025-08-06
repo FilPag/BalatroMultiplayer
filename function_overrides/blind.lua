@@ -85,7 +85,7 @@ G.FUNCS.multiplayer_blind_chip_UI_scale = function(e)
   end
 
   local score_ref
-  if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" then
+  if MP.UTILS.is_coop() then
     score_ref = MP.GAME.coop
   else
     local nemesis = MP.UTILS.get_nemesis()

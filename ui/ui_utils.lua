@@ -230,9 +230,9 @@ function MP.UI_UTILS.get_mp_blind_amount(blind, chips, is_boss)
 	end
 
 	local amount = chips
-	if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" then
-    local num_players = 0
-    for _ in pairs(MP.LOBBY.players) do
+	if MP.LOBBY.is_coop() then
+		local num_players = 0
+		for _ in pairs(MP.LOBBY.players) do
 			num_players = num_players + 1
 		end
 		amount = amount * num_players

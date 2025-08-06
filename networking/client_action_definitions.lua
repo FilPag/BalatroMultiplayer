@@ -115,7 +115,7 @@ function MP.ACTIONS.play_hand(score, hands_left)
   MP.LOBBY.local_player.game_state.score = score + MP.LOBBY.local_player.game_state.score
 
   local target = nil
-  if MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival" then
+  if MP.UTILS.is_coop() then
     target = G.GAME.blind.chips
   end
 

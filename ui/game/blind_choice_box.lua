@@ -124,16 +124,7 @@ function MP.UIDEF.blind_choice_box(config)
 									shadow = true,
 									hover = true,
 									one_press = true,
-									func = (
-												G.GAME.round_resets.blind_choices[config.type] == "bl_mp_nemesis"
-												or G.GAME.round_resets.pvp_blind_choices[config.type]
-												or (
-													MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival"
-													and (config.type == "Boss")
-												)
-											)
-											and "pvp_ready_button"
-											or nil,
+									func = MP.is_online_boss() and "pvp_ready_button" or nil,
 									button = "select_blind",
 								},
 								nodes = {

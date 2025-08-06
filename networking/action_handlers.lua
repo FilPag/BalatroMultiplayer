@@ -199,15 +199,11 @@ local function action_game_started(seed, stake)
 		stake = tonumber(stake) or 0
 	end
 
-	sendDebugMessage(tostring(seed), "\27[32mMULTIPLAYER\27[0m")
-	sendDebugMessage(tostring(seed == "random"), "\27[32mMULTIPLAYER\27[0m")
 	if MP.LOBBY.config.different_seeds or seed == "random" then
-		sendDebugMessage("\27[31mStarting game with random seed\27[0m", "MULTIPLAYER")
 		seed = generate_starting_seed()
 		MP.LOBBY.config.custom_seed = seed
 	end
 
-	sendDebugMessage("\27[31mStarting game with seed \27[0m" .. tostring(seed), "MULTIPLAYER")
 	MP.LOBBY.local_player.lives = MP.LOBBY.config.starting_lives
 	G.FUNCS.lobby_start_run(nil, { seed = seed, stake = stake })
 	G.E_MANAGER:add_event(Event({
