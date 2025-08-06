@@ -43,7 +43,6 @@ function MP.UIDEF.blind_choice_box(config)
 	end
 
 	-- Setup animation atlas and position
-	sendDebugMessage(tprint(config), "blind_choice_box_config")
 	local blind_atlas = config.blind_choice.config and config.blind_choice.config.atlas or "blind_chips"
 	local blind_pos = config.blind_choice.config and config.blind_choice.config.pos
 

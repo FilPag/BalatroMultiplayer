@@ -4,7 +4,7 @@ MP.ReworkCenter({
 	ruleset = MP.UTILS.get_standard_rulesets(),
 	silent = true,
 	calculate = function(self, card, context)
-		if MP.is_pvp_boss() then
+		if MP.online_boss() then
 			if not context.blueprint then
 				if context.before then
 					G.GAME.round_resets.mp_bloodstone = G.GAME.round_resets.mp_bloodstone or {}
