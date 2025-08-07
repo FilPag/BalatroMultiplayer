@@ -794,6 +794,15 @@ function MP.UTILS.is_coop()
 	return MP.LOBBY.config.gamemode == "gamemode_mp_coopSurvival"
 end
 
+function MP.UTILS.is_local_player(player)
+	if not player then
+		sendErrorMessage("MP.UTILS.is_local_player called with nil player")
+		return false
+	end
+
+	return player.profile.id == MP.LOBBY.local_player.profile.id
+end
+
 -- Returns the local player for the current client.
 -- @param players table: array of player tables
 -- @param my_id string: the id of the local player

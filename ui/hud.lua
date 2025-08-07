@@ -143,13 +143,7 @@ function MP.UI.create_UIBox_players()
 local players = {}
 if MP.LOBBY.players then
 	for i, player in pairs(MP.LOBBY.players) do
-		local lobby_player = MP.LOBBY.players[i].profile
-		local username = lobby_player and lobby_player.username or ("Player " .. tostring(i))
-		local colour = G.C.RED
-		if MP.UTILS.is_coop() then
-			colour = lighten(G.C.BLUE, 0.5)
-		end
-		table.insert(players, MP.UI.create_UIBox_player_row(username, player.game_state, colour))
+		table.insert(players, MP.UI.create_UIBox_player_row(player))
 	end
 end
 

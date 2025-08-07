@@ -1,4 +1,13 @@
-function MP.UI.create_UIBox_player_row(username, player_state, colour)
+function MP.UI.create_UIBox_player_row(player)
+  local colour = G.C.RED
+  if MP.UTILS.is_coop() then
+    colour = lighten(G.C.BLUE, 0.5)
+  end
+
+  local lobby_state = player.lobby_state or {}
+  local game_state  = player.game_state or {}
+  local profile = player.profile or {}
+
   return {
     n = G.UIT.R,
     config = {
@@ -34,7 +43,7 @@ function MP.UI.create_UIBox_player_row(username, player_state, colour)
               {
                 n = G.UIT.T,
                 config = {
-                  text = tostring(player_state.lives) .. " " .. localize("k_lives"),
+                  text = tostring(game_state.lives) .. " " .. localize("k_lives"),
                   scale = 0.4,
                   colour = G.C.UI.TEXT_LIGHT,
                 },
@@ -48,7 +57,7 @@ function MP.UI.create_UIBox_player_row(username, player_state, colour)
               {
                 n = G.UIT.T,
                 config = {
-                  text = " " .. username,
+                  text = " " .. profile.username,
                   scale = 0.45,
                   colour = G.C.UI.TEXT_LIGHT,
                   shadow = true,
@@ -65,7 +74,7 @@ function MP.UI.create_UIBox_player_row(username, player_state, colour)
           {
             n = G.UIT.T,
             config = {
-              ref_table = player_state,
+              ref_table = game_state,
               ref_value = "location",
               scale = 0.35,
               colour = G.C.WHITE,
@@ -85,7 +94,7 @@ function MP.UI.create_UIBox_player_row(username, player_state, colour)
               {
                 n = G.UIT.T,
                 config = {
-                  text = tostring(player_state.hands_max), -- Will be hands in the future
+                  text = tostring(game_state.hands_max),
                   scale = 0.45,
                   colour = G.C.UI.TEXT_LIGHT,
                 },
@@ -101,7 +110,7 @@ function MP.UI.create_UIBox_player_row(username, player_state, colour)
               {
                 n = G.UIT.T,
                 config = {
-                  text = tostring(player_state.discards_max),
+                  text = tostring(game_state.discards_max),
                   scale = 0.45,
                   colour = G.C.UI.TEXT_LIGHT,
                 },
@@ -117,7 +126,7 @@ function MP.UI.create_UIBox_player_row(username, player_state, colour)
           {
             n = G.UIT.T,
             config = {
-              text = number_format(player_state.highest_score),
+              text = number_format(game_state.highest_score),
               scale = 0.45,
               colour = G.C.FILTER,
               shadow = true,
@@ -125,6 +134,37 @@ function MP.UI.create_UIBox_player_row(username, player_state, colour)
           },
         },
       },
+      MP.UI.Disableable_Button({
+        id = "send_money_to_" .. profile.id,
+        button = "send_money_to_player",
+        button_args = { player_id = profile.id },
+        colour = G.C.GOLD,
+        label = { localize("b_send_money") .. " $" .. (5 - (MP.LOBBY.config.nano_br_hivemind_transfer_tax or 0)) .. " ($5)" },
+        scale = 0.45,
+        minw = 2.5,
+        minh = 0.45,
+        col = true,
+        enabled_ref_table = { enabled = (not MP.UTILS.is_local_player(player)) and G.GAME.dollars >= to_big(5) },
+        enabled_ref_value = "enabled",
+      }) or {
+        n = G.UIT.C,
+        config = { align = "cm", colour = G.C.CLEAR, r = 0.1, minw = 2.5 }
+      } or nil,
+
+      MP.LOBBY.is_host and MP.UI.Disableable_Button({
+        id = "kick_" .. profile.id,
+        button = "lobby_kick_player",
+        button_args = { player_id = profile.id},
+        colour = G.C.RED,
+        label = { localize("b_kick") },
+        scale = 0.45,
+        minw = 1.3,
+        minh = 0.45,
+
+        col = true,
+        enabled_ref_table = { enabled = not MP.UTILS.is_local_player(player) },
+        enabled_ref_value = "enabled",
+      }) or nil,
     },
   }
 end

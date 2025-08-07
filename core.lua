@@ -73,6 +73,7 @@ MP.INTEGRATIONS = {
 MP.UI_EVENT_HANDLER = SMODS.load_file('networking/ui_event_handler.lua', 'Multiplayer')()
 MP.STATE_UPDATER = SMODS.load_file('networking/state_updater.lua', 'Multiplayer')()
 G.C.MULTIPLAYER = HEX("AC3232")
+MP.MPACK = SMODS.load_file('misc/message_pack.lua', 'Multiplayer')()
 
 MP.load_mp_file("misc/utils.lua")
 MP.load_mp_file("misc/insane_int.lua")

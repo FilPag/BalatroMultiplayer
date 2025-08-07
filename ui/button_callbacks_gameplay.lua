@@ -222,6 +222,11 @@ function G.FUNCS.select_blind(e)
   end
 end
 
+function G.FUNCS.send_money_to_player(e)
+  local player_id = e.config.button_args.player_id
+  MP.ACTIONS.send_money_to_player(player_id)
+end
+
 local skip_blind_ref = G.FUNCS.skip_blind
 G.FUNCS.skip_blind = function(e)
   skip_blind_ref(e)

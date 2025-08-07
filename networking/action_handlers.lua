@@ -29,7 +29,7 @@ Client = {}
 
 function Client.send(msg)
 	if msg ~= '{"action":"a"}' then
-		sendTraceMessage(string.format("Client sent message: %s", msg), "MULTIPLAYER")
+		sendTraceMessage(string.format("Client sent message: %s", msg), "\27[34mMULTIPLAYER_SEND\27[0m")
 	end
 	love.thread.getChannel("uiToNetwork"):push(msg)
 end
@@ -206,9 +206,12 @@ local function action_game_started(seed, stake)
 
 	MP.LOBBY.local_player.lives = MP.LOBBY.config.starting_lives
 	G.FUNCS.lobby_start_run(nil, { seed = seed, stake = stake })
+	sendDebugMessage("Run started", "MULTIPLAYER")
 	G.E_MANAGER:add_event(Event({
     trigger = 'immediate',
+		no_delete = true,
     func = function()
+			sendDebugMessage("Sending hands and discards update", "MULTIPLAYER")
 			MP.ACTIONS.UpdateHandsAndDiscards(G.GAME.starting_params.hands, G.GAME.starting_params.discards)
       return true
     end
@@ -742,7 +745,7 @@ function MP.NETWORKING.update(dt)
 				then
 					log = log .. string.format(" (seed: %s) ", last_game_seed)
 				end
-				sendTraceMessage(log, "MULTIPLAYER")
+				sendTraceMessage(log, "\27[31mMULTIPLAYER-RECEIVED\27[0m")
 			end
 
 			local handler = action_table[parsedAction.action]
