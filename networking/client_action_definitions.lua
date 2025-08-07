@@ -1,4 +1,4 @@
-local json = require "json"
+local json = require("json")
 
 -- #region Client to Server
 function MP.ACTIONS.connect()
@@ -42,7 +42,6 @@ function MP.ACTIONS.send_lobby_ready(value)
     MP.LOBBY.ready_text = MP.LOBBY.local_player.lobby_state.is_ready and localize("b_unready") or localize("b_ready")
     ready_button_ref.config.colour = MP.LOBBY.local_player.lobby_state.is_ready and G.C.GREEN or G.C.RED
   end
-
 end
 
 function MP.ACTIONS.ready_blind(e)
@@ -67,7 +66,6 @@ function MP.ACTIONS.set_client_data()
       version = MULTIPLAYER_VERSION,
       mod_hash = MP.MOD_STRING
     }))
-
   end
 end
 
@@ -128,7 +126,7 @@ function MP.ACTIONS.update_lobby_options(_)
     options[k] = v
   end
 
-	MP.LOBBY.ready_to_start = false
+  MP.LOBBY.ready_to_start = false
   for _, player in pairs(MP.LOBBY.players) do
     if not player.lobby_state.is_host then
       player.lobby_state.is_ready = false
@@ -140,36 +138,32 @@ function MP.ACTIONS.update_lobby_options(_)
 end
 
 ---@param boss string
----@param chips number 
+---@param chips number
 function MP.ACTIONS.set_Boss(boss, chips)
   Client.send(json.encode({ action = "setBossBlind", key = boss, chips = tostring(chips) }))
 end
 
 function MP.ACTIONS.send_player_jokers()
-	if not G.jokers or not G.jokers.cards then
-		Client.send(json.encode({ action = "sendPlayerJokers", jokers = "" }))
-		return
-	end
+  if not G.jokers or not G.jokers.cards then
+    Client.send(json.encode({ action = "sendPlayerJokers", jokers = "" }))
+    return
+  end
 
-	-- Log the jokers
-	local jokers_str = ""
-	for _, card in pairs(G.jokers.cards) do
-		jokers_str = jokers_str .. ";" .. MP.UTILS.joker_to_string(card)
-	end
-	sendTraceMessage(string.format("Sending end game jokers: %s", jokers_str), "MULTIPLAYER")
+  -- Log the jokers
+  local jokers_str = ""
+  for _, card in pairs(G.jokers.cards) do
+    jokers_str = jokers_str .. ";" .. MP.UTILS.joker_to_string(card)
+  end
+  sendTraceMessage(string.format("Sending end game jokers: %s", jokers_str), "MULTIPLAYER")
 
-	local jokers_save = G.jokers:save()
-	local jokers_encoded = MP.UTILS.str_pack_and_encode(jokers_save)
+  local jokers_save = G.jokers:save()
+  local jokers_encoded = MP.UTILS.str_pack_and_encode(jokers_save)
 
-	Client.send(json.encode({ action = "sendPlayerJokers", jokers= jokers_encoded }))
+  Client.send(json.encode({ action = "sendPlayerJokers", jokers = jokers_encoded }))
 end
 
 function MP.ACTIONS.set_ante(ante)
   Client.send(json.encode({ action = "setAnte", ante = ante }))
-end
-
-function MP.ACTIONS.new_round()
-  Client.send(json.encode({ action = "newRound" }))
 end
 
 function MP.ACTIONS.set_furthest_blind(furthest_blind)
@@ -177,7 +171,7 @@ function MP.ACTIONS.set_furthest_blind(furthest_blind)
 end
 
 function MP.ACTIONS.skip(furthest_blind)
-  Client.send(json.encode({ action = "skip", blind = furthest_blind}))
+  Client.send(json.encode({ action = "skip", blind = furthest_blind }))
 end
 
 --- @class GameStateData
@@ -202,6 +196,7 @@ MP.ACTIONS.update_player_state = function(updates)
 end
 
 MP.ACTIONS.UpdateHandsAndDiscards = function(hands_max, discards_max)
+  sendDebugMessage("Updating hands and discards", "\27[34m[Client Actions]\27[0m")
   Client.send(json.encode({ action = "updateHandsAndDiscards", hands_max = hands_max, discards_max = discards_max }))
 end
 
@@ -263,8 +258,10 @@ function MP.ACTIONS.fail_timer()
   Client.send(json.encode({ action = "failTimer" }))
 end
 
-function MP.ACTIONS.sync_client()
-  Client.send(json.encode({ action = "syncClient", isCached = _RELEASE_MODE }))
+MP.ACTIONS.kick_player = function(player_id)
+  Client.send(json.encode({ action = "kick", player_id = player_id }))
 end
 
--- #endregion Client to Server
+function MP.ACTIONS.send_money_to_player(player_id)
+  Client.send(json.encode({ action = "sendMoney", player_id = player_id }))
+end

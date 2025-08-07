@@ -216,6 +216,8 @@ return {
 			b_view_code = "VIEW CODE",
 			b_copy_code = "COPY CODE",
 			b_leave = "LEAVE",
+			b_kick = "KICK",
+			b_send_money = "SEND",
 			b_opts_cb_money = "Give comeback $ on life loss",
 			b_opts_no_gold_on_loss = "Don't get blind rewards on round loss",
 			b_opts_death_on_loss = "Lose a life on non-PvP round loss",
