@@ -23,9 +23,10 @@
 --- @field hostCached boolean
 --- @field players? table[] @ Array of player objects: { username: string, modHash: string, isCached: boolean, id: string }
 
-
-local json = require "json"
 Client = {}
+
+local msgpack = SMODS.load_file('networking/message_pack.lua', 'Multiplayer')()
+local json = require("json")
 
 function Client.send(msg)
 	if msg ~= '{"action":"a"}' then
@@ -721,17 +722,12 @@ local last_game_seed = ""
 
 function MP.NETWORKING.update(dt)
 	repeat
-		local msg = love.thread.getChannel("networkToUi"):pop()
+		local parsedAction = love.thread.getChannel("networkToUi"):pop()
 
-		if msg then
-			local ok, parsedAction = pcall(json.decode, msg)
-			if not ok or type(parsedAction) ~= "table" then
-				sendWarnMessage("Received non-JSON message: " .. tostring(msg), "MULTIPLAYER")
-				return
-			end
-
+		if parsedAction then
+			-- Try MessagePack first, then fall back to JSON
 			if not (parsedAction.action == "a") then
-				local log = string.format("Client got %s message: ", parsedAction.action)
+				local log = string.format("Client got %s message: ", tprint(parsedAction))
 				for k, v in pairs(parsedAction) do
 					if parsedAction.action == "startGame" and k == "seed" then
 						last_game_seed = v

@@ -1,7 +1,11 @@
 -- Multiplayer networking thread
-local CONFIG_URL, CONFIG_PORT = ...
+local CONFIG_URL, CONFIG_PORT, msgpack_path = ...
 local json = require("json")
 local socket = require("socket")
+
+-- MessagePack support - use SMODS loader in thread context
+local NativeFS = require("nativefs")
+local msgpack = NativeFS.load(msgpack_path)()
 
 -- State
 local client = nil
@@ -22,12 +26,12 @@ local uiToNetwork = love.thread.getChannel("uiToNetwork")
 -- Helper functions
 local function sendError(message)
 	local errorMsg = { action = "error", message = message }
-	networkToUi:push(json.encode(errorMsg))
+	networkToUi:push(errorMsg)  -- Keep error messages as JSON for UI compatibility
 end
 
 local function sendDisconnected(reason)
 	local disconnectedMsg = { action = "disconnected", message = reason }
-	networkToUi:push(json.encode(disconnectedMsg))
+	networkToUi:push(disconnectedMsg)  -- Keep disconnection messages as JSON for UI compatibility
 end
 
 local function closeConnection()
@@ -69,7 +73,19 @@ local function sendMessage(message)
 		return false
 	end
 	
-	local success, err = client:send(message .. "\n")
+	-- Encode with MessagePack
+	local packed = msgpack.pack(message)
+	
+	-- Send 4-byte length header followed by MessagePack data
+	local length = #packed
+	local header = string.char(
+		math.floor(length / 16777216) % 256,  -- (length >> 24) & 0xFF
+		math.floor(length / 65536) % 256,     -- (length >> 16) & 0xFF
+		math.floor(length / 256) % 256,       -- (length >> 8) & 0xFF
+		length % 256                          -- length & 0xFF
+	)
+	
+	local success, err = client:send(header .. packed)
 	if not success then
 		if err == "closed" then
 			isConnected = false
@@ -112,11 +128,35 @@ local function processNetworkMessages()
 	local processed = 0
 	
 	while processed < maxPackets do
-		local data, err = client:receive()
-		if data then
-			lastKeepAlive = os.time()
-			networkToUi:push(data)
-			processed = processed + 1
+		-- First, try to read the 4-byte length header
+		local header, err = client:receive(4)
+		if header then
+			-- Decode the length from the header
+			local b1, b2, b3, b4 = header:byte(1, 4)
+			local length = b1 * 16777216 + b2 * 65536 + b3 * 256 + b4  -- (b1 << 24) | (b2 << 16) | (b3 << 8) | b4
+			
+			-- Now read the MessagePack data
+			local data, err2 = client:receive(length)
+			if data then
+				lastKeepAlive = os.time()
+				
+				-- Decode MessagePack and convert back to JSON for UI compatibility
+				local ok, decoded = pcall(msgpack.unpack, data)
+				if ok then
+					networkToUi:push(decoded)
+				else
+					-- If MessagePack decoding fails, send error
+					sendError("Failed to decode MessagePack message: " .. tostring(decoded))
+				end
+				processed = processed + 1
+			elseif err2 == "closed" then
+				isConnected = false
+				sendDisconnected("Connection closed by server")
+				break
+			else
+				-- No more data available for message body, exit loop
+				break
+			end
 		elseif err == "closed" then
 			isConnected = false
 			sendDisconnected("Connection closed by server")
@@ -136,7 +176,7 @@ local function handleKeepAlive()
 	
 	-- Send keep-alive every KEEP_ALIVE_INTERVAL seconds
 	if timeSinceLastMessage >= KEEP_ALIVE_INTERVAL then
-		local keepAliveMsg = json.encode({ action = "k" })
+		local keepAliveMsg = { action = "k" }  -- Table instead of JSON string
 		
 		if sendMessage(keepAliveMsg) then
 			lastKeepAlive = currentTime

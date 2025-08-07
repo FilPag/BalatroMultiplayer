@@ -1,5 +1,3 @@
-local json = require("json")
-
 -- #region Client to Server
 function MP.ACTIONS.connect()
   Client.send("connect")
@@ -16,24 +14,24 @@ function MP.ACTIONS.update_player_usernames()
 end
 
 function MP.ACTIONS.create_lobby(ruleset, gamemode)
-  Client.send(json.encode({ action = "createLobby", ruleset = ruleset, gameMode = gamemode }))
+  Client.send({ action = "createLobby", ruleset = ruleset, gameMode = gamemode })
 end
 
 function MP.ACTIONS.join_lobby(code)
-  Client.send(json.encode({ action = "joinLobby", code = code }))
+  Client.send({ action = "joinLobby", code = code })
 end
 
 function MP.ACTIONS.leave_lobby()
-  Client.send(json.encode({ action = "leaveLobby" }))
+  Client.send({ action = "leaveLobby" })
 end
 
 function MP.ACTIONS.start_game()
-  Client.send(json.encode({ action = "startGame", seed = MP.LOBBY.config.custom_seed, stake = MP.LOBBY.config.stake }))
+  Client.send({ action = "startGame", seed = MP.LOBBY.config.custom_seed, stake = MP.LOBBY.config.stake })
 end
 
 function MP.ACTIONS.send_lobby_ready(value)
   MP.LOBBY.local_player.lobby_state.is_ready = value
-  Client.send(json.encode({ action = "setReady", is_ready = MP.LOBBY.local_player.lobby_state.is_ready }))
+  Client.send({ action = "setReady", is_ready = MP.LOBBY.local_player.lobby_state.is_ready })
 
   if not G.MAIN_MENU_UI then return end
 
@@ -54,18 +52,18 @@ function MP.ACTIONS.unready_blind()
 end
 
 function MP.ACTIONS.stop_game()
-  Client.send(json.encode({ action = "stopGame" }))
+  Client.send({ action = "stopGame" })
 end
 
 function MP.ACTIONS.set_client_data()
   if MP.LOBBY.connected then
-    Client.send(json.encode({
+    Client.send({
       action = "setClientData",
       username = MP.username,
       colour = MP.blind_col,
       version = MULTIPLAYER_VERSION,
       mod_hash = MP.MOD_STRING
-    }))
+    })
   end
 end
 
@@ -80,11 +78,11 @@ function MP.ACTIONS.fail_round(hands_used)
   if hands_used == 0 then
     return
   end
-  Client.send(json.encode({ action = "failRound" }))
+  Client.send({ action = "failRound" })
 end
 
 function MP.ACTIONS.version()
-  Client.send(json.encode({ action = "version", version = MULTIPLAYER_VERSION }))
+  Client.send({ action = "version", version = MULTIPLAYER_VERSION })
 end
 
 function MP.ACTIONS.set_location(location)
@@ -92,7 +90,7 @@ function MP.ACTIONS.set_location(location)
     return
   end
   MP.GAME.location = location
-  Client.send(json.encode({ action = "setLocation", location = location }))
+  Client.send({ action = "setLocation", location = location })
 end
 
 ---@param score number
@@ -117,7 +115,7 @@ function MP.ACTIONS.play_hand(score, hands_left)
     target = G.GAME.blind.chips
   end
 
-  Client.send(json.encode({ action = "playHand", score = fixed_score, hands_left = hands_left, target_score = target }))
+  Client.send({ action = "playHand", score = fixed_score, hands_left = hands_left, target_score = target })
 end
 
 function MP.ACTIONS.update_lobby_options(_)
@@ -134,18 +132,18 @@ function MP.ACTIONS.update_lobby_options(_)
   end
 
   set_main_menu_UI()
-  Client.send(json.encode({ action = "updateLobbyOptions", options = options }))
+  Client.send({ action = "updateLobbyOptions", options = options })
 end
 
 ---@param boss string
 ---@param chips number
 function MP.ACTIONS.set_Boss(boss, chips)
-  Client.send(json.encode({ action = "setBossBlind", key = boss, chips = tostring(chips) }))
+  Client.send({ action = "setBossBlind", key = boss, chips = tostring(chips) })
 end
 
 function MP.ACTIONS.send_player_jokers()
   if not G.jokers or not G.jokers.cards then
-    Client.send(json.encode({ action = "sendPlayerJokers", jokers = "" }))
+    Client.send({ action = "sendPlayerJokers", jokers = "" })
     return
   end
 
@@ -159,19 +157,19 @@ function MP.ACTIONS.send_player_jokers()
   local jokers_save = G.jokers:save()
   local jokers_encoded = MP.UTILS.str_pack_and_encode(jokers_save)
 
-  Client.send(json.encode({ action = "sendPlayerJokers", jokers = jokers_encoded }))
+  Client.send({ action = "sendPlayerJokers", jokers = jokers_encoded })
 end
 
 function MP.ACTIONS.set_ante(ante)
-  Client.send(json.encode({ action = "setAnte", ante = ante }))
+  Client.send({ action = "setAnte", ante = ante })
 end
 
 function MP.ACTIONS.set_furthest_blind(furthest_blind)
-  Client.send(json.encode({ action = "setFurthestBlind", blind = furthest_blind }))
+  Client.send({ action = "setFurthestBlind", blind = furthest_blind })
 end
 
 function MP.ACTIONS.skip(furthest_blind)
-  Client.send(json.encode({ action = "skip", blind = furthest_blind }))
+  Client.send({ action = "skip", blind = furthest_blind })
 end
 
 --- @class GameStateData
@@ -192,48 +190,48 @@ end
 --- Update the player's game state on the server.
 --- @param updates GameStateData|table Table of fields to update (partial GameStateData)
 MP.ACTIONS.update_player_state = function(updates)
-  Client.send(json.encode({ action = "updatePlayerGameState", updates = updates }))
+  Client.send({ action = "updatePlayerGameState", updates = updates })
 end
 
 MP.ACTIONS.UpdateHandsAndDiscards = function(hands_max, discards_max)
   sendDebugMessage("Updating hands and discards", "\27[34m[Client Actions]\27[0m")
-  Client.send(json.encode({ action = "updateHandsAndDiscards", hands_max = hands_max, discards_max = discards_max }))
+  Client.send({ action = "updateHandsAndDiscards", hands_max = hands_max, discards_max = discards_max })
 end
 
 function MP.ACTIONS.send_phantom(key)
-  Client.send(json.encode({ action = "sendPhantom", key = key }))
+  Client.send({ action = "sendPhantom", key = key })
 end
 
 function MP.ACTIONS.remove_phantom(key)
-  Client.send(json.encode({ action = "removePhantom", key = key }))
+  Client.send({ action = "removePhantom", key = key })
 end
 
 function MP.ACTIONS.asteroid()
-  Client.send(json.encode({ action = "asteroid" }))
+  Client.send({ action = "asteroid" })
 end
 
 function MP.ACTIONS.sold_joker()
-  Client.send(json.encode({ action = "soldJoker" }))
+  Client.send({ action = "soldJoker" })
 end
 
 function MP.ACTIONS.lets_go_gambling_nemesis()
-  Client.send(json.encode({ action = "letsGoGamblingNemesis" }))
+  Client.send({ action = "letsGoGamblingNemesis" })
 end
 
 function MP.ACTIONS.eat_pizza(discards)
-  Client.send(json.encode({ action = "eatPizza", discards = discards }))
+  Client.send({ action = "eatPizza", discards = discards })
 end
 
 function MP.ACTIONS.spent_last_shop(amount)
-  Client.send(json.encode({ action = "spentLastShop", amount = amount }))
+  Client.send({ action = "spentLastShop", amount = amount })
 end
 
 function MP.ACTIONS.magnet()
-  Client.send(json.encode({ action = "magnet" }))
+  Client.send({ action = "magnet" })
 end
 
 function MP.ACTIONS.magnet_response(key)
-  Client.send(json.encode({ action = "magnetResponse", key = key }))
+  Client.send({ action = "magnetResponse", key = key })
 end
 
 function MP.ACTIONS.send_player_deck()
@@ -241,27 +239,27 @@ function MP.ACTIONS.send_player_deck()
   for _, card in ipairs(G.playing_cards) do
     deck_str = deck_str .. ";" .. MP.UTILS.card_to_string(card)
   end
-  Client.send(json.encode({ action = "sendPlayerDeck", deck = deck_str }))
+  Client.send({ action = "sendPlayerDeck", deck = deck_str })
 end
 
 function MP.ACTIONS.start_ante_timer()
-  Client.send(json.encode({ action = "startAnteTimer", time = MP.GAME.timer }))
+  Client.send({ action = "startAnteTimer", time = MP.GAME.timer })
   MP.action_start_ante_timer(MP.GAME.timer)
 end
 
 function MP.ACTIONS.pause_ante_timer()
-  Client.send(json.encode({ action = "pauseAnteTimer", time = MP.GAME.timer }))
+  Client.send({ action = "pauseAnteTimer", time = MP.GAME.timer })
   MP.action_pause_ante_timer(MP.GAME.timer)
 end
 
 function MP.ACTIONS.fail_timer()
-  Client.send(json.encode({ action = "failTimer" }))
+  Client.send({ action = "failTimer" })
 end
 
 MP.ACTIONS.kick_player = function(player_id)
-  Client.send(json.encode({ action = "kick", player_id = player_id }))
+  Client.send({ action = "kick", player_id = player_id })
 end
 
 function MP.ACTIONS.send_money_to_player(player_id)
-  Client.send(json.encode({ action = "sendMoney", player_id = player_id }))
+  Client.send({ action = "sendMoney", player_id = player_id })
 end
