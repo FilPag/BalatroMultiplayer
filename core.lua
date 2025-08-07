@@ -73,7 +73,6 @@ MP.INTEGRATIONS = {
 MP.UI_EVENT_HANDLER = SMODS.load_file('networking/ui_event_handler.lua', 'Multiplayer')()
 MP.STATE_UPDATER = SMODS.load_file('networking/state_updater.lua', 'Multiplayer')()
 G.C.MULTIPLAYER = HEX("AC3232")
-MP.MPACK = SMODS.load_file('misc/message_pack.lua', 'Multiplayer')()
 
 MP.load_mp_file("misc/utils.lua")
 MP.load_mp_file("misc/insane_int.lua")
@@ -282,5 +281,7 @@ function love.errorhandler(msg, traceback)
 end
 
 
-MP.NETWORKING_THREAD:start(SMODS.Mods["Multiplayer"].config.server_url, SMODS.Mods["Multiplayer"].config.server_port)
+
+local msgpack_path = SMODS.current_mod.path .. 'networking' .. path_separator .. 'message_pack.lua'
+MP.NETWORKING_THREAD:start(SMODS.Mods["Multiplayer"].config.server_url, SMODS.Mods["Multiplayer"].config.server_port, msgpack_path)
 MP.ACTIONS.connect()
