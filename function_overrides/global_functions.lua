@@ -48,12 +48,6 @@ function get_blind_main_colour(type) -- handles ui colour stuff
 	return get_blind_main_colourref(type)
 end
 
-local ease_dollars_ref = ease_dollars
-function ease_dollars(mod, instant)
-	sendTraceMessage(string.format("Client sent message: action:moneyMoved,amount:%s", tostring(mod)), "MULTIPLAYER")
-	return ease_dollars_ref(mod, instant)
-end
-
 local set_main_menu_UI_ref = set_main_menu_UI
 ---@diagnostic disable-next-line: lowercase-global
 function set_main_menu_UI()

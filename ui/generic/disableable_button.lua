@@ -7,6 +7,12 @@ function MP.UI.Disableable_Button(args)
 	args.label = not enabled and args.disabled_text or args.label
 
 	local button_component = UIBox_button(args)
+	-- Ensure custom args are preserved on the interactive config so callbacks can access them
+	if args.button_args then
+		-- button_component.nodes[1] is the outer container created by UIBox_button
+		-- button_component.nodes[1].config is the clickable element's config table
+		button_component.nodes[1].config.button_args = args.button_args
+	end
 	button_component.nodes[1].config.button = enabled and args.button or nil
 	button_component.nodes[1].config.hover = enabled
 	button_component.nodes[1].config.shadow = enabled

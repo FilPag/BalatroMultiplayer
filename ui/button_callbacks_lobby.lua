@@ -292,11 +292,6 @@ function G.FUNCS.start_lobby(e)
   G.FUNCS:exit_overlay_menu()
 end
 
-function G.FUNCS.lobby_kick_player(e)
-  local player_id = e.config.button_args.player_id
-  MP.ACTIONS.kick_player(player_id)
-end
-
 local start_run_ref = G.FUNCS.start_run
 function G.FUNCS.start_run(e, args)
   if MP.LOBBY.code then
@@ -361,7 +356,3 @@ for gamemode, _ in pairs(MP.Gamemodes) do
     G.FUNCS.start_lobby()
   end
 end
-
--- Lobby/Menu-related button callbacks
-
--- Functions will be copied here in alphabetical order as per instructions.

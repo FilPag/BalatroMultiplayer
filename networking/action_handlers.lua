@@ -589,6 +589,12 @@ local function action_receive_player_jokers(player_id, jokers)
 	G.FUNCS.load_end_game_jokers()
 end
 
+local function action_received_money()
+	if not MP.LOBBY.code then return end
+
+	ease_dollars(5, true)
+end
+
 function G.FUNCS.load_player_deck(player)
 	if not MP.LOBBY.code or not player.deck_str then
 		return
@@ -692,6 +698,7 @@ local action_table = {
 	playerLeftLobby = function(parsedAction) player_left_lobby(parsedAction.player_id, parsedAction.host_id) end,
 	gameStarted = function(parsedAction) action_game_started(parsedAction.seed, parsedAction.stake) end,
 	startBlind = function() action_start_blind() end,
+	receivedMoney = function() action_received_money() end,
 	lobbyReady = function(parsedAction) action_lobby_ready_update(parsedAction.ready_states) end,
 	gameStateUpdate = function(parsedAction) action_game_state_update(parsedAction.player_id, parsedAction.game_state) end,
 	gameStopped = function() action_game_stopped() end,

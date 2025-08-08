@@ -256,10 +256,14 @@ function MP.ACTIONS.fail_timer()
   Client.send({ action = "failTimer" })
 end
 
-MP.ACTIONS.kick_player = function(player_id)
-  Client.send({ action = "kick", player_id = player_id })
-end
-
 function MP.ACTIONS.send_money_to_player(player_id)
+  if G.GAME.dollars < to_big(5) then
+    sendDebugMessage("Not enough money to send!", "MULTIPLAYER")
+    MP.UTILS.overlay_message("Not enough money to send!", G.C.RED)
+    return
+  end
+
+  sendDebugMessage("Sending money to player: " .. tostring(player_id), "MULTIPLAYER")
+  ease_dollars(-5, true)
   Client.send({ action = "sendMoney", player_id = player_id })
 end

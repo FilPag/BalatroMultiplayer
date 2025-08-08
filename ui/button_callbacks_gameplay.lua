@@ -223,7 +223,13 @@ function G.FUNCS.select_blind(e)
 end
 
 function G.FUNCS.send_money_to_player(e)
-  local player_id = e.config.button_args.player_id
+  sendDebugMessage(tprint(e.config))
+  -- Safely extract player_id from button_args if present
+  local player_id = e and e.config and e.config.button_args and e.config.button_args.player_id
+  if not player_id then
+    sendDebugMessage("send_money_to_player called without player_id", "MULTIPLAYER")
+    return
+  end
   MP.ACTIONS.send_money_to_player(player_id)
 end
 
