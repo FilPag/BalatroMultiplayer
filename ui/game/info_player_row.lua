@@ -150,21 +150,6 @@ function MP.UI.create_UIBox_player_row(player)
         n = G.UIT.C,
         config = { align = "cm", colour = G.C.CLEAR, r = 0.1, minw = 2.5 }
       } or nil,
-
-      MP.LOBBY.is_host and MP.UI.Disableable_Button({
-        id = "kick_" .. profile.id,
-        button = "lobby_kick_player",
-        button_args = { player_id = profile.id},
-        colour = G.C.RED,
-        label = { localize("b_kick") },
-        scale = 0.45,
-        minw = 1.3,
-        minh = 0.45,
-
-        col = true,
-        enabled_ref_table = { enabled = not MP.UTILS.is_local_player(player) },
-        enabled_ref_value = "enabled",
-      }) or nil,
     },
   }
 end
