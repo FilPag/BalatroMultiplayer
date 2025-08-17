@@ -206,8 +206,8 @@ function MP.ACTIONS.remove_phantom(key)
   Client.send({ action = "removePhantom", key = key })
 end
 
-function MP.ACTIONS.asteroid()
-  Client.send({ action = "asteroid" })
+function MP.ACTIONS.asteroid(selected_target)
+  Client.send({ action = "asteroid", target = selected_target })
 end
 
 function MP.ACTIONS.sold_joker()

@@ -25,12 +25,9 @@
 
 Client = {}
 
-local msgpack = SMODS.load_file('networking/message_pack.lua', 'Multiplayer')()
-local json = require("json")
-
 function Client.send(msg)
 	if msg ~= '{"action":"a"}' then
-		sendTraceMessage(string.format("Client sent message: %s", msg), "\27[34mMULTIPLAYER_SEND\27[0m")
+		sendTraceMessage(string.format("Client sent message: %s", tprint(msg)), "\27[34mMULTIPLAYER_SEND\27[0m")
 	end
 	love.thread.getChannel("uiToNetwork"):push(msg)
 end
@@ -377,7 +374,7 @@ local function action_version()
 end
 
 local action_asteroid = action_asteroid
-		or function()
+		or function(sender)
 			local hand_priority = {
 				["Flush Five"] = 1,
 				["Flush House"] = 2,
@@ -711,7 +708,7 @@ local action_table = {
 	sendPhantom = function(parsedAction) action_send_phantom(parsedAction.key) end,
 	removePhantom = function(parsedAction) action_remove_phantom(parsedAction.key) end,
 	speedrun = function() action_speedrun() end,
-	asteroid = function() action_asteroid() end,
+	asteroid = function(parsedAction) action_asteroid(parsedAction.sender) end,
 	soldJoker = function() action_sold_joker() end,
 	letsGoGamblingNemesis = function() action_lets_go_gambling_nemesis() end,
 	eatPizza = function(parsedAction) action_eat_pizza(parsedAction.discards) end,
