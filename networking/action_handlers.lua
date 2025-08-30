@@ -27,7 +27,7 @@ Client = {}
 
 function Client.send(msg)
 	if msg ~= '{"action":"a"}' then
-		sendTraceMessage(string.format("Client sent message: %s", tprint(msg)), "\27[34mMULTIPLAYER_SEND\27[0m")
+		sendTraceMessage(string.format("Client sent message: %s", tostring(msg)), "\27[34mMULTIPLAYER_SEND\27[0m")
 	end
 	love.thread.getChannel("uiToNetwork"):push(msg)
 end

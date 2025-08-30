@@ -6,14 +6,15 @@ local file = io.open(lock_path, "r")
 local created_lock = false
 if file then
     file:close()
-    love.window.setMode(1200, 900, {display = 1})
+    love.window.setMode(1200, 900, {display = 1, resizable = true})
 else
     file = io.open(lock_path, "w")
     file:write("locked")
     created_lock = true
     file:close()
 
-    love.window.setMode(1200, 900, {display = 2})
+    --love.window.setMode(1200, 900, {display = 2})
+    love.window.setMode(1200, 900, {display = 1, resizable = true})
 end
 
 local love_errorhandler_ref = love.errorhandler

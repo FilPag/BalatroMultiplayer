@@ -9,14 +9,14 @@ function G.UIDEF.ruleset_selection_options()
 	})
 
 	local ruleset_buttons_data = {
-		{
+		--[[{ Remove competitive since idgaf
 			name = "k_competitive",
 			buttons = {
 				{ button_id = "ranked_ruleset_button",      button_localize_key = "k_ranked" },
 				{ button_id = "majorleague_ruleset_button", button_localize_key = "k_majorleague" },
 				{ button_id = "minorleague_ruleset_button", button_localize_key = "k_minorleague" },
 			}
-		},
+		},--]]
 		{
 			name = "k_standard",
 			buttons = {
@@ -28,9 +28,10 @@ function G.UIDEF.ruleset_selection_options()
 		{
 			name = "k_other",
 			buttons = {
+				{ button_id = "clash_ruleset_button", button_localize_key = "k_clash" },
+				{ button_id = "coop_ruleset_button", button_localize_key = "k_coop" },
 				{ button_id = "badlatro_ruleset_button", button_localize_key = "k_badlatro" },
 				{ button_id = "sandbox_ruleset_button", button_localize_key = "k_sandbox" },
-				{ button_id = "coop_ruleset_button", button_localize_key = "k_coop" },
 			}
 		}
 	}

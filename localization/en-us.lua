@@ -154,6 +154,13 @@ return {
 					"most chips wins",
 				},
 			},
+			bl_mp_clash = {
+				name = "Clash",
+				text = {
+					"Everyone plays, lowest scores are eliminated.",
+					"Last player standing wins!",
+				},
+			},
 		},
 		Edition = {
 			e_mp_phantom = {
@@ -373,6 +380,9 @@ return {
 			loc_selecting = "Selecting a Blind",
 			loc_shop = "Shopping",
 			loc_playing = "Playing ",
+			k_clash = "Clash",
+			k_clash_description =
+			"Everyone plays, lowest scores are eliminated. Last player standing wins!",
 		},
 		v_dictionary = {
 			a_mp_art = { "Art: #1#" },
