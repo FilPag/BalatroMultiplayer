@@ -9,31 +9,55 @@ local debug_players = {
   ["8"] = { profile = { name = "Player 8" }, game_state = { score = 800000000000 } },
 }
 
-function MP.UTILS.re_sort_players()
-  if not MP.GAME.leaderboard then  return end
-
-  sendDebugMessage("Re-sorting players")
-
-  --randomize all player scores
-  for i, player in pairs(debug_players) do
-    player.game_state.score = math.random(1, 100000000)
-  end
-
+-- Helper function to sort players by score (descending)
+function MP.UTILS.get_sorted_players()
   local sorted_players = {}
-  for i, player in pairs(debug_players) do
-    table.insert(sorted_players, { idx = i, player = player })
+  for idx, player in pairs(debug_players) do
+    if player.game_state and player.game_state.score then
+      table.insert(sorted_players, { idx = idx, player = player })
+    end
   end
   table.sort(sorted_players, function(a, b)
     return (a.player.game_state.score or 0) > (b.player.game_state.score or 0)
   end)
+  return sorted_players
+end
 
-  for i, player in ipairs(sorted_players) do
-    debug_players[player.idx].game_state.player_slot:remove()
-    debug_players[player.idx].game_state.player_slot = UIBox({
-      definition = MP.UIDEF.player_leaderboard_entry(player.player, i),
-      config = { major = MP.GAME.leaderboard:get_UIE_by_ID("mp_player_slot_" .. tostring(i)), bond = "Strong" }
-    })
+-- Helper function to create or update player UI slot
+function MP.UTILS.update_player_slot(player_data, position, slot_id)
+  local slot = MP.GAME.leaderboard:get_UIE_by_ID("mp_player_slot_" .. tostring(slot_id))
+  if not slot then return end
+  
+  -- Remove existing slot if it exists
+  if debug_players[player_data.idx].game_state.player_slot then
+    debug_players[player_data.idx].game_state.player_slot:remove()
   end
+  
+  debug_players[player_data.idx].game_state.player_slot = UIBox({
+    definition = MP.UIDEF.player_leaderboard_entry(player_data.player, position),
+    config = { major = slot, bond = "Strong" }
+  })
+end
+
+-- Helper function to populate all player slots
+function MP.UTILS.populate_leaderboard(sorted_players)
+  for position, player_data in ipairs(sorted_players) do
+    MP.UTILS.update_player_slot(player_data, position, position)
+  end
+end
+
+function MP.UTILS.re_sort_players()
+  if not MP.GAME.leaderboard then return end
+  
+  sendDebugMessage("Re-sorting players")
+  
+  -- Randomize scores for testing
+  for _, player in pairs(debug_players) do
+    player.game_state.score = math.random(1, 100000000)
+  end
+  
+  local sorted_players = MP.UTILS.get_sorted_players()
+  MP.UTILS.populate_leaderboard(sorted_players)
 end
 
 local keypressed_ref = love.keypressed
@@ -53,21 +77,8 @@ function Blind:set_blind(blind, reset, silent)
     config = { major = G.HUD_blind, align = 'cm', padding = 0.1 }
   })
 
-  local sorted_players = {}
-  for i, player in pairs(debug_players) do
-    table.insert(sorted_players, { idx = i, player = player })
-  end
-  table.sort(sorted_players, function(a, b)
-    return (a.player.game_state.score or 0) > (b.player.game_state.score or 0)
-  end)
-
-  for i, player in ipairs(sorted_players) do
-    local slot = MP.GAME.leaderboard:get_UIE_by_ID("mp_player_slot_" .. tostring(i))
-    debug_players[player.idx].game_state.player_slot = UIBox({
-      definition = MP.UIDEF.player_leaderboard_entry(player.player),
-      config = { major = slot, bond = "Strong" }
-    })
-  end
+  local sorted_players = MP.UTILS.get_sorted_players()
+  MP.UTILS.populate_leaderboard(sorted_players)
 end
 
 MP.DEBUG = true
@@ -133,15 +144,40 @@ function MP.UIDEF.player_leaderboard_entry(player, position)
   }
 end
 
-function generate_player_slots(from, to)
-  local slots = {}
-  for i = from, to do
-    table.insert(slots, {
-      n = G.UIT.C,
-      config = { align = "cm", minw = 1.5, minh = 0.8, padding = 0, id = "mp_player_slot_" .. tostring(i) },
-    })
+-- Generate player slot rows based on player count
+function generate_player_rows()
+  local player_count = 0
+  for _, player in pairs(debug_players) do
+    if player.game_state and player.game_state.score then
+      player_count = player_count + 1
+    end
   end
-  return slots
+  
+  local rows = {}
+  local slots_per_row = 3
+  local current_slot = 1
+  
+  while current_slot <= player_count do
+    local slots_in_this_row = math.min(slots_per_row, player_count - current_slot + 1)
+    local row_slots = {}
+    
+    for i = current_slot, current_slot + slots_in_this_row - 1 do
+      table.insert(row_slots, {
+        n = G.UIT.C,
+        config = { align = "cm", minw = 1.5, minh = 0.8, padding = 0, id = "mp_player_slot_" .. tostring(i) },
+      })
+    end
+    
+    table.insert(rows, {
+      n = G.UIT.R,
+      config = { align = "cm", padding = 0.05, minh = 0.8 },
+      nodes = row_slots
+    })
+    
+    current_slot = current_slot + slots_in_this_row
+  end
+  
+  return rows
 end
 
 function MP.UIDEF.clash_leaderboard()
@@ -171,24 +207,7 @@ function MP.UIDEF.clash_leaderboard()
           {
             n = G.UIT.C,
             config = { align = "cm", r = 0.1, padding = 0.05, minw = 4.90, minh = 2.74, colour = G.C.DYN_UI.DARK },
-            nodes = (function()
-              local count = 0
-              for i, player in pairs(debug_players) do
-                if player.game_state and player.game_state.score then
-                  count = count + 1
-                end
-              end
-              local result = {
-                { n = G.UIT.R, config = { align = "cm", padding = 0.05, minh = 0.8 }, nodes = generate_player_slots(1, 3) }
-              }
-              if count > 3 then
-                table.insert(result, { n = G.UIT.R, config = { align = "cm", padding = 0.05, minh = 0.8 }, nodes = generate_player_slots(4, 6) })
-              end
-              if count > 6 then
-                table.insert(result, { n = G.UIT.R, config = { align = "cm", padding = 0.05, minh = 0.8 }, nodes = generate_player_slots(7, 8) })
-              end
-              return result
-            end)()
+            nodes = generate_player_rows()
           }
         }
       }
