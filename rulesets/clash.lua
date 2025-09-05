@@ -1,11 +1,27 @@
 MP.Ruleset({
     key = "clash",
     multiplayer_content = true,
-    banned_jokers = {},
+    banned_jokers = {
+        "j_mp_conjoined_joker",
+        "j_mp_defensive_joker",
+        "j_mp_hanging_chad",
+        "j_mp_lets_go_gambling",
+        "j_mp_magnet",
+        "j_mp_penny_pincher",
+        "j_mp_pizza",
+        "j_mp_skip_off",
+        "j_mp_speedrun",
+        "j_mp_taxes",
+        "j_chicot",
+        "j_matador",
+        "j_mr_bones"
+    },
     banned_consumables = {},
     banned_vouchers = {},
     banned_enhancements = {},
-    banned_tags = {},
+    banned_tags = {
+        "tag_boss"
+    },
     banned_blinds = {},
     reworked_jokers = {},
     reworked_consumables = {},

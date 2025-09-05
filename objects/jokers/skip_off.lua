@@ -18,6 +18,7 @@ SMODS.Joker({
 	config = { extra = { hands = 0, discards = 0, extra_hands = 1, extra_discards = 1 } },
 	loc_vars = function(self, info_queue, card)
 		MP.UTILS.add_nemesis_info(info_queue)
+		if not MP.LOBBY.code then return { vars = { 0, 0, 0, 0, "" } } end
 		local nemesis = MP.UTILS.get_nemesis().game_state
 		if not nemesis then return { vars = { 0, 0, 0, 0, "" } } end
 		return {

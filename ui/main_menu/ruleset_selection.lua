@@ -1,10 +1,10 @@
 function G.UIDEF.ruleset_selection_options()
 	MP.LOBBY.fetched_weekly = 'smallworld' -- temp
-	MP.LOBBY.config.ruleset = "ruleset_mp_ranked"
-	MP.LoadReworks("ranked")
+	MP.LOBBY.config.ruleset = "ruleset_mp_traditional"
+	MP.LoadReworks("traditional")
 
 	local default_ruleset_area = UIBox({
-		definition = G.UIDEF.ruleset_info("ranked"),
+		definition = G.UIDEF.ruleset_info("traditional"),
 		config = { align = "cm" }
 	})
 
@@ -20,16 +20,16 @@ function G.UIDEF.ruleset_selection_options()
 		{
 			name = "k_standard",
 			buttons = {
-				{ button_id = "blitz_ruleset_button",       button_localize_key = "k_blitz" },
 				{ button_id = "traditional_ruleset_button", button_localize_key = "k_traditional" },
 				{ button_id = "vanilla_ruleset_button",     button_localize_key = "k_vanilla" },
+				{ button_id = "blitz_ruleset_button",       button_localize_key = "k_blitz" },
+				{ button_id = "clash_ruleset_button", button_localize_key = "k_clash" },
+				{ button_id = "coop_ruleset_button", button_localize_key = "k_coop" },
 			}
 		},
 		{
 			name = "k_other",
 			buttons = {
-				{ button_id = "clash_ruleset_button", button_localize_key = "k_clash" },
-				{ button_id = "coop_ruleset_button", button_localize_key = "k_coop" },
 				{ button_id = "badlatro_ruleset_button", button_localize_key = "k_badlatro" },
 				{ button_id = "sandbox_ruleset_button", button_localize_key = "k_sandbox" },
 			}
@@ -47,7 +47,7 @@ function G.FUNCS.change_ruleset_selection(e)
 		end
 	end
 
-	MP.UI.Change_Main_Lobby_Options(e, "ruleset_area", G.UIDEF.ruleset_info, "ranked_ruleset_button",
+	MP.UI.Change_Main_Lobby_Options(e, "ruleset_area", G.UIDEF.ruleset_info, "traditional_ruleset_button",
 		function(ruleset_name)
 			MP.LOBBY.config.ruleset = "ruleset_mp_" .. ruleset_name
 			MP.LoadReworks(ruleset_name)

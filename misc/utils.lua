@@ -818,6 +818,7 @@ end
 -- @param players table: array of player tables
 -- @param my_id string: the id of the local player
 function MP.UTILS.get_nemesis()
+	if not MP.LOBBY.code then return nil end
 	local players = MP.LOBBY.players
 	local my_id = MP.LOBBY.local_player.profile.id
 
