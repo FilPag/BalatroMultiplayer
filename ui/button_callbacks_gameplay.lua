@@ -152,6 +152,7 @@ G.FUNCS.evaluate_round = function()
     G.after_pvp = nil
     SMODS.calculate_context({ mp_end_of_pvp = true })
   end
+	MP.GAME.round_ended  = false	
   evaluate_round_ref()
 end
 

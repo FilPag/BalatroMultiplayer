@@ -14,6 +14,8 @@ end
 
 -- Helper function to create or update player UI slot
 function MP.UTILS.update_player_slot(player_data, position, slot_id)
+  if not MP.GAME.leaderboard then return end
+
   local slot = MP.GAME.leaderboard:get_UIE_by_ID("mp_player_slot_" .. tostring(slot_id))
   if not slot then return end
   

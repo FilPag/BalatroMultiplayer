@@ -20,8 +20,6 @@ local function handle_online_score_update(player, new_score)
         return
     end
 
-    sendDebugMessage("Updating score for player " .. tostring(player.profile.id) .. " to " .. tostring(new_score), "MULTIPLAYER")
-    sendDebugMessage("Local id is: " .. tostring(MP.LOBBY.local_player.profile.id), "MULTIPLAYER")
     MP.UTILS.ease_score(player.game_state, new_score)
 end
 
