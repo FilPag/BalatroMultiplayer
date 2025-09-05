@@ -1,6 +1,6 @@
 MP.Ruleset({
     key = "clash",
-    multiplayer_content = false,
+    multiplayer_content = true,
     banned_jokers = {},
     banned_consumables = {},
     banned_vouchers = {},
@@ -43,9 +43,9 @@ MP.Ruleset({
                         {
                             n = G.UIT.T,
                             config = {
-                                text = localize("k_no"),
+                                text = localize("k_yes"),
                                 scale = 0.8,
-                                colour = G.C.RED,
+                                colour = G.C.GREEN,
                             }
                         }
                     }, { col = true, text_scale = 0.6 }),
@@ -62,7 +62,7 @@ MP.Ruleset({
                             config = {
                                 text = localize("k_yes"),
                                 scale = 0.8,
-                                colour = G.C.RED,
+                                colour = G.C.GREEN,
                             }
                         }
                     }, { col = true, text_scale = 0.6 })

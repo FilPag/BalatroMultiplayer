@@ -1,6 +1,7 @@
 MP.Gamemode({
     key = "clash",
     get_blinds_by_ante = function(self, ante, choices)
+		--G.GAME.round_resets.pvp_blind_choices.Boss = true
         return choices.Small, choices.Big, "bl_mp_clash"
     end,
     banned_jokers = {

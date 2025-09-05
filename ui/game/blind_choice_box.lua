@@ -124,7 +124,7 @@ function MP.UIDEF.blind_choice_box(config)
 									shadow = true,
 									hover = true,
 									one_press = true,
-									func = MP.is_online_boss() and "pvp_ready_button" or nil,
+									func = MP.UTILS.should_display_ready_check(config.blind_choice.config.key, config.type) and "pvp_ready_button" or nil,
 									button = "select_blind",
 								},
 								nodes = {
@@ -409,7 +409,7 @@ function MP.UIDEF.blind_choice_extras(blind_type)
 		{ key = "ph_up_ante_2", colour = G.C.WHITE,  scale = 0.35 },
 		{ key = "ph_up_ante_3", colour = G.C.WHITE,  scale = 0.35 },
 	}
-	if blind_type == "bl_mp_nemesis" then
+	if blind_type == "bl_mp_nemesis" or blind_type == "bl_mp_clash" then
 		texts = {
 			{ key = "k_bl_life",  colour = G.C.FILTER, scale = 0.55, bump = true },
 			{ key = "k_bl_or",    colour = G.C.WHITE,  scale = 0.35 },

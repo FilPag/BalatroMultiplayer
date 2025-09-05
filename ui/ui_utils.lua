@@ -225,7 +225,7 @@ function MP.UI_UTILS.get_mp_blind_amount(blind, chips, is_boss)
 		return to_big(chips)
 	end
 
-	if blind.key == "bl_mp_nemesis" then
+	if blind.key == "bl_mp_nemesis" or blind.key == "bl_mp_clash" then
 		return to_big(0)
 	end
 

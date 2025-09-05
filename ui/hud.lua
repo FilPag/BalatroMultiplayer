@@ -176,7 +176,7 @@ end
 
 local ease_round_ref = ease_round
 function ease_round(mod)
-	if MP.LOBBY.code and (not MP.LOBBY.config.disable_live_and_timer_hud) and MP.LOBBY.config.timer then
+	if MP.LOBBY.code and MP.LOBBY.config.disable_live_and_timer_hud then
 		return
 	end
 	ease_round_ref(mod)
@@ -333,7 +333,7 @@ MP.timer_event = Event({
 		MP.GAME.timer = MP.GAME.timer - 1
 		if MP.GAME.timer <= 0 then
 			MP.GAME.timer = 0
-			if not MP.GAME.ready_blind and not MP.is_online_boss() then
+			if not MP.GAME.ready_blind and not MP.UTILS.is_in_online_blind() then
 				if MP.GAME.timers_forgiven < MP.LOBBY.config.timer_forgiveness then
 					MP.GAME.timers_forgiven = MP.GAME.timers_forgiven + 1
 					return true

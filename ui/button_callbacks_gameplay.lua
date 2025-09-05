@@ -223,7 +223,6 @@ function G.FUNCS.select_blind(e)
 end
 
 function G.FUNCS.send_money_to_player(e)
-  sendDebugMessage(tprint(e.config))
   -- Safely extract player_id from button_args if present
   local player_id = e and e.config and e.config.button_args and e.config.button_args.player_id
   if not player_id then

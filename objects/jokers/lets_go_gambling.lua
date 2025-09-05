@@ -44,7 +44,7 @@ SMODS.Joker({
 				returns.x_mult = card.ability.extra.xmult
 				returns.dollars = card.ability.extra.dollars
 			end
-			if MP.is_online_boss() and 
+			if MP.UTILS.is_in_online_blind() and 
 				pseudorandom("j_mp_lets_go_gambling_misfire")
 				< G.GAME.probabilities.normal / card.ability.extra.nemesis_odds
 			then

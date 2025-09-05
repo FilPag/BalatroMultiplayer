@@ -229,7 +229,7 @@ local function action_start_blind()
 	MP.GAME.ready_blind = false
 	MP.GAME.timer_started = false
 	MP.GAME.timer = MP.LOBBY.config.timer_base_seconds
-	MP.UI.start_pvp_countdown(begin_pvp_blind)
+	--MP.UI.start_pvp_countdown(begin_pvp_blind)
 	for _, player in pairs(MP.LOBBY.players) do
 		player.game_state.score = to_big(0)
 	end

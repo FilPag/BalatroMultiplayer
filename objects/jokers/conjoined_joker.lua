@@ -55,7 +55,7 @@ SMODS.Joker({
 		if
 			context.cardarea == G.jokers
 			and context.joker_main
-			and MP.is_online_boss()
+			and MP.UTILS.blnd.is_in_online_blind()
 			and (not card.edition or card.edition.type ~= "mp_phantom")
 		then
 			return {

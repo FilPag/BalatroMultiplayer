@@ -28,15 +28,3 @@ SMODS.Blind({
 		return false
 	end,
 })
-
-function MP.is_online_boss()
-	if not G.GAME or not G.GAME.blind then
-		return false
-	end
-	-- Special case for coop boss blinds
-	if MP.UTILS.is_coop() and G.GAME.blind.boss then
-		return true
-	end
-
-	return G.GAME.blind.config.blind.key == "bl_mp_nemesis" or G.GAME.blind.pvp
-end

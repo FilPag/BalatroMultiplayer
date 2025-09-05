@@ -37,7 +37,7 @@ local ease_background_colour_blindref = ease_background_colour_blind
 function ease_background_colour_blind(state, blind_override) -- handles background
   local blindname = ((blind_override or (G.GAME.blind and G.GAME.blind.name ~= '' and G.GAME.blind.name)) or 'Small Blind')
   local blindname = (blindname == '' and 'Small Blind' or blindname)
-  if blindname == "bl_mp_nemesis" and MP.is_online_boss() then
+  if MP.UTILS.is_in_online_blind() and blindname == "bl_mp_nemesis" then
     blind_override = MP.UTILS.get_nemesis_key()
     for k, v in pairs(G.P_BLINDS) do
       if blind_override == k then
@@ -49,7 +49,8 @@ function ease_background_colour_blind(state, blind_override) -- handles backgrou
 end
 
 local function reset_blind_HUD()
-  if MP.LOBBY.code then
+  if not MP.LOBBY.code then return end
+    MP.UI_UTILS.clean_leaderboard()
     G.HUD_blind:get_UIE_by_ID("HUD_blind_name").config.object.config.string =
     { { ref_table = G.GAME.blind, ref_value = "loc_name" } }
     G.HUD_blind:get_UIE_by_ID("HUD_blind_name").config.object:update_text()
@@ -62,7 +63,6 @@ local function reset_blind_HUD()
     G.HUD_blind:get_UIE_by_ID("dollars_to_be_earned").config.object.config.string =
     { { ref_table = G.GAME.current_round, ref_value = "dollars_to_be_earned" } }
     G.HUD_blind:get_UIE_by_ID("dollars_to_be_earned").config.object:update_text()
-  end
 end
 
 local blind_defeat_ref = Blind.defeat
@@ -73,35 +73,27 @@ end
 
 local blind_disable_ref = Blind.disable
 function Blind:disable()
-  if MP.is_online_boss() and not (G.GAME.blind and G.GAME.blind.name == 'Verdant Leaf') then -- hackfix to make verdant work properly
+  if MP.UTILS.is_in_online_blind() and not (G.GAME.blind and G.GAME.blind.name == 'Verdant Leaf') then -- hackfix to make verdant work properly
     return
   end
   blind_disable_ref(self)
 end
 
 G.FUNCS.multiplayer_blind_chip_UI_scale = function(e)
-  if not (MP.LOBBY and MP.LOBBY.code) then
-    return
-  end
+  if not (MP.LOBBY and MP.LOBBY.code) or not MP.UTILS.is_in_online_blind() then return end
 
-  local score_ref
-  if MP.UTILS.is_coop() then
-    score_ref = MP.GAME.coop
-  else
-    local nemesis = MP.UTILS.get_nemesis()
-    if not nemesis then
-      return -- Exit early if no nemesis found
-    end
-    score_ref = nemesis.game_state
-  end
+  local score_ref =
+    MP.UTILS.is_coop() and MP.GAME.coop or
+    (G.GAME.blind.config.blind.key == "bl_mp_clash" and e.config.object.config.string[1].ref_table) or
+    (MP.UTILS.get_nemesis() and MP.UTILS.get_nemesis().game_state)
 
-  if not score_ref or not score_ref.score then
+  if not (score_ref and score_ref.score) then
     if score_ref then score_ref.score_text = "" end
     return
   end
 
   local new_score_text = number_format(score_ref.score)
-  if G.GAME.blind and score_ref.score and score_ref.score_text ~= new_score_text then
+  if score_ref.score_text ~= new_score_text then
     score_ref.score_text = new_score_text
   end
 end

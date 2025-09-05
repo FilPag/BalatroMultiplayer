@@ -11,7 +11,7 @@ if SMODS.Mods["JokerDisplay"] and SMODS.Mods["JokerDisplay"].can_load then
 				},
 			},
 			calc_function = function(card)
-				card.joker_display_values.x_mult = MP.is_online_boss() and card.ability.extra.x_mult or 1
+				card.joker_display_values.x_mult = MP.UTILS.is_in_online_blind() and card.ability.extra.x_mult or 1
 			end,
 		}
 		jd_def["j_mp_defensive_joker"] = {
@@ -74,7 +74,7 @@ if SMODS.Mods["JokerDisplay"] and SMODS.Mods["JokerDisplay"].can_load then
 				},
 			},
 			calc_function = function(card)
-				card.joker_display_values.x_mult = not MP.is_online_boss() and card.ability.extra.x_mult or 1
+				card.joker_display_values.x_mult = not MP.UTILS.is_in_online_blind() and card.ability.extra.x_mult or 1
 			end,
 		}
 		jd_def["j_mp_pizza"] = {

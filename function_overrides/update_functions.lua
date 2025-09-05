@@ -7,7 +7,7 @@ function Game:update_selecting_hand(dt)
 			and MP.LOBBY.code
 	then
 		G.GAME.current_round.hands_left = 0
-		if MP.is_online_boss() then
+		if MP.UTILS.is_in_online_blind() then
 			MP.ACTIONS.play_hand(G.GAME.chips, 0)
 			G.STATE_COMPLETE = false
 			G.STATE = G.STATES.HAND_PLAYED
@@ -19,7 +19,7 @@ function Game:update_selecting_hand(dt)
 	end
 	update_selecting_hand_ref(self, dt)
 
-	if MP.GAME.end_pvp and MP.is_online_boss() then
+	if MP.GAME.end_pvp and MP.UTILS.is_in_online_blind() then
 		G.hand:unhighlight_all()
 		G.STATE_COMPLETE = false
 		G.STATE = G.STATES.NEW_ROUND
@@ -94,7 +94,7 @@ function Game:update_draw_to_hand(dt)
 			end
 
 			-- Multiplayer nemesis HUD and event logic
-			if MP.is_online_boss and MP.is_online_boss() and G.GAME.blind.config.blind.key == "bl_mp_nemesis" then
+			if MP.UTILS.is_in_online_blind and MP.UTILS.is_in_online_blind() and G.GAME.blind.config.blind.key == "bl_mp_nemesis" then
 				G.E_MANAGER:add_event(Event({
 					trigger = "after",
 					delay = 0,
@@ -227,7 +227,7 @@ local update_hand_played_ref = Game.update_hand_played
 ---@diagnostic disable-next-line: duplicate-set-field
 function Game:update_hand_played(dt)
 	-- Ignore for singleplayer or regular blinds
-	if not MP.LOBBY.connected or not MP.LOBBY.code or not MP.is_online_boss() then
+	if not MP.LOBBY.connected or not MP.LOBBY.code or not MP.UTILS.is_in_online_blind() then
 		update_hand_played_ref(self, dt)
 		return
 	end
@@ -272,13 +272,13 @@ function Game:update_hand_played(dt)
 		}))
 	end
 
-	if MP.GAME.end_pvp and MP.is_online_boss() then
+	if MP.GAME.end_pvp and MP.UTILS.is_in_online_blind() then
 		G.STATE_COMPLETE = false
 		G.STATE = G.STATES.NEW_ROUND
 		MP.GAME.end_pvp = false
 	end
 
-	if MP.UTILS.is_coop() and MP.is_online_boss() then
+	if MP.UTILS.is_coop() and MP.UTILS.is_in_online_blind() then
 		if G.GAME.chips - G.GAME.blind.chips >= to_big(0) then
 			G.STATE_COMPLETE = false
 			G.STATE = G.STATES.NEW_ROUND
@@ -295,7 +295,7 @@ function Game:update_new_round(dt)
 	end
 	if MP.LOBBY.code and not G.STATE_COMPLETE then
 		-- Prevent player from losing
-		if to_big(G.GAME.chips) < to_big(G.GAME.blind.chips) and not MP.is_online_boss() then
+		if to_big(G.GAME.chips) < to_big(G.GAME.blind.chips) and not MP.UTILS.is_in_online_blind() then
 			G.GAME.blind.chips = -1
 			MP.GAME.wait_for_enemys_furthest_blind = (MP.LOBBY.config.gamemode == "gamemode_mp_survival") and
 					(tonumber(MP.UTILS.get_local_player().lives) == 1) -- In Survival Mode, if this is the last live, wait for the enemy.

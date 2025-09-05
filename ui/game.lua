@@ -118,7 +118,7 @@ function MP.end_round()
 	if G.GAME.current_round.hands_played == 0 
 	   and G.GAME.current_round.discards_used > 0
 	   and MP.LOBBY.config.gamemode ~= "gamemode_mp_survival" then
-			if MP.is_onlineboss() then
+			if MP.UTILS.is_in_online_blind() then
 				MP.ACTIONS.play_hand(0, 0)
 			end
 			

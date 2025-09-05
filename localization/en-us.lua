@@ -157,7 +157,6 @@ return {
 			bl_mp_clash = {
 				name = "Clash",
 				text = {
-					"Everyone plays, lowest scores are eliminated.",
 					"Last player standing wins!",
 				},
 			},

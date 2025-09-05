@@ -856,3 +856,37 @@ end
 function MP.UTILS.is_weekly(arg)
 	return MP.UTILS.get_weekly() == arg and MP.LOBBY.config.ruleset == 'ruleset_mp_weekly'
 end
+
+function MP.UTILS.is_in_pvp_blind()
+	if not G.GAME.blind then return false end
+
+	local pvp_blinds = {
+		["bl_mp_clash"] = true,
+		["bl_mp_nemesis"] = true
+	}
+
+	return pvp_blinds[G.GAME.blind.config.blind.key] or false
+end
+
+function MP.UTILS.is_in_online_blind()
+	if not G.GAME.blind then return false end
+
+	if MP.UTILS.is_coop() and G.GAME.blind.boss then
+		return true
+	end
+
+	return MP.UTILS.is_in_pvp_blind()
+end
+
+function MP.UTILS.should_display_ready_check(key, type)
+		local pvp_blinds = {
+			["bl_mp_clash"] = true,
+			["bl_mp_nemesis"] = true
+		}
+
+		if MP.UTILS.is_coop() and type == "Boss" then
+			return true
+		end
+
+		return pvp_blinds[key] or false
+	end
