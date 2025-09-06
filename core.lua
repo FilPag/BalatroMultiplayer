@@ -36,7 +36,7 @@ function MP.load_mp_dir(directory)
 	end
 end
 
-MP.load_mp_file("dev.lua")
+--MP.load_mp_file("dev.lua")
 MP.load_mp_dir("compatibility")
 
 MP.LOBBY = {
