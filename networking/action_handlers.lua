@@ -145,11 +145,7 @@ local function new_player_joined_lobby(player)
 end
 
 local function action_game_stopped()
-	if G.STAGE ~= G.STAGES.MAIN_MENU then
-		G.FUNCS.go_to_menu()
-		MP.UI.update_connection_status()
-		MP.reset_game_states()
-	end
+	G.FUNCS.mp_return_to_lobby()
 end
 
 local function action_reset_players(players)
@@ -471,6 +467,7 @@ local function action_spent_last_shop(player_id, amount)
 	enemy.spent_in_shop[#enemy.spent_in_shop + 1] = tonumber(amount)
 end
 
+-- TODO ready check is a bit broken when leaving games
 ---@param ready_states table<string, boolean> <player_id, is_ready
 local function action_lobby_ready_update(ready_states)
 	for player_id, is_ready in pairs(ready_states) do

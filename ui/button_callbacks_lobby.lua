@@ -64,7 +64,7 @@ function G.FUNCS.custom_seed_overlay(e)
 end
 
 G.FUNCS.change_pvp_countdown_seconds = function(args)
-	MP.LOBBY.config.pvp_countdown_seconds = args.to_val
+  MP.LOBBY.config.pvp_countdown_seconds = args.to_val
   MP.ACTIONS.update_lobby_options()
 end
 
@@ -159,9 +159,9 @@ function G.FUNCS.lobby_leave(e)
 end
 
 function G.FUNCS.open_lobby_options(e)
-	G.FUNCS.overlay_menu({
-		definition = G.UIDEF.create_UIBox_lobby_options(),
-	})
+  G.FUNCS.overlay_menu({
+    definition = G.UIDEF.create_UIBox_lobby_options(),
+  })
 end
 
 function G.FUNCS.lobby_ready_up(e)
@@ -204,7 +204,11 @@ function G.FUNCS.lobby_start_run(e, args)
 end
 
 function G.FUNCS.mp_return_to_lobby()
-  MP.ACTIONS.stop_game()
+  if G.STAGE ~= G.STAGES.MAIN_MENU then
+    G.FUNCS.go_to_menu()
+    MP.UI.update_connection_status()
+    MP.reset_game_states()
+  end
 end
 
 function G.FUNCS.mp_toggle_ready(e)
@@ -350,9 +354,9 @@ G.FUNCS.view_player_hash = function(e)
 end
 
 for gamemode, _ in pairs(MP.Gamemodes) do
-	G.FUNCS["force_" .. gamemode] = function(e)
+  G.FUNCS["force_" .. gamemode] = function(e)
     sendDebugMessage("Forcing gamemode: " .. gamemode, "MULTIPLAYER")
-		MP.LOBBY.config.gamemode = gamemode
+    MP.LOBBY.config.gamemode = gamemode
     G.FUNCS.start_lobby()
   end
 end
