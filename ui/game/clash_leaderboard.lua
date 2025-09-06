@@ -2,7 +2,7 @@
 function MP.UTILS.get_sorted_players()
   local sorted_players = {}
   for idx, player in pairs(MP.LOBBY.players) do
-    if player.game_state and player.game_state.score then
+    if player.game_state and player.game_state.score and player.lobby_state.in_game then
       table.insert(sorted_players, { idx = idx, player = player })
     end
   end
@@ -160,10 +160,10 @@ function MP.UIDEF.player_leaderboard_entry(player, position)
 end
 
 -- Generate player slot rows based on player count
-function generate_player_rows()
+local function generate_player_rows()
   local player_count = 0
   for _, player in pairs(MP.LOBBY.players) do
-    if player.game_state and player.game_state.score then
+    if player.game_state and player.game_state.score and player.lobby_state.in_game then
       player_count = player_count + 1
     end
   end

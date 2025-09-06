@@ -6,12 +6,24 @@ MP.UI.lobby_ready_button = function(text_scale)
       colour = G.C.BLUE,
       minw = 3.65,
       minh = 1.55,
+      maxh = 1.55,
       label = { localize("b_start") },
       disabled_text = localize("b_wait_for_players"),
       scale = text_scale * 2,
       col = true,
       enabled_ref_table = MP.LOBBY,
       enabled_ref_value = "ready_to_start",
+    })
+  elseif MP.LOBBY.started then
+    return MP.UI.Disableable_Button({
+      id = "in_progress_button",
+      minw = 3.65,
+      minh = 1.55,
+      maxh = 1.55,
+      label = { localize("b_start") },
+      disabled_text = {localize("b_in_progress")},
+      scale = text_scale * 1.2,
+      col = true,
     })
   else
     local player = MP.UTILS.get_local_player_lobby_data()
@@ -27,6 +39,7 @@ MP.UI.lobby_ready_button = function(text_scale)
         maxw = 3.45,
         minw = 3.65,
         minh = 1.55,
+        maxh = 1.55,
       },
       nodes = {
         {

@@ -1,12 +1,14 @@
 function MP.UI.create_UIBox_player_row(player)
-  local colour = G.C.RED
-  if MP.UTILS.is_coop() then
-    colour = lighten(G.C.BLUE, 0.5)
-  end
-
   local lobby_state = player.lobby_state or {}
   local game_state  = player.game_state or {}
   local profile = player.profile or {}
+
+  local colour = G.C.RED
+  if MP.UTILS.is_coop() or MP.UTILS.is_local_player(player) then
+    colour = lighten(G.C.BLUE, 0.5)
+  elseif lobby_state.in_game == false or game_state.lives == 0 then
+    colour = G.C.DARK_GREY
+  end
 
   return {
     n = G.UIT.R,
@@ -144,7 +146,7 @@ function MP.UI.create_UIBox_player_row(player)
         minw = 2.5,
         minh = 0.45,
         col = true,
-        enabled_ref_table = { enabled = (not MP.UTILS.is_local_player(player)) and G.GAME.dollars >= to_big(5) },
+        enabled_ref_table = { enabled = (not MP.UTILS.is_local_player(player) and MP.UTILS.is_coop()) and G.GAME.dollars >= to_big(5) },
         enabled_ref_value = "enabled",
       }) or {
         n = G.UIT.C,

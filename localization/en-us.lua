@@ -212,6 +212,7 @@ return {
 			b_ready = "Ready",
 			b_unready = "Unready",
 			b_leave_lobby = "Leave Lobby",
+			b_in_progress= "In progress",
 			b_mp_discord = "Balatro Multiplayer Discord Server",
 			b_start = "START",
 			b_wait_for_host_start = { "WAITING FOR", "HOST TO START" },
@@ -379,6 +380,7 @@ return {
 			loc_selecting = "Selecting a Blind",
 			loc_shop = "Shopping",
 			loc_playing = "Playing ",
+			loc_waiting_in_lobby= "Waiting in Lobby",
 			k_clash = "Clash",
 			k_clash_description =
 			"Everyone plays, lowest scores are eliminated. Last player standing wins!",

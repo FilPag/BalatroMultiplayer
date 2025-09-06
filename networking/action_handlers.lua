@@ -129,6 +129,7 @@ local function action_joined_lobby(action_data)
 
 	MP.LOBBY.code = action_data.lobby_data.code
 	MP.LOBBY.ready_to_start = false
+	MP.LOBBY.started = action_data.lobby_data.started or false
   update_lobby_options(action_data.lobby_data.lobby_options)
 	MP.UI.update_connection_status()
 end
@@ -136,6 +137,7 @@ end
 local function new_player_joined_lobby(player)
 	player.game_state.score = to_big(player.game_state.score or "0")
 	player.game_state.highest_score = to_big(player.game_state.highest_score or "0")
+	player.game_state.location = MP.UI_UTILS.parse_enemy_location(player.game_state.location or "loc_waiting_in_lobby")
 	MP.LOBBY.players[player.profile.id] = player
 
   if G.MAIN_MENU_UI then G.MAIN_MENU_UI:remove() end
@@ -168,10 +170,10 @@ local function player_left_lobby(player_id, host_id)
 		MP.LOBBY.is_host = true
 	end
 
-	action_game_stopped()
+	--action_game_stopped()
 
   if G.MAIN_MENU_UI then G.MAIN_MENU_UI:remove() end
-  set_main_menu_UI()
+  	set_main_menu_UI()
 end
 
 local function action_error(message)
@@ -244,6 +246,7 @@ end
 local function action_game_state_update(player_id, game_state)
 	MP.STATE_UPDATER.update_player_state(player_id, game_state)
 end
+
 ---@param won boolean
 local function action_end_pvp(won)
 	if not MP.LOBBY.code then return end
@@ -254,7 +257,7 @@ local function action_end_pvp(won)
 	MP.GAME.timer = MP.LOBBY.config.timer_base_seconds
 	MP.GAME.timer_started = false
 
-	if won then return end
+	if won or G.GAME.blind.config.blind.key == "bl_mp_clash" then return end
 
 	if MP.LOBBY.config.gold_on_life_loss then
 		MP.LOBBY.local_player.comeback_bonus_given = false
@@ -267,6 +270,11 @@ local function action_end_pvp(won)
 end
 
 local function action_win_game()
+
+	if MP.LOBBY.local_player.lobby_state.in_game == false then
+		return
+	end
+
 	MP.ACTIONS.send_player_deck()
 	MP.ACTIONS.send_player_jokers()
 	G.E_MANAGER:add_event(Event({
@@ -287,6 +295,11 @@ local function action_win_game()
 end
 
 local function action_lose_game()
+	
+	if MP.LOBBY.local_player.lobby_state.in_game == false then
+		return
+	end
+
 	MP.ACTIONS.send_player_deck()
 	MP.ACTIONS.send_player_jokers()
 	G.E_MANAGER:add_event(Event({
@@ -469,7 +482,7 @@ local function action_lobby_ready_update(ready_states)
 	local count = 0
 	for _, player in pairs(MP.LOBBY.players) do
 		count = count + 1
-		if not player.lobby_state.is_ready then
+		if player.lobby_state.is_ready == false and player.lobby_state.in_game == false then
 			ready_check = false
 			break
 		end
@@ -479,6 +492,17 @@ local function action_lobby_ready_update(ready_states)
 		MP.LOBBY.ready_to_start = ready_check
 		set_main_menu_UI()
 	end
+end
+
+---@param statuses table<string, boolean>
+local function action_update_in_game_statuses(statuses)
+	for player_id, status in pairs(statuses) do
+		if MP.LOBBY.players[player_id] then
+			MP.LOBBY.players[player_id].lobby_state.in_game = status
+		end
+	end
+
+	set_main_menu_UI()
 end
 
 local function action_magnet()
@@ -581,6 +605,9 @@ function G.FUNCS.load_end_game_jokers()
 end
 
 local function action_receive_player_jokers(player_id, jokers)
+	if MP.LOBBY.local_player.lobby_state.in_game == false then
+		return
+	end
 	MP.end_game_jokers_payload = jokers
 	MP.end_game_jokers_received = true
 	G.FUNCS.load_end_game_jokers()
@@ -661,6 +688,9 @@ function G.FUNCS.load_player_deck(player)
 end
 
 local function action_receive_player_deck(player_id, cards)
+	if MP.LOBBY.local_player.lobby_state.in_game == false then
+		return
+	end
 	local player = MP.LOBBY.players[player_id]
 	player.deck_str = cards
 	player.deck_received = true
@@ -694,11 +724,12 @@ local action_table = {
 	playerJoinedLobby = function(parsedAction) new_player_joined_lobby(parsedAction.player) end,
 	playerLeftLobby = function(parsedAction) player_left_lobby(parsedAction.player_id, parsedAction.host_id) end,
 	gameStarted = function(parsedAction) action_game_started(parsedAction.seed, parsedAction.stake) end,
+	gameStopped = function() action_game_stopped() end,
 	startBlind = function() action_start_blind() end,
 	receivedMoney = function() action_received_money() end,
+	inGameStatuses = function(parsedAction) action_update_in_game_statuses(parsedAction.statuses) end,
 	lobbyReady = function(parsedAction) action_lobby_ready_update(parsedAction.ready_states) end,
 	gameStateUpdate = function(parsedAction) action_game_state_update(parsedAction.player_id, parsedAction.game_state) end,
-	gameStopped = function() action_game_stopped() end,
 	resetPlayers = function(parsedAction) action_reset_players(parsedAction.players) end,
 	endPvp = function(parsedAction) action_end_pvp(parsedAction.won) end,
 	winGame = function() action_win_game() end,

@@ -120,7 +120,7 @@ function MP.reset_game_states()
 		comeback_bonus = 0,
 		end_pvp = false,
 		next_coop_boss = nil,
-		location = "loc_selecting",
+		location = MP.UI_UTILS.parse_enemy_location("loc_waiting_in_lobby"),
 		next_blind_context = nil,
 		ante_key = tostring(math.random()),
 		antes_keyed = {},
@@ -153,8 +153,8 @@ function MP.reset_game_states()
 
 	MP.LOBBY.ready_text = localize("b_ready")
 	MP.LOBBY.ready_to_start = false
+	MP.LOBBY.started = false
 end
-MP.reset_game_states()
 
 MP.username = MP.UTILS.get_username()
 MP.blind_col = MP.UTILS.get_blind_col()
@@ -285,3 +285,4 @@ end
 local msgpack_path = SMODS.current_mod.path .. 'networking' .. path_separator .. 'message_pack.lua'
 MP.NETWORKING_THREAD:start(SMODS.Mods["Multiplayer"].config.server_url, SMODS.Mods["Multiplayer"].config.server_port, msgpack_path)
 MP.ACTIONS.connect()
+MP.reset_game_states()

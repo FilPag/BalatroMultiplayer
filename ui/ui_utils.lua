@@ -67,7 +67,7 @@ function MP.UI_UTILS.update_blind_HUD()
 end
 
 function MP.UI_UTILS.show_enemy_location()
-	if MP.UTILS.is_coop() then return end
+	if MP.UTILS.is_coop() or MP.LOBBY.config.gamemode == "gamemode_mp_clash" then return end
 
 	local row_dollars_chips = G.HUD:get_UIE_by_ID("row_dollars_chips")
 	if row_dollars_chips then
