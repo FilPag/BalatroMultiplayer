@@ -37,10 +37,10 @@ function MP.load_mp_dir(directory)
 end
 
 --MP.load_mp_file("dev.lua")
-MP.load_mp_file("event_hooks.lua")
 MP.load_mp_dir("compatibility")
 MP.load_mp_file("misc/utils.lua")
 MP.load_mp_file("misc/insane_int.lua")
+MP.load_mp_file("event_hooks.lua")
 
 MP.LOBBY = {
 	connected = false,
@@ -279,8 +279,6 @@ function love.errorhandler(msg, traceback)
     end
     return love.errorhandler_ref(msg, traceback)
 end
-
-
 
 local msgpack_path = SMODS.current_mod.path .. 'networking' .. path_separator .. 'message_pack.lua'
 MP.NETWORKING_THREAD:start(SMODS.Mods["Multiplayer"].config.server_url, SMODS.Mods["Multiplayer"].config.server_port, msgpack_path)

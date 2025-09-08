@@ -1,3 +1,5 @@
+MP.HOOKS = {}
+
 MP.HOOKS.on_hand_played = function()
   if not MP.LOBBY.code then return end
   local score = SMODS.calculate_round_score()
@@ -11,6 +13,6 @@ MP.HOOKS.on_hand_played = function()
   }))
 end
 
-MP.calculate = function(self, context)
+SMODS.current_mod.calculate = function(self, context)
   if context.after then MP.HOOKS.on_hand_played() end
 end
