@@ -2,6 +2,8 @@ MP.HOOKS = {}
 
 MP.HOOKS.on_hand_played = function()
   if not MP.LOBBY.code then return end
+  if not MP.UTILS.is_in_online_blind() then return end
+  
   local score = SMODS.calculate_round_score()
   G.E_MANAGER:add_event(Event({
     blocking = false,
