@@ -37,7 +37,10 @@ function MP.load_mp_dir(directory)
 end
 
 --MP.load_mp_file("dev.lua")
+MP.load_mp_file("event_hooks.lua")
 MP.load_mp_dir("compatibility")
+MP.load_mp_file("misc/utils.lua")
+MP.load_mp_file("misc/insane_int.lua")
 
 MP.LOBBY = {
 	connected = false,
@@ -73,9 +76,6 @@ MP.INTEGRATIONS = {
 MP.UI_EVENT_HANDLER = SMODS.load_file('networking/ui_event_handler.lua', 'Multiplayer')()
 MP.STATE_UPDATER = SMODS.load_file('networking/state_updater.lua', 'Multiplayer')()
 G.C.MULTIPLAYER = HEX("AC3232")
-
-MP.load_mp_file("misc/utils.lua")
-MP.load_mp_file("misc/insane_int.lua")
 
 function MP.reset_lobby_config(persist_ruleset_and_gamemode)
 	sendDebugMessage("Resetting lobby options", "MULTIPLAYER")

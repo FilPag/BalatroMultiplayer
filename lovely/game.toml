@@ -117,40 +117,13 @@ match_indent = true
 times = 1
 
 [[patches]]
-[patches.pattern]
+[patches.regex]
 target = 'functions/state_events.lua'
-pattern = '''local dollars = 0
-
-if G.GAME.chips - G.GAME.blind.chips >= to_big(0) then'''
+pattern = '''local dollars\s*=\s*0\s*\n\s*if\s*G\.GAME\.chips\s*-\s*G\.GAME\.blind\.chips\s*>=\s*(to_big\(0\)|0)\s*then'''
 position = 'at'
 payload = '''local dollars = 0
 
 if G.GAME.chips - G.GAME.blind.chips >= to_big(0) or MP.UTILS.is_in_online_blind() then'''
-match_indent = true
-times = 1
-
-[[patches]]
-[patches.pattern]
-target = 'functions/state_events.lua'
-pattern = '''G.E_MANAGER:add_event(Event({
-      trigger = 'ease',
-      blocking = false,
-      ref_table = G.GAME,
-      ref_value = 'chips',
-      ease_to = G.GAME.chips + math.floor(hand_chips*mult),
-      delay =  0.5,
-      func = (function(t) return math.floor(t) end)
-    }))'''
-position = 'after'
-payload = '''if MP.LOBBY.code and MP.UTILS.is_in_online_blind() then
-  G.E_MANAGER:add_event(Event({
-    blocking = false,
-    func = function()
-      MP.ACTIONS.play_hand(hand_chips * mult, G.GAME.current_round.hands_left)
-      return true
-    end
-  }))
-end'''
 match_indent = true
 times = 1
 
@@ -162,6 +135,7 @@ position = 'after'
 payload = '''self.chips = MP.UI_UTILS.get_mp_blind_amount(blind, self.chips)'''
 match_indent = true
 times = 1
+
 # apply bans here
 # hmm...
 [[patches]]
