@@ -267,3 +267,7 @@ function MP.ACTIONS.send_money_to_player(player_id)
   ease_dollars(-5, true)
   Client.send({ action = "sendMoney", player_id = player_id })
 end
+
+MP.ACTIONS.return_to_lobby = function()
+  Client.send({ action = "return_to_lobby" })
+end

@@ -17,7 +17,12 @@ MP.Ruleset({
         "j_mr_bones"
     },
     banned_consumables = {},
-    banned_vouchers = {},
+	banned_vouchers = {
+		"v_hieroglyph",
+		"v_petroglyph",
+		"v_directors_cut",
+		"v_retcon",
+	},
     banned_enhancements = {},
     banned_tags = {
         "tag_boss"

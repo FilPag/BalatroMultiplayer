@@ -32,23 +32,30 @@ local function get_warnings()
 	end
 
 	if MP.LOBBY.ready_to_start or not MP.LOBBY.is_host then
-		
-		local steamodded_versions = {}
-		for _, player in pairs(MP.LOBBY.players) do
-			local version = MP.UTILS.parse_Hash(player.profile.mod_hash)["Steamodded"]
-			if version then
-				steamodded_versions[version] = true
-			end
-		end
+    local steamodded_versions = {}
+    for _, player in pairs(MP.LOBBY.players) do
+        local version = MP.UTILS.parse_Hash(player.profile.mod_hash)["Steamodded"]
+        if version then
+            table.insert(steamodded_versions, version)
+        end
+    end
 
-		local all_players_same_steamodded_version = next(steamodded_versions) ~= nil and next(steamodded_versions, next(steamodded_versions)) == nil
+    local all_same = true
+    if #steamodded_versions > 1 then
+        for i = 2, #steamodded_versions do
+            if steamodded_versions[i] ~= steamodded_versions[1] then
+                all_same = false
+                break
+            end
+        end
+    end
 
-		if not all_players_same_steamodded_version then
-			table.insert(warnings, {
-				localize("k_steamodded_warning"),
-				SMODS.Gradients.warning_text,
-			})
-		end
+    if not all_same then
+        table.insert(warnings, {
+            localize("k_steamodded_warning"),
+            SMODS.Gradients.warning_text,
+        })
+    end
 	end
 
 	SMODS.Mods["Multiplayer"].config.unlocked = MP.UTILS.unlock_check()

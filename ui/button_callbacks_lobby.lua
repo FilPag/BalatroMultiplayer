@@ -145,10 +145,12 @@ function G.FUNCS.lobby_choose_deck(e)
   if not MP.LOBBY.is_host then
     MP.ACTIONS.send_lobby_ready(false)
   end
+
   G.FUNCS.setup_run(e)
   if G.OVERLAY_MENU then
     G.OVERLAY_MENU:get_UIE_by_ID("run_setup_seed"):remove()
   end
+  set_main_menu_UI()
 end
 
 function G.FUNCS.lobby_leave(e)
@@ -203,7 +205,11 @@ function G.FUNCS.lobby_start_run(e, args)
   })
 end
 
-function G.FUNCS.mp_return_to_lobby()
+function G.FUNCS.mp_return_to_lobby(e)
+  if e then
+    MP.ACTIONS.return_to_lobby()
+  end
+
   if G.STAGE ~= G.STAGES.MAIN_MENU then
     G.FUNCS.go_to_menu()
     MP.UI.update_connection_status()
