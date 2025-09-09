@@ -174,13 +174,6 @@ function MP.UI.create_UIBox_mods_list(type)
 	}
 end
 
-local ease_round_ref = ease_round
-function ease_round(mod)
-	if MP.LOBBY.code and MP.LOBBY.config.disable_live_and_timer_hud then
-		return
-	end
-	ease_round_ref(mod)
-end
 
 function G.FUNCS.mp_timer_button(e)
 	if MP.LOBBY.config.timer then
