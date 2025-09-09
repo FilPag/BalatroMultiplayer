@@ -207,7 +207,6 @@ local function action_game_started(seed, stake)
 
 	MP.LOBBY.local_player.lives = MP.LOBBY.config.starting_lives
 	G.FUNCS.lobby_start_run(nil, { seed = seed, stake = stake })
-	sendDebugMessage("Run started", "MULTIPLAYER")
 	G.E_MANAGER:add_event(Event({
     trigger = 'immediate',
 		no_delete = true,
@@ -499,12 +498,14 @@ local function action_lobby_ready_update(ready_states)
 end
 
 ---@param statuses table<string, boolean>
-local function action_update_in_game_statuses(statuses)
+local function action_update_in_game_statuses(statuses, started)
 	for player_id, status in pairs(statuses) do
 		if MP.LOBBY.players[player_id] then
 			MP.LOBBY.players[player_id].lobby_state.in_game = status
 		end
 	end
+
+	MP.LOBBY.started = started
 
 	set_main_menu_UI()
 end
@@ -731,7 +732,7 @@ local action_table = {
 	gameStopped = function() action_game_stopped() end,
 	startBlind = function() action_start_blind() end,
 	receivedMoney = function() action_received_money() end,
-	inGameStatuses = function(parsedAction) action_update_in_game_statuses(parsedAction.statuses) end,
+	inGameStatuses = function(parsedAction) action_update_in_game_statuses(parsedAction.statuses, parsedAction.started) end,
 	lobbyReady = function(parsedAction) action_lobby_ready_update(parsedAction.ready_states) end,
 	gameStateUpdate = function(parsedAction) action_game_state_update(parsedAction.player_id, parsedAction.game_state) end,
 	resetPlayers = function(parsedAction) action_reset_players(parsedAction.players) end,
