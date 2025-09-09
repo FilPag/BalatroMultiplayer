@@ -115,3 +115,11 @@ function wheel_of_fortune_the_card(card)
 		MP.UI_UTILS.juice_up(card, 0.3, 0.5)
 	end
 end
+
+local ease_round_ref = ease_round
+function ease_round(mod)
+	if MP.LOBBY.code then
+		return
+	end
+	ease_round_ref(mod)
+end

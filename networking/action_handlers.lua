@@ -160,6 +160,11 @@ end
 local function player_left_lobby(player_id, host_id)
 	MP.LOBBY.players[host_id].lobby_state.is_host = true
 	MP.LOBBY.players[host_id].lobby_state.is_ready = true
+
+	if MP.LOBBY.players[player_id].game_state.player_slot then
+  	MP.LOBBY.players[player_id].game_state.player_slot:remove()
+	end
+
   MP.LOBBY.players[player_id] = nil
 
 	if host_id == MP.LOBBY.local_player.profile.id then
@@ -232,7 +237,9 @@ local function action_start_blind()
 		player.game_state.score = to_big(0)
 	end
 
+	sendDebugMessage("should be starting blind", "MULTIPLAYER")
 	if MP.GAME.next_blind_context then
+		sendDebugMessage("startedBlind", "MULTIPLAYER")
 		G.FUNCS.select_blind(MP.GAME.next_blind_context)
 	else
 		sendErrorMessage("No next blind context", "MULTIPLAYER")
@@ -781,5 +788,5 @@ function MP.NETWORKING.update(dt)
 				handler(parsedAction)
 			end
 		end
-	until not msg
+	until not parsedAction
 end

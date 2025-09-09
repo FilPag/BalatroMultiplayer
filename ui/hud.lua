@@ -174,7 +174,6 @@ function MP.UI.create_UIBox_mods_list(type)
 	}
 end
 
-
 function G.FUNCS.mp_timer_button(e)
 	if MP.LOBBY.config.timer then
 		if MP.GAME.ready_blind then
