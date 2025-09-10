@@ -222,7 +222,7 @@ function MP.ACTIONS.eat_pizza(discards)
 end
 
 function MP.ACTIONS.spent_last_shop(amount)
-  Client.send({ action = "spentLastShop", amount = amount })
+  --Client.send({ action = "spentLastShop", amount = amount })
 end
 
 function MP.ACTIONS.magnet()
