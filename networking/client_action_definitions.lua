@@ -99,10 +99,9 @@ function MP.ACTIONS.play_hand(score, hands_left)
   local fixed_score = tostring(to_big(score))
   -- Credit to sidmeierscivilizationv on discord for this fix for Talisman
   if string.match(fixed_score, "[eE]") == nil and string.match(fixed_score, "[.]") then
-    -- Remove decimal from non-exponential numbers
-    fixed_score = string.sub(string.gsub(fixed_score, "%.", ","), 1, -3)
+    -- Remove everything after the decimal point for non-exponential numbers
+    fixed_score = fixed_score:match("^[^.]+")
   end
-  fixed_score = string.gsub(fixed_score, ",", "") -- Remove commas
 
   if score > MP.LOBBY.local_player.game_state.highest_score then
     MP.LOBBY.local_player.game_state.highest_score = score

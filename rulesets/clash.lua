@@ -14,7 +14,8 @@ MP.Ruleset({
         "j_mp_taxes",
         "j_chicot",
         "j_matador",
-        "j_mr_bones"
+        "j_mr_bones",
+        "j_luchador"
     },
     banned_consumables = {},
 	banned_vouchers = {
